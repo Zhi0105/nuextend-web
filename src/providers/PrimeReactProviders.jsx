@@ -9,6 +9,7 @@ import 'primereact/resources/primereact.min.css';
 // PrimeIcons
 import 'primeicons/primeicons.css';
 
+
 export const PrimeReactProviders = ({ children }) => {
     return (
         <PrimeReactProvider>

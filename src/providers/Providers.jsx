@@ -7,16 +7,19 @@ import 'react-toastify/dist/ReactToastify.css'
 import { TanstackProviders } from './TanstackProviders'
 import { PrimeReactProviders } from './PrimeReactProviders'
 import { AuthProviders } from './AuthProviders'
+import { EventProviders } from './EventProviders'
 
 export const Providers = () => {
     return (
         <Router>
             <TanstackProviders>
                 <AuthProviders>
-                    <PrimeReactProviders>
-                        <Navigation />
-                        <ToastContainer />  
-                    </PrimeReactProviders>
+                    <EventProviders>
+                        <PrimeReactProviders>
+                            <Navigation />
+                            <ToastContainer />  
+                        </PrimeReactProviders>
+                    </EventProviders>
                 </AuthProviders>
             </TanstackProviders>
         </Router>

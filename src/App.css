@@ -13,3 +13,16 @@ body {
   /* overflow-x:hidden; */
 }
 
+.p-checkbox-box {
+  border: 1px solid gray;
+}
+
+.p-calendar {
+  border-radius: 5%;
+  width: 50%;
+}
+
+.p-calendar > .p-inputtext {
+  padding: 10px 0 10px 10px;
+  border: 1px solid gray;
+}

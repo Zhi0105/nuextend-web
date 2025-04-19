@@ -7,6 +7,9 @@ import { RegisterScreen } from '@_src/components/Screen/RegisterScreen'
 import { HomeScreen } from '@_src/components/Screen/HomeScreen'
 import { DashboardScreen } from '@_src/components/Screen/DashboardScreen'
 
+import { CreateScreen } from '@_src/components/Screen/Event/CreateScreen'
+import { ViewScreen } from '@_src/components/Screen/Event/ViewScreen'
+
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
 
@@ -17,6 +20,8 @@ export const RouteList = () => {
         <Routes location={location} key={location.pathname}>
             <Route element={<PrivateRoute />}>
                 <Route path="/dashboard" element={<DashboardScreen />} />
+                <Route path="/event/view" element={<ViewScreen />} />
+                <Route path="/event/create" element={<CreateScreen />} />
             </Route>
 
             <Route element={<LoginRoute />}>

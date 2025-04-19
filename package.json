@@ -31,7 +31,7 @@
     "lodash": "^4.17.21",
     "lottie-react": "^2.4.0",
     "material-table": "^2.0.5",
-    "primeflex": "^3.3.1",
+    "primeflex": "^4.0.0",
     "primeicons": "^7.0.0",
     "primereact": "^10.8.5",
     "react": "^18.3.1",

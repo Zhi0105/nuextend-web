@@ -1,15 +1,15 @@
 import { DashboardTemplate } from "@_src/templates/DashboardTemplate"
 import { Sidenav } from "@_src/routes/Sidenav"
-import { Dashboard } from "../Pages/Dashboard"
-import { Header } from "../Partial/Header"
+import { Create } from "@_src/components/Pages/Event/Create"
+import { Header } from "@_src/components/Partial/Header"
 
-export const DashboardScreen = () => {
+export const CreateScreen = () => {
     return (
         <DashboardTemplate
             sidenav={<Sidenav />}
             header={<Header />}
         >
-            <Dashboard />
+            <Create />
         </DashboardTemplate>
     )
 }
