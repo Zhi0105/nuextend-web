@@ -9,6 +9,7 @@ import { DashboardScreen } from '@_src/components/Screen/DashboardScreen'
 
 import { CreateScreen } from '@_src/components/Screen/Event/CreateScreen'
 import { ViewScreen } from '@_src/components/Screen/Event/ViewScreen'
+import { UpdateScreen } from '@_src/components/Screen/Event/UpdateScreen'
 
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
@@ -22,6 +23,7 @@ export const RouteList = () => {
                 <Route path="/dashboard" element={<DashboardScreen />} />
                 <Route path="/event/view" element={<ViewScreen />} />
                 <Route path="/event/create" element={<CreateScreen />} />
+                <Route path="/event/update" element={<UpdateScreen />} />
             </Route>
 
             <Route element={<LoginRoute />}>

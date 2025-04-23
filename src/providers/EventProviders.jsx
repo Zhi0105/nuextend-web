@@ -1,10 +1,12 @@
 import { EventContext } from "@_src/contexts/EventContext";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { createEvent } from "@_src/services/event";
+import { createEvent, updateEvent } from "@_src/services/event";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify"
 
 export const EventProviders = ({ children }) => {
     const queryClient = useQueryClient()
+    const navigate = useNavigate()
 
     const { mutate: handleCreateEvent, isLoading: createEventLoading } = useMutation({
         mutationFn: createEvent
@@ -16,6 +18,18 @@ export const EventProviders = ({ children }) => {
         //     console.log("@CE:", error)
         // },
     });
+    const { mutate: handleUpdateEvent, isLoading: updateEventLoading } = useMutation({
+        mutationFn: updateEvent,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['event'] });
+            toast(data.message, { type: "success" })
+            navigate('/event/view')
+            }, 
+        onError: (error) => {  
+            console.log("@UE:", error)
+        },
+    });
+
     return (     
         <EventContext.Provider
             value={{
@@ -32,7 +46,9 @@ export const EventProviders = ({ children }) => {
                         },
                     });
                 },
-                createEventLoading: createEventLoading
+                createEventLoading: createEventLoading,
+                updateEvent: (data) => handleUpdateEvent(data),
+                updateEventLoading: updateEventLoading
             }}
         >
             {children}

@@ -1,63 +1,85 @@
-import { useContext } from "react";
+import { useEffect, useContext } from "react";
+import { useLocation } from "react-router-dom"
+import { useUserStore } from "@_src/store/auth";
 import { EventContext } from "@_src/contexts/EventContext";
-import { InputTextarea } from "primereact/inputtextarea";
-import { Dropdown } from "primereact/dropdown";
-import { useUserStore } from '@_src/store/auth';
 import { useForm, Controller } from "react-hook-form";
+import { DecryptString, DecryptUser, SetTermValue } from "@_src/utils/helpers";
+import { Dropdown } from "primereact/dropdown";
+import { InputText } from "primereact/inputtext";
+import { Button } from "primereact/button";
+import { MultiSelect } from 'primereact/multiselect';
+import { Calendar } from 'primereact/calendar';
+import { InputTextarea } from "primereact/inputtextarea";
 import { getModels } from "@_src/services/model";
 import { getEventTypes } from "@_src/services/event";
 import { getUnsdgs } from "@_src/services/unsdgs";
 import { getSkills } from "@_src/services/skills";
 import { getOrganizations } from "@_src/services/organization";
-import { InputText } from "primereact/inputtext";
-import { MultiSelect } from 'primereact/multiselect';
-import { Calendar } from 'primereact/calendar';
-import { Button } from "primereact/button";
 import dayjs from 'dayjs';
-import { DecryptString, DecryptUser, SetTermValue } from "@_src/utils/helpers";
 import _ from "lodash";
 
-export const Create = () => {
-    const { createEvent, createEventLoading } = useContext(EventContext)
+export const Update = () => {
+    const location = useLocation();
+    const event = location.state
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedToken = token && DecryptString(token)
     const decryptedUser = token && DecryptUser(user)
+    const { updateEvent, updateEventLoading } = useContext(EventContext)
     const { data: modelData, isLoading: modelLoading } = getModels()
     const { data: orgData, isLoading: orgLoading } = getOrganizations()
     const { data: typeData, isLoading: typeLoading } = getEventTypes()
     const { data: unsdgData, isLoading: unsdgLoading } = getUnsdgs()
     const { data: skillData, isLoading: skillLoading } = getSkills()
 
-
-    const setFormatDate = (date) => {
-        return dayjs(new Date(date)).format('MM-DD-YYYY')
-    }
-
     const { handleSubmit, control, reset, formState: { errors }} = useForm({
             defaultValues: {
-                term: SetTermValue() || "",
-                name: "",
-                address: "",
+                term:  "",
+                name:  "",
+                address:  "",
                 description: "",
                 organization: "",
                 model: "",
                 event_type: "",
+                event_status: "",
                 unsdgs: [],
                 skills: [],
                 duration: []
             },
     });
 
+    useEffect(() => {
+        if (orgData && modelData && typeData && unsdgData && skillData && event) {
+                const filteredUNSDG = unsdgData.data.filter((item) => event.unsdgs.some((evItem) => evItem.name === item.name))
+                const filteredSkills = skillData.data.filter((item) => event.skills.some((evItem) => evItem.name === item.name))
+            reset({
+                term: SetTermValue() || "",
+                name: event?.name || "",
+                address: event?.address || "",
+                description: event?.description || "",
+                organization: _.find(orgData.data, { id: event.organization_id }) || "",
+                model:  _.find(modelData.data, { id: event.model_id }) || "",
+                event_type: _.find(typeData.data, { id: event.event_type_id }) || "",
+                unsdgs: [ ...filteredUNSDG ],
+                skills: [ ...filteredSkills ],
+                duration: [ new Date(event.start_date), new Date(event.end_date) ]
+            });
+        }
+    }, [orgData, modelData, typeData, event, unsdgData, skillData, reset]);
+
+
+    const setFormatDate = (date) => {
+        return dayjs(new Date(date)).format('MM-DD-YYYY')
+    }
 
     const onSubmit = (data) => {
         const { organization, model, event_type, name, address, term, duration, description, skills, unsdgs } = data
         const payload = {
             token: decryptedToken,
             user_id: decryptedUser?.id,
+            id: event?.id,
             organization_id: organization?.id,
             model_id: model?.id,
             event_type_id: event_type?.id,
-            event_status_id: 1,
             name,
             address,
             term,
@@ -68,16 +90,10 @@ export const Create = () => {
             unsdgs: _.map(unsdgs, 'id')
         }
 
-        createEvent(payload, {
-            onSuccess: () => {
-                reset();
-            }
-        })
+        updateEvent(payload)
     };
 
     
-
-
     if(modelLoading || orgLoading || typeLoading || unsdgLoading || skillLoading) {
         return (
             <div className="create-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] mt-[50px]">
@@ -85,23 +101,24 @@ export const Create = () => {
             </div>
         )
     }
-
-    if(createEventLoading) {
+    
+    if(updateEventLoading) {
         return (
-            <div className="create-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] mt-[50px]">
-                Creating event please wait.....
+            <div className="edit-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] mt-[50px]">
+                Updating event please wait.....
             </div>
         )
     }
 
+
     return (
-        <div className="create-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] mt-[50px]">
+        <div className="edit-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] mt-[50px]">
             <form
                 onSubmit={handleSubmit(onSubmit)}
                 className="bg-transparent flex flex-col gap-4 w-1/2 my-8"
-            >  
+            >
                 <label className="text-base">
-                    Create event:
+                    Update event:
                 </label>
                 <div className="term">
                     <Controller
@@ -348,11 +365,11 @@ export const Create = () => {
                 </div>
                 <div>
                     <Button
-                        disabled={createEventLoading}
+                        // disabled={createEventLoading}
                         type="submit"
                         className="bg-[#2211cc] text-[#c7c430] flex justify-center font-bold rounded-full p-2 w-full"
                     >
-                        submit
+                        Update
                     </Button>
                 </div>
             </form>
