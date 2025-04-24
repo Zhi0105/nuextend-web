@@ -21,14 +21,13 @@ export const View = () => {
                 <button onClick={() => navigate('/event/update', { state: rowData })}>
                     <PiNotePencil className="w-7 h-7 text-[#364190]"/>
                 </button>
-                <button onClick={() => console.log(rowData)}>
+                <button onClick={() => navigate('/event/detail', { state: rowData })}>
                     <PiListMagnifyingGlass className="w-7 h-7 text-[#364190]"/>
                 </button>
                 
             </div>
         )
     }
-
     const setStatus = (rowData) => {
         return (
             <div className={`${rowData.eventstatus.name.toLowerCase() === 'active' ? 'text-violet-400' : rowData.eventstatus.name.toLowerCase() === 'pending' ? 'text-yellow-400' : 'text-green-400' }`}>
