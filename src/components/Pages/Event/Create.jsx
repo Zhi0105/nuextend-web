@@ -8,7 +8,6 @@ import { getModels } from "@_src/services/model";
 import { getEventTypes } from "@_src/services/event";
 import { getUnsdgs } from "@_src/services/unsdgs";
 import { getSkills } from "@_src/services/skills";
-import { getOrganizations } from "@_src/services/organization";
 import { InputText } from "primereact/inputtext";
 import { MultiSelect } from 'primereact/multiselect';
 import { Calendar } from 'primereact/calendar';
@@ -23,7 +22,6 @@ export const Create = () => {
     const decryptedToken = token && DecryptString(token)
     const decryptedUser = token && DecryptUser(user)
     const { data: modelData, isLoading: modelLoading } = getModels()
-    const { data: orgData, isLoading: orgLoading } = getOrganizations()
     const { data: typeData, isLoading: typeLoading } = getEventTypes()
     const { data: unsdgData, isLoading: unsdgLoading } = getUnsdgs()
     const { data: skillData, isLoading: skillLoading } = getSkills()
@@ -76,9 +74,12 @@ export const Create = () => {
     };
 
     
+    const setOrganizationList = (organizations) => {
+        return _.filter(organizations, (org) => [6, 7].includes(org.pivot.role_id))
+    }
 
 
-    if(modelLoading || orgLoading || typeLoading || unsdgLoading || skillLoading) {
+    if(modelLoading || typeLoading || unsdgLoading || skillLoading) {
         return (
             <div className="create-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] mt-[50px]">
                 Initializing form....
@@ -129,14 +130,14 @@ export const Create = () => {
                     <Controller
                         control={control}
                         rules={{
-                            required: true,
+                            required: false,
                         }}
                         render={({ field: { onChange, value } }) => (
                             <Dropdown
                                 className="w-full md:w-14rem capitalize border border-gray-400" 
                                 value={value} 
                                 onChange={onChange} 
-                                options={orgData?.data} 
+                                options={setOrganizationList(decryptedUser?.organizations)} 
                                 optionLabel="name" 
                                 placeholder="Select organization" 
                                 checkmark={true} 
