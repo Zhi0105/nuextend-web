@@ -74,21 +74,19 @@ export const Sidenav = () => {
                                     <span>View</span>
                                 </Link>
                             </li>
-                            {hasRole(decryptedUser?.organizations) && (
-                                <li>
-                                    <Link
-                                        to="/event/create"
-                                        className="flex gap-6 cursor-pointer"
-                                        >
-                                        <IoIosCreate 
-                                            width={5}
-                                            height={5}
-                                            className='text-xl text-gray-500'
-                                        />
-                                        <span>Create</span>
-                                    </Link>
-                                </li>
-                            )}
+                            <li>
+                                <Link
+                                    to="/event/create"
+                                    className="flex gap-6 cursor-pointer"
+                                    >
+                                    <IoIosCreate 
+                                        width={5}
+                                        height={5}
+                                        className='text-xl text-gray-500'
+                                    />
+                                    <span>Create</span>
+                                </Link>
+                            </li>
                         </ul>
                     )}
                 </li>

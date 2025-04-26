@@ -1,11 +1,15 @@
 import { getOrganizations } from "@_src/services/organization"
 import { DataTable } from 'primereact/datatable';
+import { useUserStore } from '@_src/store/auth';
 import { Column } from 'primereact/column';
 import { FaUserGroup } from "react-icons/fa6";
 import { BsFillCalendarEventFill } from "react-icons/bs";
+import { DecryptUser } from "@_src/utils/helpers";
 
 export const View = () => {
     const { data: orgData, isLoading: orgLoading } = getOrganizations()
+    const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
+    const decryptedUser = token && DecryptUser(user)
 
     const actionBodyTemplate = (rowData) => {
         return (
@@ -32,7 +36,7 @@ export const View = () => {
     }
 
     if(!orgLoading || orgData) {
-        const organizations = orgData?.data
+        const organizations = decryptedUser?.organizations
         return (
             <div className="orgview-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
                 <DataTable 
