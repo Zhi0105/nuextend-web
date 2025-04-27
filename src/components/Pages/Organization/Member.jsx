@@ -3,7 +3,7 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { useLocation } from "react-router-dom"
 import { useUserStore } from '@_src/store/auth';
 import { DecryptString, DecryptUser } from "@_src/utils/helpers";
-import { changeRole, getMembers } from "@_src/services/organization"
+import { changeRole, getMembers, removeMember } from "@_src/services/organization"
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Dropdown } from 'primereact/dropdown';
@@ -28,8 +28,18 @@ export const Member = () => {
         token: decryptedToken,
         organization_id: organization.id
     })
-  
-    
+    const { mutate: handleRemoveMember, isLoading: removeMemberLoading } = useMutation({
+        mutationFn: removeMember,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['members'] });
+            toast(data?.message, {type: "success" })
+            
+            }, 
+        onError: (error) => {  
+            console.log("@RME:", error)
+            toast(error?.response.data.message, {type: "warning" })
+        },
+    });
 
     useEffect(() => {
         refetch()
@@ -51,7 +61,7 @@ export const Member = () => {
         );
         const [pendingRole, setPendingRole] = useState(null); // temporary selected value
 
-        const { mutate: changeRoleMutate, } = useMutation({
+        const { mutate: changeRoleMutate } = useMutation({
             mutationFn: changeRole,
             onSuccess: (data) => {
                 queryClient.invalidateQueries({ queryKey: ['members'] });
@@ -59,7 +69,7 @@ export const Member = () => {
                 setSelectedRole(pendingRole)
                 }, 
             onError: (error) => {  
-                console.log("@COE:", error)
+                console.log("@CRE:", error)
                 toast(error?.response.data.message, {type: "warning" })
             },
         });
@@ -102,13 +112,50 @@ export const Member = () => {
             </div>
         )
     }
-    if(memberLoading || isRefetching) {
+    const actionTemplate = (rowData) => {
+        return (
+            <div className="action-main flex gap-4">
+                {rowData.pivot.role_id === 6 && (
+                    <Button
+                        onClick={() => {
+                            handleRemoveMember({
+                                token: decryptedToken,
+                                user_id: rowData?.id,
+                                role: rowData?.pivot.role_id
+                            })
+                        }}
+                        className="text-red-400 px-4 py-2"
+                    >
+                        leave
+                    </Button>
+                )}
+                {rowData.pivot.role_id !== 6 && (
+                    <Button
+                        onClick={() => {
+                            handleRemoveMember({
+                                token: decryptedToken,
+                                user_id: rowData?.id,
+                                role: rowData?.pivot.role_id
+                            })
+                        }}
+                        className="text-red-400 px-4 py-2"
+                    >
+                        remove
+                    </Button>    
+                )}
+                
+            </div>  
+        )
+    }
+
+    if(memberLoading || isRefetching || removeMemberLoading) {
         return (
             <div className="member-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
                 Loading members...
             </div>
         )
     }
+    // #FCA712
 
     if(!memberLoading && memberData) {
             const members = memberData?.data
@@ -127,12 +174,13 @@ export const Member = () => {
                     removableSort
                 >
                     <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" body={nameTemplate} header="Name" />
-                <Column headerClassName="bg-[#FCA712] text-white" body={(rowData) => <RoleTemplate rowData={rowData} />} header="Role"></Column>
+                    <Column headerClassName="bg-[#364190] text-white" body={(rowData) => <RoleTemplate rowData={rowData} />} header="Role"></Column>
+                    <Column headerClassName="bg-[#FCA712] text-white" body={actionTemplate} header="Action"></Column>
                 </DataTable>
                 <ConfirmDialog 
                     pt={{
                     acceptButton: { className: "text-white bg-[#5b9bd1] border border-[#5b9bd1] border-none py-1 px-3" },
-                    rejectButton: { className: "text-white bg-[#C62E2E] border-none py-1 px-3 mr-4" }
+                    rejectButton: { className: "text-white bg-[#5b9bd1] border-none py-1 px-3 mr-4" }
                     }}
                 />  
             </div>

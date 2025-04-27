@@ -18,9 +18,8 @@ export const Addmember = () => {
     const decryptedToken = token && DecryptString(token)
     const decryptedUser = token && DecryptUser(user)
 
-    const { data: userData, isLoading: userLoading } = getUsers({ token: decryptedToken })
+    const { data: userData, isLoading: userLoading, refetch: userRefetch } = getUsers({ token: decryptedToken })
     const { data: roleData, isLoading: roleLoading } = getRoles()
-
 
     const { handleSubmit, control, reset, formState: { errors }} = useForm({
         defaultValues: {
@@ -53,6 +52,10 @@ export const Addmember = () => {
         }
     }, [roleData, roleLoading, reset])
 
+    useEffect(() => {
+        userRefetch()
+    }, [userData, userRefetch])
+
     const onSubmit = (data) => {
         handleOrganizationAssign({
             token: decryptedToken,
@@ -63,15 +66,10 @@ export const Addmember = () => {
             }]
         })
     };
-    
-    const setUsersList = (users) => {
-        return _.filter(users, (user) => user.id !== decryptedUser?.id)
-    }
 
     const setOrganizationList = (organizations) => {
         return _.filter(organizations, (org) => [6, 7].includes(org.pivot.role_id))
     }
-
 
     if(userLoading || roleLoading) {
         return (
@@ -113,7 +111,7 @@ export const Addmember = () => {
                                         className="w-full md:w-14rem capitalize border shadow-sm" 
                                         value={value} 
                                         onChange={onChange} 
-                                        options={setUsersList(userData?.data)} 
+                                        options={_.filter(userData?.data, (user) => user.id !== decryptedUser.id)} 
                                         optionLabel={`firstname`} 
                                         placeholder="Select member" 
                                         checkmark={true} 

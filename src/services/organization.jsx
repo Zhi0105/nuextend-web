@@ -63,6 +63,23 @@ export const getMembers = (payload) => {
         refetchOnWindowFocus: true,
     })
 }
+export const getUserOrganizations = (payload) => {
+    return useQuery({
+        queryKey: ['organization'],
+        queryFn: async() => {
+
+            const { token } = payload
+
+            const headers = {
+                Authorization: `Bearer ${token}`
+            }
+            const result = await apiClient.get(`api/v1/organizations/${payload.user_id}`, {headers})
+            return result?.data
+        },
+        staleTime: 5 * 60000,
+        refetchOnWindowFocus: true,
+    })
+}
 export const changeRole = (payload) => {
     const { organization_id, assigner_id, assigner_role, assignee_id, assignee_role } = payload
 
@@ -78,6 +95,23 @@ export const changeRole = (payload) => {
     };
 
     const result = apiClient.post('api/v1/organization/role/change', data, {headers}).then(res => {
+        return res.data
+    })
+
+    return result
+}
+export const removeMember = (payload) => {
+    const { user_id, role } = payload
+
+    const headers = {
+        Authorization: `Bearer ${payload?.token}`
+    }
+    const data = {
+        user_id,
+        role
+    };
+
+    const result = apiClient.post('api/v1/organization/remove_member', data, {headers}).then(res => {
         return res.data
     })
 

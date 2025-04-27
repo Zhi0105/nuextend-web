@@ -1,17 +1,21 @@
-import { getOrganizations } from "@_src/services/organization"
+import { getUserOrganizations } from "@_src/services/organization"
 import { DataTable } from 'primereact/datatable';
 import { useUserStore } from '@_src/store/auth';
 import { Column } from 'primereact/column';
 import { FaUserGroup } from "react-icons/fa6";
 import { BsFillCalendarEventFill } from "react-icons/bs";
-import { DecryptUser } from "@_src/utils/helpers";
+import { DecryptString, DecryptUser } from "@_src/utils/helpers";
 import { useNavigate } from 'react-router-dom'
 
 export const View = () => {
     const navigate = useNavigate()
-    const { data: orgData, isLoading: orgLoading } = getOrganizations()
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedUser = token && DecryptUser(user)
+    const decryptedToken = token && DecryptString(token)
+    const { data: organizationData, isLoading: organizationLoading } = getUserOrganizations({
+        token: decryptedToken,
+        user_id: decryptedUser?.id
+    })
 
     const actionBodyTemplate = (rowData) => {
         return (
@@ -29,16 +33,15 @@ export const View = () => {
         )
     }
 
-    if(orgLoading) {
+    if(organizationLoading) {
         return (
             <div className="orgview-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
                 Organization loading...
             </div>
         )
     }
-
-    if(!orgLoading || orgData) {
-        const organizations = decryptedUser?.organizations
+    if(!organizationData || organizationData) { 
+        const organizations = organizationData?.data
         return (
             <div className="orgview-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
                 <DataTable 
@@ -46,9 +49,9 @@ export const View = () => {
                     size="normal"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                     dataKey="id"
-                    emptyMessage="Event(s) Not Found."
+                    emptyMessage="Organization(s) Not Found."
                     className="datatable-responsive min-w-full px-2 py-2"
-                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} events"
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} organizations"
                     rows={10}
                     paginator
                     removableSort
