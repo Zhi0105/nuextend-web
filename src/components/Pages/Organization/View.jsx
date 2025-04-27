@@ -5,8 +5,10 @@ import { Column } from 'primereact/column';
 import { FaUserGroup } from "react-icons/fa6";
 import { BsFillCalendarEventFill } from "react-icons/bs";
 import { DecryptUser } from "@_src/utils/helpers";
+import { useNavigate } from 'react-router-dom'
 
 export const View = () => {
+    const navigate = useNavigate()
     const { data: orgData, isLoading: orgLoading } = getOrganizations()
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedUser = token && DecryptUser(user)
@@ -14,7 +16,7 @@ export const View = () => {
     const actionBodyTemplate = (rowData) => {
         return (
             <div className="flex gap-8">
-                <button onClick={() => console.log(rowData)} className="flex gap-2 justify-center items-center cursor-pointer">
+            <button onClick={() =>  navigate('/organization/member', { state: { organization: rowData, role: rowData.pivot.role_id } })} className="flex gap-2 justify-center items-center cursor-pointer">
                     <FaUserGroup className="w-4 h-4 text-[#364190]"/>
                     <label className="text-xs text-[#FCA712]">Members</label>
                 </button>

@@ -5,6 +5,7 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { PiNotePencil, PiListMagnifyingGlass } from "react-icons/pi";
 import { useNavigate } from 'react-router-dom'
+import _ from "lodash";
 
 
 export const View = () => {
@@ -45,7 +46,7 @@ export const View = () => {
     }
 
     if(!eventLoading || eventData) {
-        const events = eventData?.data.data
+        const events = _.filter(eventData?.data.data, (event) => event.organization_id === null)
         return (
             <div className="view-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
                 <DataTable 

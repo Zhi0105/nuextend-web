@@ -15,6 +15,7 @@ import { DetailScreen } from '@_src/components/Screen/Event/DetailScreen'
 import { OrgcreateScreen } from '@_src/components/Screen/Organization/OrgCreateScreen'
 import { OrgViewScreen } from '@_src/components/Screen/Organization/OrgViewScreen'
 import { AddmemberScreen } from '@_src/components/Screen/Organization/AddmemberScreen'
+import { MemberScreen } from '@_src/components/Screen/Organization/MemberScreen'
 
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
@@ -35,6 +36,8 @@ export const RouteList = () => {
                 <Route path="/organization/view" element={<OrgViewScreen />} />
                 <Route path="/organization/create" element={<OrgcreateScreen />} />
                 <Route path="/organization/member/add" element={<AddmemberScreen />} />
+                <Route path="/organization/member" element={<MemberScreen />} />
+            
 
             </Route>
 

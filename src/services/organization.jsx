@@ -46,3 +46,40 @@ export const userOrganizationAssign = (payload) => {
 
     return result
 }
+export const getMembers = (payload) => {
+    return useQuery({
+        queryKey: ['members'],
+        queryFn: async() => {
+
+            const { token } = payload
+
+            const headers = {
+                Authorization: `Bearer ${token}`
+            }
+            const result = await apiClient.get(`api/v1/organization/${payload.organization_id}/members`, {headers})
+            return result?.data
+        },
+        staleTime: 5 * 60000,
+        refetchOnWindowFocus: true,
+    })
+}
+export const changeRole = (payload) => {
+    const { organization_id, assigner_id, assigner_role, assignee_id, assignee_role } = payload
+
+    const headers = {
+        Authorization: `Bearer ${payload?.token}`
+    }
+    const data = {
+        organization_id,
+        assigner_id,
+        assigner_role,
+        assignee_id,
+        assignee_role
+    };
+
+    const result = apiClient.post('api/v1/organization/role/change', data, {headers}).then(res => {
+        return res.data
+    })
+
+    return result
+}
