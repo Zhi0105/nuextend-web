@@ -143,13 +143,14 @@ export const acceptEvent = (payload ) => {
     return result
 }
 export const rejectEvent = (payload ) => {
-    const { id } = payload
+    const { id, remarks } = payload
 
     const headers = {
         Authorization: `Bearer ${payload?.token}`
     }
     const data = {
         id,
+        remarks
     };
 
     const result = apiClient.post('api/v1/event/reject', data, {headers}).then(res => {
