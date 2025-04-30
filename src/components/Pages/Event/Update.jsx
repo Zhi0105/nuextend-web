@@ -146,11 +146,12 @@ export const Update = () => {
                     <Controller
                         control={control}
                         rules={{
-                            required: true,
+                            required: false,
                         }}
                         render={({ field: { onChange, value } }) => (
                             <Dropdown
-                                className="w-full md:w-14rem capitalize border border-gray-400" 
+                                disabled={decryptedUser?.role_id === 1}
+                                className={`w-full md:w-14rem capitalize ${decryptedUser?.role_id === 1 && 'bg-blue-100'} border border-gray-400`} 
                                 value={value} 
                                 onChange={onChange} 
                                 options={orgData?.data} 

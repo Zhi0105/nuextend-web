@@ -1,23 +1,32 @@
-import { useEffect } from "react";
+import { useContext } from "react";
+import { useUserStore } from '@_src/store/auth';
+import { EventContext } from "@_src/contexts/EventContext";
 import { useLocation } from "react-router-dom"
 import { Card } from 'primereact/card';
 import { Button } from "primereact/button";
+import { DecryptString } from "@_src/utils/helpers";
 import dayjs from "dayjs";
 
 export const Detail = () => {
     const location = useLocation();
     const event = location.state
+    const { token } = useUserStore((state) => ({ token: state.token }));
+    const decryptedToken = token && DecryptString(token)
+    const { acceptEvent, rejectEvent, acceptEventLoading, rejectEventLoading } = useContext(EventContext)
 
-    useEffect(() => {
-        console.log(event)
-    }, [event])
-
-    
     const setFormatDate = (date) => {
         return dayjs(new Date(date)).format('MMMM D, YYYY')
     }
     const setFullname = (firstname, lastname, middlename) => {
         return `${lastname}, ${firstname} ${middlename}`
+    }
+
+    if(acceptEventLoading || rejectEventLoading) {
+        return (
+            <div className="view-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
+                Processing event approvals......
+            </div>
+        )
     }
     
     return (
@@ -59,8 +68,8 @@ export const Detail = () => {
                     <div className="flex gap-2">
                         <h1 className="font-bold">Owned By:</h1>
                         <p className="capitalize">
-                            {event?.organization.name ? (
-                                event?.organization.name
+                            {event?.organization?.name ? (
+                                event?.organization?.name
                             ) : (
                                 setFullname(event?.user.lastname, event?.user.firstname, event?.user.middlename)
                             )}
@@ -98,14 +107,30 @@ export const Detail = () => {
                         <h1 className="font-bold">Status:</h1>
                         <p className="capitalize">{event?.eventstatus.name}</p>
                     </div>
-                    <div className="flex gap-16 justify-center">
-                            <Button className="bg-[#2211cc] text-[#c7c430] text-center font-bold rounded-lg p-2">
-                                forms upload
+                    {event?.event_status_id !== 2 && (
+                        <div className="flex gap-16 justify-center">
+                            <Button
+                                onClick={() => acceptEvent({
+                                    token: decryptedToken,
+                                    id: event?.id
+                                })}
+                                disabled={acceptEventLoading}
+                                className="bg-[#2211cc] text-[#c7c430] text-center font-bold rounded-lg p-2"
+                            >
+                                Accept
                             </Button>
-                            <Button className="bg-[#2211cc] text-[#c7c430] text-center font-bold rounded-lg p-2">
-                                Participants
+                            <Button
+                                onClick={() => rejectEvent({
+                                    token: decryptedToken,
+                                    id: event?.id
+                                })}
+                                disabled={rejectEventLoading}
+                                className="bg-[#2211cc] text-[#c7c430] text-center font-bold rounded-lg p-2"
+                            >
+                                Reject
                             </Button>
-                    </div>
+                        </div>
+                    )}
                 </div>
             </Card>
         </div>

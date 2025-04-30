@@ -1,13 +1,17 @@
 import { EventContext } from "@_src/contexts/EventContext";
+import { useUserStore } from '@_src/store/auth'
 import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { createEvent, updateEvent } from "@_src/services/event";
+import { acceptEvent, createEvent, rejectEvent, updateEvent } from "@_src/services/event";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify"
+import { DecryptString, DecryptUser } from "@_src/utils/helpers";
 
 export const EventProviders = ({ children }) => {
     const queryClient = useQueryClient()
     const navigate = useNavigate()
-
+    const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
+    const decryptedUser = token && DecryptUser(user)
+    
     const { mutate: handleCreateEvent, isLoading: createEventLoading } = useMutation({
         mutationFn: createEvent
         // onSuccess: () => {
@@ -23,12 +27,47 @@ export const EventProviders = ({ children }) => {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['event'] });
             toast(data.message, { type: "success" })
-            navigate('/event/view')
+            if(decryptedUser?.role_id === 1) {
+                navigate('/admin/event/view')
+            } else {
+                navigate('/event/view')
+            }
             }, 
         onError: (error) => {  
             console.log("@UE:", error)
         },
     });
+    const { mutate: handleAcceptEvent, isLoading: acceptEventLoading } = useMutation({
+        mutationFn: acceptEvent,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['event'] });
+            toast(data.message, { type: "success" })
+            if(decryptedUser?.role_id === 1) {
+                navigate('/admin/event/view')
+            } else {
+                navigate('/event/view')
+            }
+            }, 
+        onError: (error) => {  
+            console.log("@AEE:", error)
+        },
+    });
+    const { mutate: handleRejectEvent, isLoading: rejectEventLoading } = useMutation({
+        mutationFn: rejectEvent,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['event'] });
+            toast(data.message, { type: "success" })
+            if(decryptedUser?.role_id === 1) {
+                navigate('/admin/event/view')
+            } else {
+                navigate('/event/view')
+            }
+            }, 
+        onError: (error) => {  
+            console.log("@REE:", error)
+        },
+    });
+    
 
     return (     
         <EventContext.Provider
@@ -48,7 +87,11 @@ export const EventProviders = ({ children }) => {
                 },
                 createEventLoading: createEventLoading,
                 updateEvent: (data) => handleUpdateEvent(data),
-                updateEventLoading: updateEventLoading
+                updateEventLoading: updateEventLoading,
+                acceptEvent: (data) => handleAcceptEvent(data),
+                acceptEventLoading: acceptEventLoading,
+                rejectEvent: (data) => handleRejectEvent(data),
+                rejectEventLoading: rejectEventLoading
             }}
         >
             {children}

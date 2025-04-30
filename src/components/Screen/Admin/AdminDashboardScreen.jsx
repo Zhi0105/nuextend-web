@@ -1,29 +1,29 @@
 import { DashboardTemplate } from "@_src/templates/DashboardTemplate"
-import { Sidenav } from "@_src/routes/Sidenav"
-import { Dashboard } from "../Pages/Dashboard"
-import { Header } from "../Partial/Header"
+import { useNavigate } from "react-router-dom"
+import { AdminSidenav } from "@_src/routes/AdminSidenav"
+import { AdminDashboard } from "@_src/components/Pages/Admin/AdminDashboard"
+import { Header } from "@_src/components/Partial/Header"
 import { useUserStore } from '@_src/store/auth';
 import { DecryptUser } from "@_src/utils/helpers";
-import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
-export const DashboardScreen = () => {
+export const AdminDashboardScreen = () => {
     const navigate = useNavigate()
     const { user } = useUserStore((state) => ({
         user: state.user
     }));
     const decryptedUser = DecryptUser(user);
-
+    
     useEffect(() => {
-        if ( decryptedUser?.role_id === 1) navigate('/admin/dashboard')
+        if ( decryptedUser?.role_id !== 1) navigate('/dashboard')
     }, [decryptedUser, navigate])
 
     return (
         <DashboardTemplate
-            sidenav={<Sidenav />}
+            sidenav={<AdminSidenav />}
             header={<Header />}
         >
-            <Dashboard />
+            <AdminDashboard />
         </DashboardTemplate>
     )
 }

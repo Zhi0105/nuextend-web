@@ -126,3 +126,35 @@ export const updateEvent = (payload) => {
 
     return result
 }
+export const acceptEvent = (payload ) => {
+    const { id } = payload
+
+    const headers = {
+        Authorization: `Bearer ${payload?.token}`
+    }
+    const data = {
+        id,
+    };
+
+    const result = apiClient.post('api/v1/event/accept', data, {headers}).then(res => {
+        return res.data
+    })
+
+    return result
+}
+export const rejectEvent = (payload ) => {
+    const { id } = payload
+
+    const headers = {
+        Authorization: `Bearer ${payload?.token}`
+    }
+    const data = {
+        id,
+    };
+
+    const result = apiClient.post('api/v1/event/reject', data, {headers}).then(res => {
+        return res.data
+    })
+
+    return result
+}

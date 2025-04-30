@@ -1,40 +1,78 @@
 import { getEvents } from "@_src/services/event"
 import { useUserStore } from '@_src/store/auth';
-import { DecryptString } from "@_src/utils/helpers";
+import { DecryptString, DecryptUser } from "@_src/utils/helpers";
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { PiNotePencil, PiListMagnifyingGlass } from "react-icons/pi";
+import { TbUsersGroup } from "react-icons/tb";
+import { FaWpforms } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom'
 import _ from "lodash";
 
 
 export const View = () => {
     const navigate = useNavigate()
-    const { token } = useUserStore((state) => ({ token: state.token }));
+    const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedToken = token && DecryptString(token)
+    const decryptedUser = token && DecryptUser(user)
     const { data: eventData, isLoading: eventLoading } = getEvents({token: decryptedToken})
 
 
-    
+
+    const handleUpdateEventNavigation = (rowData) => {
+        if(decryptedUser?.role_id === 1) {
+            navigate('/admin/event/update', { state: rowData })
+        } else {
+            navigate('/event/update', { state: rowData })
+        }
+    }
+    const handleDetailEventNavigation = (rowData) => {
+        if(decryptedUser?.role_id === 1) {
+            navigate('/admin/event/detail', { state: rowData })
+        } else {
+            navigate('/event/detail', { state: rowData })
+        }
+    }
     const actionBodyTemplate = (rowData) => {
         return (
             <div className="flex gap-8">
-                <button onClick={() => navigate('/event/update', { state: rowData })}>
-                    <PiNotePencil className="w-7 h-7 text-[#364190]"/>
-                </button>
-                <button onClick={() => navigate('/event/detail', { state: rowData })}>
+                {((decryptedUser?.role_id !== 1 ) || (rowData?.organization_id === 1)) && 
+                    <button onClick={() => handleUpdateEventNavigation(rowData)}>
+                        <PiNotePencil className="w-7 h-7 text-[#364190]"/>
+                    </button>
+                }
+                <button onClick={() => handleDetailEventNavigation(rowData)}>
                     <PiListMagnifyingGlass className="w-7 h-7 text-[#364190]"/>
                 </button>
-                
+                {rowData?.event_status_id === 2 &&
+                    <>
+                    <button>
+                        <TbUsersGroup className="w-7 h-7 text-[#364190]"/>
+                    </button>
+                    <button>
+                        <FaWpforms className="w-7 h-7 text-[#364190]"/>
+                    </button>
+                    </>
+                }
             </div>
         )
     }
     const setStatus = (rowData) => {
         return (
-            <div className={`${rowData.eventstatus.name.toLowerCase() === 'active' ? 'text-violet-400' : rowData.eventstatus.name.toLowerCase() === 'pending' ? 'text-yellow-400' : 'text-green-400' }`}>
+            <div className={`${rowData.eventstatus.name.toLowerCase() === 'active' ? 'text-violet-400'
+                : rowData.eventstatus.name.toLowerCase() === 'pending' ? 'text-yellow-400' 
+                : rowData.eventstatus.name.toLowerCase() === 'declined' ? 'text-red-400' 
+                : 'text-green-400' }`}>
                 {rowData.eventstatus.name}
             </div>
         )
+    }
+    const handleEventList = (events) => {
+        if(decryptedUser?.role_id === 1) {
+            return events
+        } else {
+            return  _.filter(events, (event) => event.organization_id === null)
+        }
     }
 
     if(eventLoading) {
@@ -46,7 +84,7 @@ export const View = () => {
     }
 
     if(!eventLoading || eventData) {
-        const events = _.filter(eventData?.data.data, (event) => event.organization_id === null)
+        const events = handleEventList(eventData?.data.data)
         return (
             <div className="view-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
                 <DataTable 

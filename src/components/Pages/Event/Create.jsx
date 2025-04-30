@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { EventContext } from "@_src/contexts/EventContext";
 import { InputTextarea } from "primereact/inputtextarea";
 import { Dropdown } from "primereact/dropdown";
@@ -45,8 +45,6 @@ export const Create = () => {
                 duration: []
             },
     });
-
-
     const onSubmit = (data) => {
         const { organization, model, event_type, name, address, term, duration, description, skills, unsdgs } = data
         const payload = {
@@ -55,7 +53,7 @@ export const Create = () => {
             organization_id: organization?.id,
             model_id: model?.id,
             event_type_id: event_type?.id,
-            event_status_id: 1,
+            event_status_id: decryptedUser?.role_id === 1 ? 2 : 1,
             name,
             address,
             term,
@@ -73,11 +71,19 @@ export const Create = () => {
         })
     };
 
-    
     const setOrganizationList = (organizations) => {
         return _.filter(organizations, (org) => [6, 7].includes(org.pivot.role_id))
     }
-
+;
+    useEffect(() => {
+        if (decryptedUser?.role_id === 1) {
+            reset({
+                term: SetTermValue(),
+                organization: _.find(decryptedUser.organizations, (org) => org.name.toLowerCase() === 'comex') || "",
+            });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     if(modelLoading || typeLoading || unsdgLoading || skillLoading) {
         return (
@@ -134,7 +140,8 @@ export const Create = () => {
                         }}
                         render={({ field: { onChange, value } }) => (
                             <Dropdown
-                                className="w-full md:w-14rem capitalize border border-gray-400" 
+                                disabled={decryptedUser?.role_id === 1}
+                                className={`w-full md:w-14rem capitalize ${decryptedUser?.role_id === 1 && 'bg-blue-100'} border border-gray-400`} 
                                 value={value} 
                                 onChange={onChange} 
                                 options={setOrganizationList(decryptedUser?.organizations)} 

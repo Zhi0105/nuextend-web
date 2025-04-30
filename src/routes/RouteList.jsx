@@ -17,6 +17,12 @@ import { OrgViewScreen } from '@_src/components/Screen/Organization/OrgViewScree
 import { AddmemberScreen } from '@_src/components/Screen/Organization/AddmemberScreen'
 import { MemberScreen } from '@_src/components/Screen/Organization/MemberScreen'
 
+import { AdminDashboardScreen } from '@_src/components/Screen/Admin/AdminDashboardScreen'
+import { AdminCreateScreen } from '@_src/components/Screen/Event/admin/AdminCreateScreen'
+import { AdminViewScreen } from '@_src/components/Screen/Event/admin/AdminViewScreen'
+import { AdminUpdateScreen } from '@_src/components/Screen/Event/admin/AdminUpdateScreen'
+import { AdminDetailScreen } from '@_src/components/Screen/Event/admin/AdminDetailScreen'
+
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
 
@@ -27,18 +33,22 @@ export const RouteList = () => {
         <Routes location={location} key={location.pathname}>
             <Route element={<PrivateRoute />}>
                 <Route path="/dashboard" element={<DashboardScreen />} />
+                <Route path="/admin/dashboard" element={<AdminDashboardScreen />} />
 
                 <Route path="/event/view" element={<ViewScreen />} />
                 <Route path="/event/create" element={<CreateScreen />} />
                 <Route path="/event/update" element={<UpdateScreen />} />
                 <Route path="/event/detail" element={<DetailScreen />} />
+                <Route path="/admin/event/create" element={<AdminCreateScreen />} />
+                <Route path="/admin/event/view" element={<AdminViewScreen />} />
+                <Route path="/admin/event/update" element={<AdminUpdateScreen />} />
+                <Route path="/admin/event/detail" element={<AdminDetailScreen />} />
+                
 
                 <Route path="/organization/view" element={<OrgViewScreen />} />
                 <Route path="/organization/create" element={<OrgcreateScreen />} />
                 <Route path="/organization/member/add" element={<AddmemberScreen />} />
                 <Route path="/organization/member" element={<MemberScreen />} />
-            
-
             </Route>
 
             <Route element={<LoginRoute />}>
