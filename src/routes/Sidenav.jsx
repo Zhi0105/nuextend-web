@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { useUserStore } from '@_src/store/auth';
 import { AuthContext } from "@_src/contexts/AuthContext"
 import { FaSignOutAlt } from "react-icons/fa";
@@ -12,21 +12,32 @@ import _ from 'lodash';
 
 export const Sidenav = () => {
     const { logout } = useContext(AuthContext)
-    const [eventVisible, setEventVisible] = useState(false);
-    const [orgVisible, setOrgVisible] = useState(false);
+    // const [orgVisible, setOrgVisible] = useState(false);
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedUser = token && DecryptUser(user)
 
-    const toggleEvents = () => {
-        setEventVisible(!eventVisible)
-    };
-    const toggleOrg = () => {
-        setOrgVisible(!orgVisible)
-    };
 
-    const hasRole = (organization) => {
-        return _.some(organization, (org) => [6, 7].includes(org.pivot.role_id))
+    // const toggleOrg = () => {
+    //     setOrgVisible(!orgVisible)
+    // };
+
+    // const hasRole = (organization) => {
+    //     return _.some(organization, (org) => [6, 7].includes(org.pivot.role_id))
+    // }
+
+    const validateUserRole = (role) => {
+        if(role === 3) {
+            return true
+        }
+        if(role === 4) {
+            return true
+        }
+        return false
     }
+
+    useEffect(() => {
+        console.log(decryptedUser.role_id)
+    }, [decryptedUser])
 
     return (
         <div className='sidenav-main text-white h-screen mt-10'>
@@ -44,53 +55,37 @@ export const Sidenav = () => {
                         <span>Home</span>
                     </Link>
                 </li>
-                <li>
-                    <div
-                        className="flex items-center justify-between rounded cursor-pointer"
-                        onClick={() => toggleEvents()}
-                    >
-                        <div className="flex gap-6">
-                            <RiCalendarEventFill 
+                {validateUserRole(decryptedUser?.role_id) &&(
+                    <>
+                    <li>
+                        <Link
+                            to="/event/view"
+                            className="flex gap-6 cursor-pointer"
+                            >
+                            <IoIosEye 
                                 width={5}
                                 height={5}
                                 className='text-xl text-gray-500'
                             />
-                            <span>Events</span>
-                        </div>
-                        {eventVisible ? <FaChevronUp /> : <FaChevronDown />}
-                    </div>
-                    {eventVisible && (
-                        <ul className="ml-6 mt-1 space-y-1">
-                            <li>
-                                <Link
-                                    to="/event/view"
-                                    className="flex gap-6 cursor-pointer"
-                                    >
-                                    <IoIosEye 
-                                        width={5}
-                                        height={5}
-                                        className='text-xl text-gray-500'
-                                    />
-                                    <span>View</span>
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    to="/event/create"
-                                    className="flex gap-6 cursor-pointer"
-                                    >
-                                    <IoIosCreate 
-                                        width={5}
-                                        height={5}
-                                        className='text-xl text-gray-500'
-                                    />
-                                    <span>Create</span>
-                                </Link>
-                            </li>
-                        </ul>
-                    )}
-                </li>
-                <li>
+                            <span>View Event</span>
+                        </Link>
+                    </li>
+                    <li>
+                        <Link
+                            to="/event/create"
+                            className="flex gap-6 cursor-pointer"
+                            >
+                            <IoIosCreate 
+                                width={5}
+                                height={5}
+                                className='text-xl text-gray-500'
+                            />
+                            <span>Create Event</span>
+                        </Link>
+                    </li>
+                    </>
+                )}
+                {/* <li>
                     <div
                         className="flex items-center justify-between rounded cursor-pointer"
                         onClick={() => toggleOrg()}
@@ -153,7 +148,7 @@ export const Sidenav = () => {
                             )}
                         </ul>
                     )}
-                </li>
+                </li> */}
                 <li
                     onClick={logout}
                     className="flex gap-6 cursor-pointer"

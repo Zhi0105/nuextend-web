@@ -98,6 +98,7 @@ export const View = () => {
                     rows={10}
                     paginator
                     removableSort
+                    
                 >
                     <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="name" header="Event" />
                     <Column headerClassName="bg-[#364190] text-white" body={setStatus} header="Status" />

@@ -37,7 +37,7 @@ export const Create = () => {
                 name: "",
                 address: "",
                 description: "",
-                organization: "",
+                // organization: "",
                 model: "",
                 event_type: "",
                 unsdgs: [],
@@ -46,11 +46,13 @@ export const Create = () => {
             },
     });
     const onSubmit = (data) => {
-        const { organization, model, event_type, name, address, term, duration, description, skills, unsdgs } = data
+        const { 
+            // organization, 
+            model, event_type, name, address, term, duration, description, skills, unsdgs } = data
         const payload = {
             token: decryptedToken,
             user_id: decryptedUser?.id,
-            organization_id: organization?.id,
+            // organization_id: organization?.id,
             model_id: model?.id,
             event_type_id: event_type?.id,
             event_status_id: decryptedUser?.role_id === 1 ? 2 : 1,
@@ -71,9 +73,9 @@ export const Create = () => {
         })
     };
 
-    const setOrganizationList = (organizations) => {
-        return _.filter(organizations, (org) => [6, 7].includes(org.pivot.role_id))
-    }
+    // const setOrganizationList = (organizations) => {
+    //     return _.filter(organizations, (org) => [6, 7].includes(org.pivot.role_id))
+    // }
 ;
     useEffect(() => {
         if (decryptedUser?.role_id === 1) {
@@ -132,7 +134,7 @@ export const Create = () => {
                         </p>
                     )}
                 </div>
-                <div className="organization">
+                {/* <div className="organization">
                     <Controller
                         control={control}
                         rules={{
@@ -156,7 +158,7 @@ export const Create = () => {
                     {errors.organization && (
                         <p className="text-sm text-red-400 indent-2">Please select organization*</p>
                     )}
-                </div>
+                </div> */}
                 <div className="models">
                     <Controller
                         control={control}

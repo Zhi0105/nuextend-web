@@ -45,7 +45,7 @@ export const getEvents = (payload) => {
 export const createEvent = (payload) => {
     const {
         user_id,
-        organization_id,
+        // organization_id,
         model_id,
         event_type_id,
         event_status_id,
@@ -63,7 +63,7 @@ export const createEvent = (payload) => {
     }
     const data = {
         user_id,
-        organization_id,
+        // organization_id,
         model_id,
         event_type_id,
         event_status_id,
@@ -87,7 +87,7 @@ export const updateEvent = (payload) => {
     const {
         id,
         user_id,
-        organization_id,
+        // organization_id,
         model_id,
         event_type_id,
         event_status_id,
@@ -106,7 +106,7 @@ export const updateEvent = (payload) => {
     const data = {
         id,
         user_id,
-        organization_id,
+        // organization_id,
         model_id,
         event_type_id,
         event_status_id,

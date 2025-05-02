@@ -71,6 +71,18 @@ export const Register = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [watch('role')])
     
+    const handleEmailLabelValidation = (role) => {
+        if(role === 3 || role === 4) {
+            return "NU email" 
+        }
+        return "Email"
+    }
+    const handleEmailPlaceHolderValidation = (role) => {
+        if(role === 3 || role === 4) {
+            return "Enter your NU email or email" 
+        }
+        return "Enter your email"
+    }
 
     if(registerLoading) {
         return (
@@ -86,7 +98,7 @@ export const Register = () => {
                 onSubmit={handleSubmit(onSubmit)}
                 className="bg-transparent w-3/4 my-4"
             >
-                <Stepper ref={stepperRef}>
+                <Stepper ref={stepperRef} linear>
                     <StepperPanel>
                         <div className="bg-transparent flex flex-col justify-center">
                             <Controller
@@ -141,7 +153,7 @@ export const Register = () => {
                                     control={control}
                                     rules={{
                                     required: true,
-                                    pattern: /[\S\s]+[\S]+/,
+                                    pattern: /^\d{4}-\d{6}$/,
                                     }}
                                     render={({ field: { onChange, value } }) => (
                                     <input
@@ -158,7 +170,7 @@ export const Register = () => {
                                 />
                                 {errors.schoolID && (
                                     <p className="text-sm italic mt-1 text-red-400 indent-2">
-                                        School ID is required.*
+                                        School ID is invalid.*
                                     </p>
                                 )}
                             </div>
@@ -250,7 +262,7 @@ export const Register = () => {
                                     control={control}
                                     rules={{
                                     required: true,
-                                    pattern: /[\S\s]+[\S]+/,
+                                    pattern: /^0\d{10}$/,
                                     }}
                                     render={({ field: { onChange, value } }) => (
                                     <input
@@ -267,7 +279,7 @@ export const Register = () => {
                                 />
                                 {errors.contact && (
                                     <p className="text-sm italic mt-1 text-red-400 indent-2">
-                                        Contact is required.*
+                                        Contact is invalid.*
                                     </p>
                                 )}
                             </div>
@@ -365,15 +377,34 @@ export const Register = () => {
                             </div>
                         </StepperPanel>
                     )}
-                    <StepperPanel >
+                    <StepperPanel>
                         <div className="bg-transparent flex flex-col gap-6 justify-center items-center">
                             <div className="email-field flex flex-col w-1/2">
-                                    <label>NU email</label>
+                                    <label>{handleEmailLabelValidation(getValues("role.id"))}</label>
                                     <Controller
                                         control={control}
                                         rules={{
                                         required: true,
-                                        pattern: /^\S+@\S+\.\S+$/,
+                                            ...(getValues("role.id") === 2 && {
+                                                pattern: {
+                                                    value: /^\S+@\S+\.\S+$/,
+                                                },
+                                            }),
+                                            ...(getValues("role.id") === 3 && {
+                                                pattern: {
+                                                    value: /^[a-zA-Z0-9._%+-]+@students\.nu-baliwag\.edu\.ph$/,
+                                                },
+                                            }),
+                                            ...(getValues("role.id") === 4 && {
+                                                pattern: {
+                                                    value: /^[a-zA-Z0-9._%+-]+@nu-baliwag\.edu\.ph$/,
+                                                },
+                                            }),
+                                            ...(getValues("role.id") === 5 && {
+                                                pattern: {
+                                                    value: /^\S+@\S+\.\S+$/,
+                                                },
+                                            })
                                         }}
                                         render={({ field: { onChange, value } }) => (
                                         <input
@@ -382,7 +413,7 @@ export const Register = () => {
                                             type="email"
                                             name="email"
                                             id="email"
-                                            placeholder="Enter your NU email or email"
+                                            placeholder={handleEmailPlaceHolderValidation(getValues("role.id"))}
                                             className={`${errors.email && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
                                         />
                                         )}

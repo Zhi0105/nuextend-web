@@ -14,7 +14,7 @@ import { getModels } from "@_src/services/model";
 import { getEventTypes } from "@_src/services/event";
 import { getUnsdgs } from "@_src/services/unsdgs";
 import { getSkills } from "@_src/services/skills";
-import { getOrganizations } from "@_src/services/organization";
+// import { getOrganizations } from "@_src/services/organization";
 import dayjs from 'dayjs';
 import _ from "lodash";
 
@@ -26,7 +26,7 @@ export const Update = () => {
     const decryptedUser = token && DecryptUser(user)
     const { updateEvent, updateEventLoading } = useContext(EventContext)
     const { data: modelData, isLoading: modelLoading } = getModels()
-    const { data: orgData, isLoading: orgLoading } = getOrganizations()
+    // const { data: orgData, isLoading: orgLoading } = getOrganizations()
     const { data: typeData, isLoading: typeLoading } = getEventTypes()
     const { data: unsdgData, isLoading: unsdgLoading } = getUnsdgs()
     const { data: skillData, isLoading: skillLoading } = getSkills()
@@ -37,7 +37,7 @@ export const Update = () => {
                 name:  "",
                 address:  "",
                 description: "",
-                organization: "",
+                // organization: "",
                 model: "",
                 event_type: "",
                 event_status: "",
@@ -48,7 +48,9 @@ export const Update = () => {
     });
 
     useEffect(() => {
-        if (orgData && modelData && typeData && unsdgData && skillData && event) {
+        if (
+            // orgData && 
+            modelData && typeData && unsdgData && skillData && event) {
                 const filteredUNSDG = unsdgData.data.filter((item) => event.unsdgs.some((evItem) => evItem.name === item.name))
                 const filteredSkills = skillData.data.filter((item) => event.skills.some((evItem) => evItem.name === item.name))
             reset({
@@ -56,7 +58,7 @@ export const Update = () => {
                 name: event?.name || "",
                 address: event?.address || "",
                 description: event?.description || "",
-                organization: _.find(orgData.data, { id: event.organization_id }) || "",
+                // organization: _.find(orgData.data, { id: event.organization_id }) || "",
                 model:  _.find(modelData.data, { id: event.model_id }) || "",
                 event_type: _.find(typeData.data, { id: event.event_type_id }) || "",
                 unsdgs: [ ...filteredUNSDG ],
@@ -64,7 +66,9 @@ export const Update = () => {
                 duration: [ new Date(event.start_date), new Date(event.end_date) ]
             });
         }
-    }, [orgData, modelData, typeData, event, unsdgData, skillData, reset]);
+    }, [
+        // orgData, 
+        modelData, typeData, event, unsdgData, skillData, reset]);
 
 
     const setFormatDate = (date) => {
@@ -72,12 +76,14 @@ export const Update = () => {
     }
 
     const onSubmit = (data) => {
-        const { organization, model, event_type, name, address, term, duration, description, skills, unsdgs } = data
+        const { 
+            // organization, 
+            model, event_type, name, address, term, duration, description, skills, unsdgs } = data
         const payload = {
             token: decryptedToken,
             user_id: decryptedUser?.id,
             id: event?.id,
-            organization_id: organization?.id,
+            // organization_id: organization?.id,
             model_id: model?.id,
             event_type_id: event_type?.id,
             name,
@@ -94,7 +100,9 @@ export const Update = () => {
     };
 
     
-    if(modelLoading || orgLoading || typeLoading || unsdgLoading || skillLoading) {
+    if(modelLoading || 
+        // orgLoading || 
+        typeLoading || unsdgLoading || skillLoading) {
         return (
             <div className="create-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] mt-[50px]">
                 Initializing form....
@@ -142,7 +150,7 @@ export const Update = () => {
                         </p>
                     )}
                 </div>
-                <div className="organization">
+                {/* <div className="organization">
                     <Controller
                         control={control}
                         rules={{
@@ -166,7 +174,7 @@ export const Update = () => {
                     {errors.organization && (
                         <p className="text-sm text-red-400 indent-2">Please select organization*</p>
                     )}
-                </div>
+                </div> */}
                 <div className="models">
                     <Controller
                         control={control}
