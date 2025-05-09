@@ -37,7 +37,7 @@ export const Create = () => {
                 name: "",
                 address: "",
                 description: "",
-                // organization: "",
+                organization: "",
                 model: "",
                 event_type: "",
                 unsdgs: [],
@@ -73,9 +73,9 @@ export const Create = () => {
         })
     };
 
-    // const setOrganizationList = (organizations) => {
-    //     return _.filter(organizations, (org) => [6, 7].includes(org.pivot.role_id))
-    // }
+    const setOrganizationList = (organizations) => {
+        return _.filter(organizations, (org) => [6, 7].includes(org.pivot.role_id))
+    }
 ;
     useEffect(() => {
         if (decryptedUser?.role_id === 1) {
@@ -134,7 +134,7 @@ export const Create = () => {
                         </p>
                     )}
                 </div>
-                {/* <div className="organization">
+                <div className="organization">
                     <Controller
                         control={control}
                         rules={{
@@ -158,7 +158,7 @@ export const Create = () => {
                     {errors.organization && (
                         <p className="text-sm text-red-400 indent-2">Please select organization*</p>
                     )}
-                </div> */}
+                </div>
                 <div className="models">
                     <Controller
                         control={control}

@@ -11,6 +11,7 @@ import { getRoles } from "@_src/services/role";
 import { Button } from "primereact/button";
 import { OverlayPanel } from 'primereact/overlaypanel'
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
+import { Link } from 'react-router-dom';
 import { toast } from "react-toastify";
 import _ from "lodash";
 
@@ -46,6 +47,11 @@ export const Member = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
+
+    
+    const hasRole = (organization) => {
+        return _.some(organization, (org) => [6, 7].includes(org.pivot.role_id))
+    }
 
     const nameTemplate = (rowData) => {
         return (
@@ -161,7 +167,18 @@ export const Member = () => {
             const members = memberData?.data
         return (
             <div className="member-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
-                <DataTable 
+                {hasRole(decryptedUser?.organizations) && (
+                    <div className="w-full flex justify-end px-2">
+                        <Link
+                            to="/organization/member/add"
+                            className="bg-blue-200 px-4 py-2"
+                        >
+                            Add member
+                        </Link>
+                    </div>
+                )}
+                <div className="w-full">
+                    <DataTable 
                     value={members} 
                     size="normal"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
@@ -176,13 +193,14 @@ export const Member = () => {
                     <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" body={nameTemplate} header="Name" />
                     <Column headerClassName="bg-[#364190] text-white" body={(rowData) => <RoleTemplate rowData={rowData} />} header="Role"></Column>
                     <Column headerClassName="bg-[#FCA712] text-white" body={actionTemplate} header="Action"></Column>
-                </DataTable>
-                <ConfirmDialog 
-                    pt={{
-                    acceptButton: { className: "text-white bg-[#5b9bd1] border border-[#5b9bd1] border-none py-1 px-3" },
-                    rejectButton: { className: "text-white bg-[#5b9bd1] border-none py-1 px-3 mr-4" }
-                    }}
-                />  
+                    </DataTable>
+                    <ConfirmDialog 
+                        pt={{
+                        acceptButton: { className: "text-white bg-[#5b9bd1] border border-[#5b9bd1] border-none py-1 px-3" },
+                        rejectButton: { className: "text-white bg-[#5b9bd1] border-none py-1 px-3 mr-4" }
+                        }}
+                    /> 
+                </div>
             </div>
         )
     }

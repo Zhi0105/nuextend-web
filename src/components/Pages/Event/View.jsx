@@ -49,7 +49,7 @@ export const View = () => {
                     <button>
                         <TbUsersGroup className="w-7 h-7 text-[#364190]"/>
                     </button>
-                    <button>
+                    <button onClick={() => navigate("/event/form-list")}>
                         <FaWpforms className="w-7 h-7 text-[#364190]"/>
                     </button>
                     </>
