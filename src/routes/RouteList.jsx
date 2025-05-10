@@ -24,6 +24,7 @@ import { AdminUpdateScreen } from '@_src/components/Screen/Event/admin/AdminUpda
 import { AdminDetailScreen } from '@_src/components/Screen/Event/admin/AdminDetailScreen'
 
 import { FormListScreen } from '@_src/components/Screen/Forms/FormListScreen'
+import { UploadScreen } from '@_src/components/Screen/Forms/UploadScreen'
 
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
@@ -47,6 +48,7 @@ export const RouteList = () => {
                 <Route path="/admin/event/detail" element={<AdminDetailScreen />} />
                 
                 <Route path="/event/form-list" element={<FormListScreen />} />
+                <Route path="/event/form/upload" element={<UploadScreen />} />
 
                 <Route path="/organization/view" element={<OrgViewScreen />} />
                 <Route path="/organization/create" element={<OrgcreateScreen />} />

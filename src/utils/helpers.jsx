@@ -21,7 +21,6 @@ export const DecryptString = ( data ) => {
     const string = JSON.parse(decryptedString)
     return string
 }
-
 export const SetTermValue = () => {
     const currentDate = dayjs();
     const year = currentDate.year();
@@ -46,3 +45,22 @@ export const SetTermValue = () => {
   
     return 'Out of range'; // If no term is matched (shouldn't happen)
 }
+// eslint-disable-next-line react-refresh/only-export-components
+export const CodeList = [
+    { id: 1, name: "ACD-CE-F-001" },
+    { id: 2, name: "ACD-CE-F-002" },
+    { id: 3, name: "ACD-CE-F-003" },
+    { id: 4, name: "ACD-CE-F-004" },
+    { id: 5, name: "ACD-CE-F-005" },
+    { id: 6, name: "ACD-CE-F-006" },
+    { id: 7, name: "ACD-CE-F-007" },
+    { id: 8, name: "ACD-CE-F-008" },
+    { id: 9, name: "ACD-CE-F-009" },
+    { id: 10, name: "ACD-CE-F-010" },
+    { id: 11, name: "ACD-CE-F-011" },
+    { id: 12, name: "ACD-CE-F-012" },
+    { id: 13, name: "ACD-CE-F-013" },
+    { id: 14, name: "ACD-CE-F-014" },
+    { id: 15, name: "ACD-CE-F-015" },
+
+]

@@ -42,6 +42,22 @@ export const getEvents = (payload) => {
     });
 
 }
+export const getForms = (payload) => {
+    const headers = {
+        Authorization: `Bearer ${payload?.token}`
+    }
+
+    return useQuery({
+        queryKey: ['form'],
+        queryFn: async() => {
+            const result = await apiClient.get(`api/v1/form/${payload.event}`, {headers})
+            return result
+        },
+        staleTime: 5 * 60000,
+        refetchOnWindowFocus: true,
+    });
+
+}
 export const createEvent = (payload) => {
     const {
         user_id,
@@ -154,6 +170,25 @@ export const rejectEvent = (payload ) => {
     };
 
     const result = apiClient.post('api/v1/event/reject', data, {headers}).then(res => {
+        return res.data
+    })
+
+    return result
+}
+export const uploadForm = (payload ) => {
+    const { event_id, name, code, file } = payload
+
+    const formData = new FormData();
+        formData.append("event_id", event_id);
+        formData.append("name", name);
+        formData.append("code", code);
+        formData.append("file", file);
+
+    const headers = {
+        Authorization: `Bearer ${payload?.token}`
+    }
+
+    const result = apiClient.post('api/v1/forms', formData, {headers}).then(res => {
         return res.data
     })
 

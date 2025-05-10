@@ -4,7 +4,7 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { acceptEvent, createEvent, rejectEvent, updateEvent } from "@_src/services/event";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify"
-import { DecryptString, DecryptUser } from "@_src/utils/helpers";
+import { DecryptUser } from "@_src/utils/helpers";
 
 export const EventProviders = ({ children }) => {
     const queryClient = useQueryClient()

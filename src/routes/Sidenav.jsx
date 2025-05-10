@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react'
+import React, { useContext } from 'react'
 import { useUserStore } from '@_src/store/auth';
 import { AuthContext } from "@_src/contexts/AuthContext"
 import { FaSignOutAlt } from "react-icons/fa";
@@ -24,11 +24,6 @@ export const Sidenav = () => {
         }
         return false
     }
-
-    useEffect(() => {
-        console.log(decryptedUser)
-    },[decryptedUser])
-
     return (
         <div className='sidenav-main text-white h-screen mt-10'>
             <ul className="flex flex-col gap-4 cursor-pointer">
