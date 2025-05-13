@@ -23,6 +23,16 @@ export const AuthProviders = ({ children }) => {
             console.log("@RE", err?.response.data)
         },
     });
+    const { mutate: handleDeanRegister, isLoading: deanLoading } = useMutation({
+        mutationFn: Register,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['register'] });
+            toast("User added successful!", { type: "success" })
+        }, 
+        onError: (err) => {  
+            console.log("@RE", err?.response.data)
+        },
+    });
     const { mutate: handleLoginUser, isLoading: loginLoading } = useMutation({
         mutationFn: Login,
         onSuccess: (data) => {
@@ -57,6 +67,8 @@ export const AuthProviders = ({ children }) => {
             value={{
                 register:(data) => { register(data) },
                 registerLoading: registerLoading,
+                deanRegister:(data) => { handleDeanRegister(data) },
+                deanLoading: deanLoading,
                 login:(data) => { login(data) },
                 loginLoading: loginLoading,
                 logout: () => { logout() }

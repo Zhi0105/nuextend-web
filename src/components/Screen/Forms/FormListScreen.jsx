@@ -12,10 +12,11 @@ export const FormListScreen = () => {
         user: state.user
     }));
     const decryptedUser = DecryptUser(user);
+    const isAdminRole = [1, 9, 10, 11].includes(decryptedUser?.role_id);
     
     return (
         <DashboardTemplate
-            sidenav={decryptedUser?.role_id === 1 ? <AdminSidenav /> : <Sidenav />}
+            sidenav={isAdminRole ? <AdminSidenav /> : <Sidenav />}
             header={<Header />}
         >
             <FormList />

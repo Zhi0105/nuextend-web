@@ -13,10 +13,11 @@ export const AdminDashboardScreen = () => {
         user: state.user
     }));
     const decryptedUser = DecryptUser(user);
+    const isAdminRole = [1, 9, 10, 11].includes(decryptedUser?.role_id);
     
     useEffect(() => {
-        if ( decryptedUser?.role_id !== 1) navigate('/dashboard')
-    }, [decryptedUser, navigate])
+        if ( !isAdminRole ) navigate('/dashboard')
+    }, [decryptedUser, navigate, isAdminRole])
 
     return (
         <DashboardTemplate

@@ -61,6 +61,7 @@ export const getForms = (payload) => {
 export const createEvent = (payload) => {
     const {
         user_id,
+        program_model_name,
         organization_id,
         model_id,
         event_type_id,
@@ -79,6 +80,7 @@ export const createEvent = (payload) => {
     }
     const data = {
         user_id,
+        program_model_name,
         organization_id,
         model_id,
         event_type_id,
@@ -103,6 +105,7 @@ export const updateEvent = (payload) => {
     const {
         id,
         user_id,
+        program_model_name,
         organization_id,
         model_id,
         event_type_id,
@@ -122,6 +125,7 @@ export const updateEvent = (payload) => {
     const data = {
         id,
         user_id,
+        program_model_name,
         organization_id,
         model_id,
         event_type_id,

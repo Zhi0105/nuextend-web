@@ -17,8 +17,6 @@ export const View = () => {
     const decryptedUser = token && DecryptUser(user)
     const { data: eventData, isLoading: eventLoading } = getEvents({token: decryptedToken})
 
-
-
     const handleUpdateEventNavigation = (rowData) => {
         if(decryptedUser?.role_id === 1) {
             navigate('/admin/event/update', { state: rowData })
@@ -74,6 +72,7 @@ export const View = () => {
             return  _.filter(events, (event) => event.organization_id === null)
         }
     }
+
 
     if(eventLoading) {
         return (

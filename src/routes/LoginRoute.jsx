@@ -14,9 +14,10 @@ const LoginRoute = () => {
     }
 
     const decryptedUser = DecryptUser(user);
+    const isAdminRole = [1, 9, 10, 11].includes(decryptedUser?.role_id);
 
-    // If role_id === 1, redirect to admin dashboard, else user dashboard
-    if (decryptedUser?.role_id === 1) {
+    if (isAdminRole) {
+        console.log(true)
         return <Navigate to="/admin/dashboard" />;
     }
 

@@ -40,7 +40,7 @@ export const Sidenav = () => {
                         <span>Home</span>
                     </Link>
                 </li>
-                {validateUserRole(decryptedUser?.role_id) &&(
+                {validateUserRole(decryptedUser?.role_id) && (
                     <>
                     <li>
                         <Link
