@@ -8,6 +8,7 @@ import { TbUsersGroup } from "react-icons/tb";
 import { FaWpforms } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom'
 import _ from "lodash";
+import { useEffect } from "react";
 
 
 export const View = () => {
@@ -15,8 +16,8 @@ export const View = () => {
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedToken = token && DecryptString(token)
     const decryptedUser = token && DecryptUser(user)
-    const { data: eventData, isLoading: eventLoading } = getEvents({token: decryptedToken})
-    const { data: userEventData, isLoading: userEventLoading } = getUserEvents({
+    const { data: eventData, isLoading: eventLoading, refetch: eventRefetch, isRefetching: eventRefetchLoading } = getEvents({token: decryptedToken})
+    const { data: userEventData, isLoading: userEventLoading, refetch: userEventRefetch, isRefetching: userEventRefetchLoading} = getUserEvents({
         token: decryptedToken,
         user_id: decryptedUser?.id
     })
@@ -70,7 +71,12 @@ export const View = () => {
         )
     }
 
-    if(eventLoading || userEventLoading) {
+    useEffect(() => {
+        eventRefetch()
+        userEventRefetch()
+    }, [eventRefetch, userEventRefetch])
+
+    if(eventLoading || userEventLoading || eventRefetchLoading || userEventRefetchLoading) {
         return (
             <div className="view-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px]">
                 Event loading...
@@ -78,9 +84,8 @@ export const View = () => {
         )
     }
 
-    if(!eventLoading || !userEventLoading || eventData || userEventData) {
-        console.log(userEventData?.data)
-        const events = ![1, 10, 11].includes(decryptedUser?.role_id) ? userEventData?.data : eventData?.data.data
+    if(!eventLoading || !userEventLoading || !eventRefetchLoading || !userEventRefetchLoading || eventData || userEventData) {
+        const events = ![1, 10, 11].includes(decryptedUser?.role_id) ? userEventData?.data : eventData?.data.data        
         return (
             <div className="view-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
                 <DataTable 
