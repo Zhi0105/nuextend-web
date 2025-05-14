@@ -1,4 +1,4 @@
-import { useContext, useRef, useEffect, useCallback } from "react";
+import { useContext, useRef, useEffect, useCallback, useState } from "react";
 import { EventContext } from "@_src/contexts/EventContext";
 import { InputTextarea } from "primereact/inputtextarea";
 import { Dropdown } from "primereact/dropdown";
@@ -15,8 +15,10 @@ import { Button } from "primereact/button";
 import { Stepper } from 'primereact/stepper';
 import { StepperPanel } from 'primereact/stepperpanel';
 import { DecryptString, DecryptUser, SetTermValue } from "@_src/utils/helpers";
+import { getTargetGroups } from "@_src/services/targetgroup";
 import dayjs from 'dayjs';
 import _ from "lodash";
+
 
 export const Create = () => {
     const stepperRef = useRef(null);
@@ -28,37 +30,44 @@ export const Create = () => {
     const { data: typeData, isLoading: typeLoading } = getEventTypes()
     const { data: unsdgData, isLoading: unsdgLoading } = getUnsdgs()
     const { data: skillData, isLoading: skillLoading } = getSkills()
-
+    const { data: targetgroupData, isLoading: targetgroupLoading, refetch: targetGroupreFetch } = getTargetGroups()
+    const [filteredTargetGroups, setFilteredTargetGroups] = useState([]);
 
     const setFormatDate = (date) => {
         return dayjs(new Date(date)).format('MM-DD-YYYY')
     }
 
-    const { handleSubmit, control, trigger, watch, reset, formState: { errors }} = useForm({
+    const { handleSubmit, control, trigger, watch, getValues, reset, formState: { errors }} = useForm({
             defaultValues: {
                 program_model_name: "",
                 term: SetTermValue() || "",
+                target_group_name: "",
                 name: "",
                 address: "",
                 description: "",
                 organization: "",
                 model: "",
                 event_type: "",
+                target_group: "",
                 unsdgs: [],
                 skills: [],
                 duration: []
             },
     });
+    const selectedTargetGroup = useRef([]);
+    const watchedProgramName = watch("program_model_name");
     const onSubmit = (data) => {
-        const { program_model_name, organization, model, event_type, name, address, term, duration, description, skills, unsdgs } = data
+        const { program_model_name, target_group_name, target_group, organization, model, event_type, name, address, term, duration, description, skills, unsdgs } = data
         const payload = {
             token: decryptedToken,
             user_id: decryptedUser?.id,
+            target_group_id: target_group?.id,
             organization_id: organization?.id,
             model_id: model?.id,
             event_type_id: event_type?.id,
             event_status_id: decryptedUser?.role_id === 1 ? 2 : 1,
             program_model_name,
+            target_group_name,
             name,
             address,
             term,
@@ -68,10 +77,33 @@ export const Create = () => {
             skills: _.map(skills, 'id'),
             unsdgs: _.map(unsdgs, 'id')
         }
-
         createEvent(payload, {
-            onSuccess: () => {
-                reset()
+            onSuccess: (data) => {
+                if(data?.data.model_id !== 3) {
+                    reset()
+                } else {
+                    selectedTargetGroup.current.push(data?.data.target_group_id);
+
+                    const updatedTargetGroups = _.filter(targetgroupData.data, (target) => 
+                        !selectedTargetGroup.current.includes(target.id)
+                    );
+
+                    setFilteredTargetGroups(updatedTargetGroups);
+                    reset({
+                        term: getValues("term"),
+                        model:getValues("model"),
+                        program_model_name: getValues("program_model_name"),
+                        target_group: "",
+                        organization: getValues("organization"),
+                        event_type: "",
+                        name: "",
+                        address: "",
+                        duration: [],
+                        description: "",
+                        skills: [],
+                        unsdgs: [],
+                    })
+                }
             }
         })
     };
@@ -79,6 +111,24 @@ export const Create = () => {
 
     const modelCallback = useCallback((model) => {
         if(model !== 3) {
+            return false
+        }
+        return true
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [watch('model')])
+
+    
+    const targetgroupCallback = useCallback((model) => {
+        if(model !== 1) {
+            return false
+        }
+        return true
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [watch('model')])
+
+    const targetgroupIDCallback = useCallback((model) => {
+        if(model === 1) {
+            targetGroupreFetch()
             return false
         }
         return true
@@ -99,7 +149,23 @@ export const Create = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    if(modelLoading || typeLoading || unsdgLoading || skillLoading) {
+    useEffect(() => {
+        if (targetgroupData?.data) {
+            setFilteredTargetGroups(targetgroupData.data);
+        }
+    }, [targetgroupData]);
+
+    useEffect(() => {
+        // Reset excluded target group IDs and re-include all
+        selectedTargetGroup.current = [];
+
+        if (targetgroupData?.data) {
+            setFilteredTargetGroups(targetgroupData.data);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [watchedProgramName]);
+
+    if(modelLoading || typeLoading || unsdgLoading || skillLoading || targetgroupLoading) {
         return (
             <div className="create-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] mt-[50px]">
                 Initializing form....
@@ -284,6 +350,32 @@ export const Create = () => {
                                     <p className="text-sm text-red-400 indent-2">Please select your event type*</p>
                                 )}
                             </div>
+                            {targetgroupIDCallback(watch("model.id")) && (
+                                <div className="targetgroup">
+                                    <Controller
+                                        control={control}
+                                        rules={{
+                                            required: true,
+                                        }}
+                                        render={({ field: { onChange, value } }) => (
+                                            <Dropdown
+                                                className="w-full md:w-14rem capitalize border border-gray-400" 
+                                                value={value} 
+                                                onChange={onChange} 
+                                                options={filteredTargetGroups} 
+                                                optionLabel="name" 
+                                                placeholder="Select target group" 
+                                                checkmark={true} 
+                                                highlightOnSelect={false} 
+                                            />
+                                        )}
+                                        name="target_group"
+                                    />
+                                    {errors.target_group && (
+                                        <p className="text-sm text-red-400 indent-2">Please select target group*</p>
+                                    )}
+                                </div>
+                            )}
                             <div className="unsdgs">
                                 <Controller
                                     control={control}
@@ -358,6 +450,34 @@ export const Create = () => {
                                     </p>
                                 )}
                             </div>
+                            {targetgroupCallback(watch("model.id")) && (
+                                <div className="target_group">
+                                    <Controller
+                                        control={control}
+                                        rules={{
+                                        required: true,
+                                        pattern: /[\S\s]+[\S]+/,
+                                        }}
+                                        render={({ field: { onChange, value } }) => (
+                                        <InputText
+                                            value={value}
+                                            onChange={onChange}
+                                            name="target_group"
+                                            type="text"
+                                            id="target_group"
+                                            placeholder="Enter your target group name"
+                                            className={`${errors.target_group_name && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                                        />
+                                        )}
+                                        name="target_group_name"
+                                    />
+                                    {errors.target_group_name && (
+                                        <p className="text-sm italic mt-1 text-red-400 indent-2">
+                                            event target group name is required.*
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                             <div className="location">
                                 <Controller
                                     control={control}

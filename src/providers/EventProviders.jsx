@@ -74,13 +74,14 @@ export const EventProviders = ({ children }) => {
             value={{
                 createEvent: (data, options) => {
                     handleCreateEvent(data, {
-                        onSuccess: () => {
+                        onSuccess: (data) => {
                             queryClient.invalidateQueries({ queryKey: ['event'] });
                             toast("new event created", { type: "success" });
-                            options?.onSuccess?.(); // allow form to do its own thing
+                            options?.onSuccess?.(data); // allow form to do its own thing
                         },
                         onError: (error) => {
                             console.log("@CE:", error);
+                            toast(error?.response.data.message, { type: "warning" });
                             options?.onError?.(error);
                         },
                     });
