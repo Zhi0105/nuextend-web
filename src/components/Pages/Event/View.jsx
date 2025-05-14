@@ -66,11 +66,12 @@ export const View = () => {
         )
     }
     const handleEventList = (events) => {
-        if(decryptedUser?.role_id === 1) {
-            return events
-        } else {
-            return  _.filter(events, (event) => event.organization_id === null)
-        }
+        return events
+        // if(decryptedUser?.role_id === 1) {
+        //     return events
+        // } else {
+        //     return  _.filter(events, (event) => event.organization_id === null)
+        // }
     }
 
 
