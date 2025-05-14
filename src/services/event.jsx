@@ -42,6 +42,23 @@ export const getEvents = (payload) => {
     });
 
 }
+export const getUserEvents = (payload) => {
+    return useQuery({
+        queryKey: ['user-event'],
+        queryFn: async() => {
+
+            const { token } = payload
+
+            const headers = {
+                Authorization: `Bearer ${token}`
+            }
+            const result = await apiClient.get(`api/v1/event/${payload.user_id}`, {headers})
+            return result?.data
+        },
+        staleTime: 5 * 60000,
+        refetchOnWindowFocus: true,
+    })
+}
 export const getForms = (payload) => {
     const headers = {
         Authorization: `Bearer ${payload?.token}`

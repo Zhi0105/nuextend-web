@@ -111,7 +111,7 @@ export const Addmember = () => {
                                         className="w-full md:w-14rem capitalize border shadow-sm" 
                                         value={value} 
                                         onChange={onChange} 
-                                        options={_.filter(userData?.data, (user) => user.id !== decryptedUser.id)} 
+                                        options={_.filter(userData?.data, (user) => (user.id !== decryptedUser.id) && (![1, 10, 11].includes(user.role_id)))} 
                                         optionLabel={`firstname`} 
                                         placeholder="Select member" 
                                         checkmark={true} 

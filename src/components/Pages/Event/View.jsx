@@ -1,4 +1,4 @@
-import { getEvents } from "@_src/services/event"
+import { getEvents, getUserEvents } from "@_src/services/event"
 import { useUserStore } from '@_src/store/auth';
 import { DecryptString, DecryptUser } from "@_src/utils/helpers";
 import { DataTable } from 'primereact/datatable';
@@ -16,6 +16,10 @@ export const View = () => {
     const decryptedToken = token && DecryptString(token)
     const decryptedUser = token && DecryptUser(user)
     const { data: eventData, isLoading: eventLoading } = getEvents({token: decryptedToken})
+    const { data: userEventData, isLoading: userEventLoading } = getUserEvents({
+        token: decryptedToken,
+        user_id: decryptedUser?.id
+    })
 
     const handleUpdateEventNavigation = (rowData) => {
         if(decryptedUser?.role_id === 1) {
@@ -65,17 +69,8 @@ export const View = () => {
             </div>
         )
     }
-    const handleEventList = (events) => {
-        return events
-        // if(decryptedUser?.role_id === 1) {
-        //     return events
-        // } else {
-        //     return  _.filter(events, (event) => event.organization_id === null)
-        // }
-    }
 
-
-    if(eventLoading) {
+    if(eventLoading || userEventLoading) {
         return (
             <div className="view-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px]">
                 Event loading...
@@ -83,8 +78,9 @@ export const View = () => {
         )
     }
 
-    if(!eventLoading || eventData) {
-        const events = handleEventList(eventData?.data.data)
+    if(!eventLoading || !userEventLoading || eventData || userEventData) {
+        console.log(userEventData?.data)
+        const events = ![1, 10, 11].includes(decryptedUser?.role_id) ? userEventData?.data : eventData?.data.data
         return (
             <div className="view-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
                 <DataTable 
