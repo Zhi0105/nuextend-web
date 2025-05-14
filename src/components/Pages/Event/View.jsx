@@ -74,7 +74,7 @@ export const View = () => {
     useEffect(() => {
         eventRefetch()
         userEventRefetch()
-    }, [eventRefetch, userEventRefetch, decryptedUser])
+    }, [eventRefetch, userEventRefetch])
 
     if(eventLoading || userEventLoading || eventRefetchLoading || userEventRefetchLoading) {
         return (
