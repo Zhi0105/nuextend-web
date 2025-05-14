@@ -8,13 +8,14 @@ import { DecryptString, DecryptUser } from "@_src/utils/helpers";
 import { useNavigate } from 'react-router-dom'
 import { Button } from "primereact/button";
 import { Link } from 'react-router-dom';
+import { useEffect } from "react";
 
 export const View = () => {
     const navigate = useNavigate()
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedUser = token && DecryptUser(user)
     const decryptedToken = token && DecryptString(token)
-    const { data: organizationData, isLoading: organizationLoading } = getUserOrganizations({
+    const { data: organizationData, isLoading: organizationLoading, refetch: orgRefetch, isRefetching: orgRefetchLoading } = getUserOrganizations({
         token: decryptedToken,
         user_id: decryptedUser?.id
     })
@@ -35,14 +36,18 @@ export const View = () => {
         )
     }
 
-    if(organizationLoading) {
+    useEffect(() => {
+        orgRefetch()
+    }, [orgRefetch])
+
+    if(organizationLoading || orgRefetchLoading) {
         return (
             <div className="orgview-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
                 Organization loading...
             </div>
         )
     }
-    if(!organizationData || organizationData) { 
+    if(!organizationData|| !orgRefetchLoading || organizationData) { 
         const organizations = organizationData?.data
         return (
             <div className="orgview-main min-h-screen bg-white w-full flex flex-col xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
