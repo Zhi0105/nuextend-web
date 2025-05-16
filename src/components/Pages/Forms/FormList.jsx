@@ -1,22 +1,135 @@
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useUserStore } from '@_src/store/auth';
 import { DecryptString, DecryptUser } from "@_src/utils/helpers";
 import { getForms } from "@_src/services/event";
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { approveForm, rejectForm } from "@_src/services/form";
+import { toast } from "react-toastify"
+import { Dialog } from 'primereact/dialog';
+import { useForm, Controller } from "react-hook-form";
+import { Button } from "primereact/button";
+import { InputTextarea } from "primereact/inputtextarea";
 import _ from "lodash";
 
 export const FormList = () => {
     const location = useLocation()
+    const navigate = useNavigate()
+    const queryClient = useQueryClient()
     const data = location.state ;
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedToken = token && DecryptString(token)
     const decryptedUser = token && DecryptUser(user)
+    const isAdminRole = [1, 9, 10, 11].includes(decryptedUser?.role_id);
+    const [visible, setVisible] = useState(false);
 
     const { data: formData, isLoading: formLoading, refetch, isFetching: fetchLoading } = getForms({token: decryptedToken, event: data.id})
 
+    const { mutate: handleAcceptForm, isLoading: approveFormLoading } = useMutation({
+        mutationFn: approveForm,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['form'] });
+            toast(data.message, { type: "success" })
+            refetch()
+            }, 
+        onError: (error) => {  
+            console.log("@AFE:", error)
+        },
+    });
+    const { mutate: handleRejectForm, isLoading: rejectFormLoading } = useMutation({
+        mutationFn: rejectForm,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['form'] });
+            toast(data.message, { type: "success" })
+            setVisible(false)
+            refetch()
+            }, 
+        onError: (error) => {
+            setVisible(false)  
+            console.log("@RFE:", error)
+        },
+    });
 
+
+    const handleAdminActionValidation = (data, role_id) => {
+        if(role_id === 9 && data?.is_dean) { // DEAN
+            return false
+        }  
+          if(role_id === 10 && data?.is_asd) { // ASD
+            return false
+        }  
+          if(role_id === 11 && data?.is_ad) { // AD
+            return false
+        } 
+        return true
+    }
+
+    const RejectDialog = ({ rowData }) => {
+        const { handleSubmit, control, formState: { errors }} = useForm({
+            defaultValues: {
+                remarks: ""
+            },
+        });
+        const onSubmit = (data) => {
+            const remarksKeyByRole = {
+                9: 'dean_remarks',
+                10: 'asd_remarks',
+                11: 'ad_remarks'
+            };
+
+            const remarksKey = remarksKeyByRole[decryptedUser?.role_id];
+
+            if (remarksKey) {
+                handleRejectForm({
+                    token: decryptedToken,
+                    id: rowData?.id,
+                    role_id: decryptedUser?.role_id,
+                    [remarksKey]: data?.remarks
+                });
+            }
+        };
+
+        return (
+            <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="bg-transparent flex flex-col gap-4 w-full my-8"
+            >
+                <div className="remarks">
+                    <Controller
+                        control={control}
+                        rules={{
+                        required: true,
+                        }}
+                        render={({ field: { onChange, value } }) => (
+                            <InputTextarea
+                                className={`${errors.remarks && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                                name="description"
+                                value={value} 
+                                onChange={onChange}
+                                rows={4}
+                                placeholder="Enter your remarks here"
+                            />
+                        )}
+                        name="remarks"
+                    />
+                    {errors.remarks && (
+                        <p className="text-sm italic mt-1 text-red-400 indent-2">
+                            remarks is required.*
+                        </p>
+                    )}
+                </div>
+                <Button
+                    type="submit"
+                    disabled={rejectFormLoading}
+                    className="bg-[#2211cc] text-[#c7c430]  flex justify-center text-center font-bold rounded-lg p-2"
+                >
+                    Submit
+                </Button>
+            </form>
+        )
+    }
     const fileBodyTemplate = (rowData) => {
         return (
             <div className="flex gap-8">
@@ -30,12 +143,42 @@ export const FormList = () => {
             </div>
         )
     }
+    const actionBodyTemplate = (rowData) => {
+        return (
+            <div className="flex gap-8">
+                <button onClick={() => navigate('/event/form-detail', { state: rowData })} className="text-blue-400">
+                    View
+                </button>
+                {(isAdminRole && handleAdminActionValidation(rowData, decryptedUser?.role_id)) && (
+                    <>
+                        <button 
+                            disabled={approveFormLoading} 
+                            onClick={() => handleAcceptForm({
+                                token: decryptedToken,
+                                id: rowData.id,
+                                role_id: decryptedUser?.role_id
+                            })} 
+                            className="text-green-400"
+                        >
+                            Approve
+                        </button>
+                        <button  onClick={() => setVisible(true)} className="text-red-400">
+                            Reject
+                        </button>
+                        <Dialog header="Remarks" visible={visible} style={{ width: '50vw' }} onHide={() => {if (!visible) return; setVisible(false); }}>
+                            <RejectDialog rowData={rowData}/>
+                        </Dialog>
+                    </>
+                )}            
+            </div>
+        )
+    }
 
     useEffect(() => {
         refetch()
     }, [data, refetch])
 
-    if(formLoading || fetchLoading) {
+    if(formLoading || approveFormLoading || rejectFormLoading || fetchLoading) {
         return (
             <div className="formlist-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
                 Loading... Please wait....
@@ -43,12 +186,12 @@ export const FormList = () => {
         )
     }
 
-    if(!formLoading || !fetchLoading || formData) {
+    if(!formLoading || !approveFormLoading || !rejectFormLoading || !fetchLoading || formData) {
 
         return (
             <div className="formlist-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] py-20">
                 <div className="w-full flex justify-end px-4">
-                    {/* {decryptedUser.role_id !== 1 && ( */}
+                    {!isAdminRole && (
                         <Link
                             to="/event/form/upload"
                             state={{ event: data, forms: formData?.data.data }}
@@ -56,7 +199,7 @@ export const FormList = () => {
                         >
                             Submit a form
                         </Link>
-                    {/* )} */}
+                    )}
                 </div>
                 <div className="w-full mt-4">
                     <DataTable 
@@ -75,8 +218,7 @@ export const FormList = () => {
                         <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="code" header="Code" />
                         <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="name" header="Name of the form" />
                         <Column headerClassName="bg-[#364190] text-white" className="text-base" body={fileBodyTemplate} header="Uploaded File" />
-                        {/* <Column headerClassName="bg-[#FCA712] text-white" body={actionBodyTemplate} header="Action"></Column> */}
-
+                        <Column headerClassName="bg-[#FCA712] text-white" body={actionBodyTemplate} header="Action"></Column>
                     </DataTable>
                 </div>
             </div>

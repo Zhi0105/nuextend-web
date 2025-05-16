@@ -2,13 +2,15 @@ import { useContext } from "react";
 import { AuthContext } from "@_src/contexts/AuthContext";
 import { Button } from "primereact/button";
 import { useForm, Controller } from "react-hook-form";
-
+import { getDepartments } from "@_src/services/department";
+import { Dropdown } from "primereact/dropdown";
 
 export const Dean = () => {
     const { deanRegister, deanLoading } = useContext(AuthContext)
     const { handleSubmit, control, reset, formState: { errors }} = useForm({
         defaultValues: {
             role: { id: 9 },
+            department: "",
             firstname: "",
             middlename: "",
             lastname: "",
@@ -17,6 +19,7 @@ export const Dean = () => {
             contact: ""
         },
     });
+    const { data: departmentData } = getDepartments()
     
     const onSubmit = (data) => {
         deanRegister(data)
@@ -38,6 +41,31 @@ export const Dean = () => {
                 onSubmit={handleSubmit(onSubmit)}
                 className="bg-transparent w-3/4 my-4 flex flex-col items-center"
             >
+                <div className="department-field flex flex-col w-1/2">
+                    <label>Department</label>
+                    <Controller
+                        control={control}
+                        rules={{
+                            required: true,
+                        }}
+                        render={({ field: { onChange, value } }) => (
+                            <Dropdown
+                                className="w-full md:w-14rem capitalize border border-gray-400" 
+                                value={value} 
+                                onChange={onChange} 
+                                options={departmentData?.data} 
+                                optionLabel="name" 
+                                placeholder="Select department" 
+                                checkmark={true} 
+                                highlightOnSelect={false} 
+                            />
+                        )}
+                        name="department"
+                    />
+                    {errors.department && (
+                        <p className="text-sm text-red-400 indent-2">Please select your department*</p>
+                    )}
+                </div>
                 <div className="firstname-field flex flex-col w-1/2">
                     <label>First name</label>
                     <Controller

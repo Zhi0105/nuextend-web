@@ -5,10 +5,12 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { PiNotePencil, PiListMagnifyingGlass } from "react-icons/pi";
 import { TbUsersGroup } from "react-icons/tb";
-import { FaWpforms } from "react-icons/fa";
+import { FaSearch, FaWpforms } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from "react";
+import { FilterMatchMode } from "primereact/api";
+import { InputText } from "primereact/inputtext";
 import _ from "lodash";
-import { useEffect } from "react";
 
 
 export const View = () => {
@@ -21,6 +23,11 @@ export const View = () => {
         token: decryptedToken,
         user_id: decryptedUser?.id
     })
+    const [filters, setFilters] = useState({
+        global: { value: null, matchMode: FilterMatchMode.CONTAINS }
+    })
+
+    
 
     const handleUpdateEventNavigation = (rowData) => {
         if(decryptedUser?.role_id === 1) {
@@ -60,6 +67,21 @@ export const View = () => {
             </div>
         )
     }
+    const programModelTemplate = (rowData) => {
+        return (
+            <div>
+                {rowData?.program_model_name ?? "N/A"}
+            </div>
+        )
+    }
+    const handleEventListIfDeanUser = (events) => {
+        if(decryptedUser?.role_id === 9) {
+            const filteredEvents = _.filter(events, (event) => event.user.department_id === decryptedUser?.department_id)
+            return filteredEvents
+        }
+        return events
+    }
+
     const setStatus = (rowData) => {
         return (
             <div className={`${rowData.eventstatus.name.toLowerCase() === 'active' ? 'text-violet-400'
@@ -85,9 +107,25 @@ export const View = () => {
     }
 
     if(!eventLoading || !userEventLoading || !eventRefetchLoading || !userEventRefetchLoading || eventData || userEventData) {
-        const events = ![1, 10, 11].includes(decryptedUser?.role_id) ? userEventData?.data : eventData?.data.data        
+        const events = ![1, 9, 10, 11].includes(decryptedUser?.role_id) ? userEventData?.data : handleEventListIfDeanUser(eventData?.data.data)        
         return (
             <div className="view-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
+                <div className="w-full flex justify-end items-center">
+                    <div className="w-[18%] p-inputgroup mr-2">
+                        <InputText
+                            className="text-sm p-2" 
+                            placeholder="Search" 
+                            onInput={(e) => {
+                            setFilters({
+                                global: { value: e.target.value, matchMode: FilterMatchMode.CONTAINS }
+                            })
+                            }}
+                        />
+                        <span className="p-button p-component bg-[#f0f3f5] text-[#5c6873]">
+                            <FaSearch />
+                        </span>
+                    </div>
+                </div>
                 <DataTable 
                     value={events} 
                     size="normal"
@@ -99,9 +137,11 @@ export const View = () => {
                     rows={10}
                     paginator
                     removableSort
-                    
+                    filters={filters}
+                    filterDisplay="row"
                 >
                     <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="name" header="Event" />
+                    <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="program_model_name" body={programModelTemplate} header="Program model" />
                     <Column headerClassName="bg-[#364190] text-white" body={setStatus} header="Status" />
                     <Column headerClassName="bg-[#FCA712] text-white" body={actionBodyTemplate} header="Action"></Column>
 

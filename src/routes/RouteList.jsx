@@ -20,6 +20,7 @@ import { AdminViewScreen } from '@_src/components/Screen/Event/admin/AdminViewSc
 import { AdminUpdateScreen } from '@_src/components/Screen/Event/admin/AdminUpdateScreen'
 import { AdminDetailScreen } from '@_src/components/Screen/Event/admin/AdminDetailScreen'
 import { FormListScreen } from '@_src/components/Screen/Forms/FormListScreen'
+import { FormDetailScreen } from '@_src/components/Screen/Forms/FormDetailScreen'
 import { UploadScreen } from '@_src/components/Screen/Forms/UploadScreen'
 import { CreateDeanScreen } from '@_src/components/Screen/CreateDeanScreen'
 
@@ -47,6 +48,7 @@ export const RouteList = () => {
                 
 
                 <Route path="/event/form-list" element={<FormListScreen />} />
+                <Route path="/event/form-detail" element={<FormDetailScreen />} />
                 <Route path="/event/form/upload" element={<UploadScreen />} />
 
                 <Route path="/organization/view" element={<OrgViewScreen />} />

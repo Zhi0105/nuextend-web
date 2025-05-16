@@ -70,10 +70,6 @@ export const Detail = () => {
                 </div>
                 <Button
                     type="submit"
-                    // onClick={() => acceptEvent({
-                    //     token: decryptedToken,
-                    //     id: event?.id
-                    // })}
                     disabled={rejectEventLoading}
                     className="bg-[#2211cc] text-[#c7c430]  flex justify-center text-center font-bold rounded-lg p-2"
                 >
