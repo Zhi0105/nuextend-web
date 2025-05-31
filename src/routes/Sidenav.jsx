@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { FaHome, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { RiCalendarEventFill } from "react-icons/ri";
 import { IoIosEye, IoIosCreate  } from "react-icons/io";
+import { PiDownloadSimpleBold } from "react-icons/pi";
 import { DecryptUser } from '@_src/utils/helpers';
 import _ from 'lodash';
 
@@ -82,6 +83,21 @@ export const Sidenav = () => {
                             className="flex gap-6 cursor-pointer"
                         >
                             <span>Organization</span>
+                        </Link>
+                    </div>
+                </li>
+                <li>
+                    <div className="flex gap-6">
+                        <PiDownloadSimpleBold 
+                            width={5}
+                            height={5}
+                            className='text-xl text-gray-500'
+                        />
+                        <Link
+                            to="/event/form/download"
+                            className="flex gap-6 cursor-pointer"
+                        >
+                            <span>Downloads</span>
                         </Link>
                     </div>
                 </li>

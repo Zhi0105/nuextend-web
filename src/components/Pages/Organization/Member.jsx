@@ -183,7 +183,7 @@ export const Member = () => {
                     size="normal"
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                     dataKey="id"
-                    emptyMessage="Event(s) Not Found."
+                    emptyMessage="Member(s) Not Found."
                     className="datatable-responsive min-w-full px-2 py-2"
                     currentPageReportTemplate="Showing {first} to {last} of {totalRecords} members"
                     rows={10}

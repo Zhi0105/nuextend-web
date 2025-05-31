@@ -23,6 +23,7 @@ import { FormListScreen } from '@_src/components/Screen/Forms/FormListScreen'
 import { FormDetailScreen } from '@_src/components/Screen/Forms/FormDetailScreen'
 import { UploadScreen } from '@_src/components/Screen/Forms/UploadScreen'
 import { CreateDeanScreen } from '@_src/components/Screen/CreateDeanScreen'
+import { FormDownloadScreen } from '@_src/components/Screen/Forms/FormDownloadScreen'
 
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
@@ -50,6 +51,7 @@ export const RouteList = () => {
                 <Route path="/event/form-list" element={<FormListScreen />} />
                 <Route path="/event/form-detail" element={<FormDetailScreen />} />
                 <Route path="/event/form/upload" element={<UploadScreen />} />
+                <Route path="/event/form/download" element={<FormDownloadScreen />} />
 
                 <Route path="/organization/view" element={<OrgViewScreen />} />
                 <Route path="/organization/create" element={<OrgcreateScreen />} />
