@@ -11,6 +11,10 @@ export const FormDetail = () => {
         return "Approved"
     }
 
+    const handlesetFullname = (data) => {
+        return `${data?.lastname}, ${data?.firstname} ${data?.middlename}`
+    }
+
     return (
         <div className="formdetail-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] py-20">
             <Card title="Form Details:" className="w-[60%] my-4">
@@ -25,7 +29,7 @@ export const FormDetail = () => {
                     </div>
                     <div className="flex gap-2">
                         <h1 className="font-bold">Dean:</h1>
-                        <p className="capitalize">{handleStatus(data?.is_dean, data?.dean_remarks)}</p>
+                        <p className="capitalize">{handleStatus(data?.is_dean, data?.dean_remarks)} {data?.dean_approved_by !== null && `(${handlesetFullname(data?.dean_approver)})`}</p>
                     </div>
                     {data?.dean_remarks !== null && (
                         <div className="flex gap-2">
@@ -35,7 +39,7 @@ export const FormDetail = () => {
                     )}
                     <div className="flex gap-2">
                         <h1 className="font-bold">ASD:</h1>
-                        <p className="capitalize">{handleStatus(data?.is_asd, data?.asd_remarks)}</p>
+                        <p className="capitalize">{handleStatus(data?.is_asd, data?.asd_remarks)} {data?.asd_approved_by !== null && `(${handlesetFullname(data?.asd_approver)})`}</p>
                     </div>
                     {data?.asd_remarks !== null && (
                         <div className="flex gap-2">
@@ -45,7 +49,7 @@ export const FormDetail = () => {
                     )}
                     <div className="flex gap-2">
                         <h1 className="font-bold">AD:</h1>
-                        <p className="capitalize">{handleStatus(data?.is_ad, data?.ad_remarks)}</p>
+                        <p className="capitalize">{handleStatus(data?.is_ad, data?.ad_remarks)} {data?.ad_approved_by !== null && `(${handlesetFullname(data?.ad_approver)})`}</p>
                     </div>
                     {data?.ad_remarks !== null && (
                         <div className="flex gap-2">
