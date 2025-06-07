@@ -28,6 +28,10 @@ import { EmailVerifiedScreen } from '@_src/components/Screen/Email/EmailVerified
 import { EmailVerifiedFailScreen } from '@_src/components/Screen/Email/EmailVerifiedFailScreen'
 import { EmailSendLinkScreen } from '@_src/components/Screen/Email/EmailSendLinkScreen'
 
+import { SkillCreateScreen } from '@_src/components/Screen/Skill/admin/CreateScreen'
+import { SkillViewScreen } from '@_src/components/Screen/Skill/admin/ViewScreen'
+import { SkillUpdateScreen } from '@_src/components/Screen/Skill/admin/UpdateScreen'
+
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
 
@@ -66,8 +70,9 @@ export const RouteList = () => {
                 <Route path="/organization/member/add" element={<AddmemberScreen />} />
                 <Route path="/organization/member" element={<MemberScreen />} />    
 
-
-
+                <Route path="/skill/create" element={<SkillCreateScreen />} />    
+                <Route path="/skill/update" element={<SkillUpdateScreen />} />    
+                <Route path="/skill/view" element={<SkillViewScreen />} />    
             </Route>
 
             <Route element={<LoginRoute />}>

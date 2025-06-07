@@ -13,3 +13,45 @@ export const getSkills = () => {
         refetchOnWindowFocus: true,
     })
 }
+export const createSkill = (payload) => {
+    const { name } = payload
+
+    const headers = {
+        Authorization: `Bearer ${payload?.token}`
+    }
+    const data = { name };
+
+    const result = apiClient.post('api/v1/skill/create', data, {headers}).then(res => {
+        return res.data
+    })
+
+    return result
+}
+export const updateSkill = (payload) => {
+    const { id, name } = payload
+
+    const headers = {
+        Authorization: `Bearer ${payload?.token}`
+    }
+    const data = { id, name };
+
+    const result = apiClient.post('api/v1/skill/update', data, {headers}).then(res => {
+        return res.data
+    })
+
+    return result
+}
+export const removeSkill = (payload) => {
+    const { id } = payload
+
+    const headers = {
+        Authorization: `Bearer ${payload?.token}`
+    }
+    const data = { id };
+
+    const result = apiClient.post('api/v1/skill/delete', data, {headers}).then(res => {
+        return res.data
+    })
+
+    return result
+}
