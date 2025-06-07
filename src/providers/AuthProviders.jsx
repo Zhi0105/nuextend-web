@@ -38,8 +38,7 @@ export const AuthProviders = ({ children }) => {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['login'] });
             authenticate(data?.data, data?.token)     
-            toast(data?.message, { type: "success" })
-
+            // toast(data?.message, { type: "success" })
             }, 
         onError: (error) => {
             toast(error?.response.data.message, { type: "warning" })

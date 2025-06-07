@@ -24,6 +24,9 @@ import { FormDetailScreen } from '@_src/components/Screen/Forms/FormDetailScreen
 import { UploadScreen } from '@_src/components/Screen/Forms/UploadScreen'
 import { CreateDeanScreen } from '@_src/components/Screen/CreateDeanScreen'
 import { FormDownloadScreen } from '@_src/components/Screen/Forms/FormDownloadScreen'
+import { EmailVerifiedScreen } from '@_src/components/Screen/Email/EmailVerifiedScreen'
+import { EmailVerifiedFailScreen } from '@_src/components/Screen/Email/EmailVerifiedFailScreen'
+import { EmailSendLinkScreen } from '@_src/components/Screen/Email/EmailSendLinkScreen'
 
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
@@ -35,6 +38,11 @@ export const RouteList = () => {
         <Routes location={location} key={location.pathname}>
             <Route element={<PrivateRoute />}>
             <Route path="/dashboard" element={<DashboardScreen />} />
+                <Route path="/email-verified-sendlink" element={<EmailSendLinkScreen />} />
+                <Route path="/email-verified" element={<EmailVerifiedScreen />} />
+                <Route path="/email-verified-error" element={<EmailVerifiedFailScreen />} />
+
+
                 <Route path="/admin/dashboard" element={<AdminDashboardScreen />} />
 
                 <Route path="/event/view" element={<ViewScreen />} />
