@@ -32,6 +32,9 @@ import { SkillCreateScreen } from '@_src/components/Screen/Skill/admin/CreateScr
 import { SkillViewScreen } from '@_src/components/Screen/Skill/admin/ViewScreen'
 import { SkillUpdateScreen } from '@_src/components/Screen/Skill/admin/UpdateScreen'
 
+import { Deeplink } from '@_src/components/Pages/Deeplink/Deeplink'
+
+
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
 
@@ -79,6 +82,9 @@ export const RouteList = () => {
                 <Route path="/" element={<HomeScreen />} />
                 <Route path="/login" element={<LoginScreen />} />
                 <Route path="/register" element={<RegisterScreen />} />
+
+                <Route path="/deeplink" element={<Deeplink />} />
+
             </Route>
         </Routes>
     )
