@@ -10,7 +10,8 @@ export const Deeplink = () => {
                     className="text-green-400 h-20 w-20"
                 />
                 <h1>Email verification</h1>
-                <h2>Your email address was successfully verified. you may now re open your application.</h2>
+                <h2>Your email address was successfully verified.</h2>
+                <h2>You may now re open your application.</h2>
             </div>
         </PageTemplate>
     )
