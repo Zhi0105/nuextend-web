@@ -8,7 +8,7 @@ export const getEmailVerificationStatus = (payload) => {
     }
 
     return useQuery({
-        queryKey: ['email-status'],
+        queryKey: ['email-status', payload?.token],
         queryFn: async() => {
             const result = await apiClient.get('api/v1/email/verify-status', {headers})
             return result?.data

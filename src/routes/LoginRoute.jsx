@@ -1,7 +1,6 @@
 import { Outlet, Navigate } from 'react-router-dom';
 import { useUserStore } from '@_src/store/auth';
 import { DecryptString, DecryptUser } from '@_src/utils/helpers';
-import { PageTemplate } from "@_src/templates/PageTemplate";
 import { AuthContext } from "@_src/contexts/AuthContext";
 import { getEmailVerificationStatus } from "@_src/services/email";
 
