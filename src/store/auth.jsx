@@ -16,7 +16,7 @@ const userStore = persist(
         setJustVerified: (value) => set({ justVerified: value }), // ✅ NEW SETTER
         setUserLogout: () => {
             localStorage.removeItem('user') // ❗ Clear persisted storage
-            set(() => ({ token: null, user: null, justVerified: false }))
+            // set(() => ({ token: null, user: null, justVerified: false }))
         }
         // setUserLogout: () => set(() => ({ token: null, user: null, justVerified: false }))
     }),
