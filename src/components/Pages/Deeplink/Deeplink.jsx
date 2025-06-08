@@ -1,13 +1,17 @@
-import { useEffect } from 'react';
+import { PageTemplate } from "@_src/templates/PageTemplate"
+import { HiMiniCheckCircle } from "react-icons/hi2";
 
 
 export const Deeplink = () => {
-    useEffect(() => {
-        const target = new URLSearchParams(window.location.search).get('target');
-        if (target) {
-        window.location.href = target;
-        }
-    }, []);
-
-    return <p>Opening your app...</p>;
+    return (
+        <PageTemplate>
+            <div className="min-h-screen flex flex-col justify-center items-center">
+                <HiMiniCheckCircle 
+                    className="text-green-400 h-20 w-20"
+                />
+                <h1>Email verification</h1>
+                <h2>Your email address was successfully verified. you may now re open your application.</h2>
+            </div>
+        </PageTemplate>
+    )
 }
