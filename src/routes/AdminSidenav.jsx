@@ -110,67 +110,73 @@ export const AdminSidenav = () => {
                         </ul>
                     )}
                 </li>
-                <li>
-                    <div
-                        className="flex items-center justify-between rounded cursor-pointer"
-                        onClick={() => toggleSkills()}
-                    >
+
+                {handleEventMenuValidation(decryptedUser?.role_id) && (
+                    <li>
+                        <div
+                            className="flex items-center justify-between rounded cursor-pointer"
+                            onClick={() => toggleSkills()}
+                        >
+                            <div className="flex gap-6">
+                                <RiCalendarEventFill 
+                                    width={5}
+                                    height={5}
+                                    className='text-xl text-gray-500'
+                                />
+                                <span>Skills</span>
+                            </div>
+                            {skillVisible ? <FaChevronUp /> : <FaChevronDown />}
+                        </div>
+                        {skillVisible && (
+                            <ul className="ml-6 mt-1 space-y-1">
+                                <li>
+                                    <Link
+                                        to="/skill/view"
+                                        className="flex gap-6 cursor-pointer"
+                                        >
+                                        <IoIosEye 
+                                            width={5}
+                                            height={5}
+                                            className='text-xl text-gray-500'
+                                        />
+                                        <span>View</span>
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        to="/skill/create"
+                                        className="flex gap-6 cursor-pointer"
+                                        >
+                                        <IoIosCreate 
+                                            width={5}
+                                            height={5}
+                                            className='text-xl text-gray-500'
+                                        />
+                                        <span>Create</span>
+                                    </Link>
+                                </li>
+                            </ul>
+                        )}
+                    </li>
+                )}
+
+                {handleEventMenuValidation(decryptedUser?.role_id) && (
+                    <li>
                         <div className="flex gap-6">
                             <RiCalendarEventFill 
                                 width={5}
                                 height={5}
                                 className='text-xl text-gray-500'
                             />
-                            <span>Skills</span>
+                            <Link
+                                to="/organization/view"
+                                className="flex gap-6 cursor-pointer"
+                            >
+                                <span>Organization</span>
+                            </Link>
                         </div>
-                        {skillVisible ? <FaChevronUp /> : <FaChevronDown />}
-                    </div>
-                    {skillVisible && (
-                        <ul className="ml-6 mt-1 space-y-1">
-                            <li>
-                                <Link
-                                    to="/skill/view"
-                                    className="flex gap-6 cursor-pointer"
-                                    >
-                                    <IoIosEye 
-                                        width={5}
-                                        height={5}
-                                        className='text-xl text-gray-500'
-                                    />
-                                    <span>View</span>
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    to="/skill/create"
-                                    className="flex gap-6 cursor-pointer"
-                                    >
-                                    <IoIosCreate 
-                                        width={5}
-                                        height={5}
-                                        className='text-xl text-gray-500'
-                                    />
-                                    <span>Create</span>
-                                </Link>
-                            </li>
-                        </ul>
-                    )}
-                </li>
-                <li>
-                    <div className="flex gap-6">
-                        <RiCalendarEventFill 
-                            width={5}
-                            height={5}
-                            className='text-xl text-gray-500'
-                        />
-                        <Link
-                            to="/organization/view"
-                            className="flex gap-6 cursor-pointer"
-                        >
-                            <span>Organization</span>
-                        </Link>
-                    </div>
-                </li>
+                    </li>
+                )}
                 <li
                     onClick={logout}
                     className="flex gap-6 cursor-pointer"
