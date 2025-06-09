@@ -23,6 +23,13 @@ export const AdminSidenav = () => {
     const toggleSkills = () => {
         setSkillVisible(!skillVisible)
     };
+    
+    const handleEventMenuValidation = (role) => {
+        if([9, 10, 11].includes(role)) {
+            return false
+        } 
+        return true
+    }
         
     return (
         <div className='sidenav-main text-white h-screen mt-10'>
@@ -85,19 +92,21 @@ export const AdminSidenav = () => {
                                     <span>View</span>
                                 </Link>
                             </li>
-                            <li>
-                                <Link
-                                    to="/admin/event/create"
-                                    className="flex gap-6 cursor-pointer"
-                                    >
-                                    <IoIosCreate 
-                                        width={5}
-                                        height={5}
-                                        className='text-xl text-gray-500'
-                                    />
-                                    <span>Create</span>
-                                </Link>
-                            </li>
+                            {handleEventMenuValidation(decryptedUser?.role_id) && (
+                                <li>
+                                    <Link
+                                        to="/admin/event/create"
+                                        className="flex gap-6 cursor-pointer"
+                                        >
+                                        <IoIosCreate 
+                                            width={5}
+                                            height={5}
+                                            className='text-xl text-gray-500'
+                                        />
+                                        <span>Create</span>
+                                    </Link>
+                                </li>
+                            )}
                         </ul>
                     )}
                 </li>

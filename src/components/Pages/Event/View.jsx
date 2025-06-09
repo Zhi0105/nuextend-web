@@ -44,6 +44,15 @@ export const View = () => {
         }
     }
     const actionBodyTemplate = (rowData) => {
+
+        if([9, 10, 11].includes(decryptedUser?.role_id)) {
+            return (
+                <button onClick={() => navigate("/event/form-list", { state: rowData })}>
+                    <FaWpforms className="w-7 h-7 text-[#364190]"/>
+                </button>
+            )
+        }
+
         return (
             <div className="flex gap-8">
                 {((decryptedUser?.role_id !== 1 ) || (rowData?.organization_id === 1)) && 
