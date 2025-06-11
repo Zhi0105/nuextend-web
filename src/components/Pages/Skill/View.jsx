@@ -9,6 +9,7 @@ import { removeSkill } from '@_src/services/skills';
 import { DecryptString } from "@_src/utils/helpers";
 import { useUserStore } from '@_src/store/auth';
 import { toast } from "react-toastify"
+import { Tooltip } from 'primereact/tooltip';
 
 export const View = () => {
     const navigate = useNavigate()
@@ -32,10 +33,12 @@ export const View = () => {
         return (
             <div className="flex gap-8">
                 <button onClick={() => navigate('/skill/update', { state: rowData })}>
-                    <PiNotePencil className="w-7 h-7 text-[#364190]"/>
+                    <Tooltip target=".edit" content="edit" position="right" />
+                    <PiNotePencil className="edit w-7 h-7 text-[#364190]"/>
                 </button>
                 <button onClick={() => handleRemoveSkill({ token: decryptedToken, id: rowData?.id })}>
-                    <FaTrash className="w-7 h-7 text-[#364190]"/>
+                    <Tooltip target=".remove" content="remove" position="right" />
+                    <FaTrash className="remove w-7 h-7 text-[#364190]"/>
                 </button>
             </div>
         )

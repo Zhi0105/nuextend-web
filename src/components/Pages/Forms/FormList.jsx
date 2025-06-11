@@ -163,7 +163,7 @@ export const FormList = () => {
                             Approve
                         </button>
                         <button  onClick={() => setVisible(true)} className="text-red-400">
-                            Reject
+                            Revise
                         </button>
                         <Dialog header="Remarks" visible={visible} style={{ width: '50vw' }} onHide={() => {if (!visible) return; setVisible(false); }}>
                             <RejectDialog rowData={rowData}/>

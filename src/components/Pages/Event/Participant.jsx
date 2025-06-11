@@ -3,11 +3,15 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { FaRegCalendarCheck } from "react-icons/fa6";
 import { useNavigate } from 'react-router-dom'
+import { Tooltip } from 'primereact/tooltip';
 
 export const Participant = () => {
     const navigate = useNavigate()
     const location = useLocation()
     const participants = location.state 
+
+
+
 
     const nameTemplate = (rowData) => {
         return (
@@ -17,18 +21,19 @@ export const Participant = () => {
         )
     }
 
-    // 
+    
     const actionBodyTemplate = (rowData) => {
         return (
             <div className="flex gap-8">
-            
+                <Tooltip target=".attendance" content="attendance" position="right" />
                 <button onClick={() => navigate('/event/participants/attendance', {state: rowData})}>
-                    <FaRegCalendarCheck className="w-7 h-7 text-[#364190]"/>
+                    <FaRegCalendarCheck className="attendance w-7 h-7 text-[#364190]"/>
                 </button>
             </div>
         )
     }
-    
+
+
     return (
         <div className="participant-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
             <DataTable 

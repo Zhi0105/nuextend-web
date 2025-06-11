@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from "react";
 import { FilterMatchMode } from "primereact/api";
 import { InputText } from "primereact/inputtext";
+import { Tooltip } from 'primereact/tooltip'
 import _ from "lodash";
 
 
@@ -48,7 +49,8 @@ export const View = () => {
         if([9, 10, 11].includes(decryptedUser?.role_id)) {
             return (
                 <button onClick={() => navigate("/event/form-list", { state: rowData })}>
-                    <FaWpforms className="w-7 h-7 text-[#364190]"/>
+                    <Tooltip target=".form" content="form" position="right" />
+                    <FaWpforms className="form w-7 h-7 text-[#364190]"/>
                 </button>
             )
         }
@@ -57,19 +59,23 @@ export const View = () => {
             <div className="flex gap-8">
                 {((decryptedUser?.role_id !== 1 ) || (rowData?.organization_id === 1)) && 
                     <button onClick={() => handleUpdateEventNavigation(rowData)}>
-                        <PiNotePencil className="w-7 h-7 text-[#364190]"/>
+                        <Tooltip target=".edit" content="edit" position="right" />
+                        <PiNotePencil className="edit w-7 h-7 text-[#364190]"/>
                     </button>
                 }
                 <button onClick={() => handleDetailEventNavigation(rowData)}>
-                    <PiListMagnifyingGlass className="w-7 h-7 text-[#364190]"/>
+                    <Tooltip target=".view" content="view" position="right" />
+                    <PiListMagnifyingGlass className="view w-7 h-7 text-[#364190]"/>
                 </button>
                 {rowData?.event_status_id === 2 &&
                     <>
                     <button onClick={() => navigate("/event/participants", { state: rowData.participants })}>
-                        <TbUsersGroup className="w-7 h-7 text-[#364190]"/>
+                        <Tooltip target=".participants" content="participants" position="right" />
+                        <TbUsersGroup className="participants w-7 h-7 text-[#364190]"/>
                     </button>
                     <button onClick={() => navigate("/event/form-list", { state: rowData })}>
-                        <FaWpforms className="w-7 h-7 text-[#364190]"/>
+                        <Tooltip target=".form" content="form" position="right" />
+                        <FaWpforms className="form w-7 h-7 text-[#364190]"/>
                     </button>
                     </>
                 }

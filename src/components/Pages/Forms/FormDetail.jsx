@@ -7,7 +7,7 @@ export const FormDetail = () => {
 
     const handleStatus = (status, remarks) => {
         if(!status && !remarks) return "Pending"
-        if(!status && remarks.length > 1) return "Rejected"
+        if(!status && remarks.length > 1) return "For revise"
         return "Approved"
     }
 
