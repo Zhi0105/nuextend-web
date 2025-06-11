@@ -65,7 +65,7 @@ export const View = () => {
                 </button>
                 {rowData?.event_status_id === 2 &&
                     <>
-                    <button>
+                    <button onClick={() => navigate("/event/participants", { state: rowData.participants })}>
                         <TbUsersGroup className="w-7 h-7 text-[#364190]"/>
                     </button>
                     <button onClick={() => navigate("/event/form-list", { state: rowData })}>

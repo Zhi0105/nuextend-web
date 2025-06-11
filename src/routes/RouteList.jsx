@@ -31,6 +31,8 @@ import { EmailSendLinkScreen } from '@_src/components/Screen/Email/EmailSendLink
 import { SkillCreateScreen } from '@_src/components/Screen/Skill/admin/CreateScreen'
 import { SkillViewScreen } from '@_src/components/Screen/Skill/admin/ViewScreen'
 import { SkillUpdateScreen } from '@_src/components/Screen/Skill/admin/UpdateScreen'
+import { ParticipantScreen } from '@_src/components/Screen/Event/ParticipantScreen'
+import { AttendanceScreen } from '@_src/components/Screen/Event/AttendanceScreen'
 
 import { Deeplink } from '@_src/components/Pages/Deeplink/Deeplink'
 
@@ -56,6 +58,8 @@ export const RouteList = () => {
                 <Route path="/event/create" element={<CreateScreen />} />
                 <Route path="/event/update" element={<UpdateScreen />} />
                 <Route path="/event/detail" element={<DetailScreen />} />
+                <Route path="/event/participants" element={<ParticipantScreen />} />
+                <Route path="/event/participants/attendance" element={<AttendanceScreen />} />
                 <Route path="/admin/event/create" element={<AdminCreateScreen />} />
                 <Route path="/admin/event/view" element={<AdminViewScreen />} />
                 <Route path="/admin/event/update" element={<AdminUpdateScreen />} />
