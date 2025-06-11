@@ -46,6 +46,26 @@ export const View = () => {
     }
     const actionBodyTemplate = (rowData) => {
 
+        if([1].includes(decryptedUser?.role_id)) {
+            return (
+                <div className="flex gap-8">
+                    <button onClick={() => handleDetailEventNavigation(rowData)}>
+                        <Tooltip target=".view" content="view" position="right" />
+                        <PiListMagnifyingGlass className="view w-7 h-7 text-[#364190]"/>
+                    </button>
+                    <button onClick={() => navigate("/event/participants", { state: rowData.participants })}>
+                        <Tooltip target=".participants" content="participants" position="right" />
+                        <TbUsersGroup className="participants w-7 h-7 text-[#364190]"/>
+                    </button>
+                    <button onClick={() => navigate("/event/form-list", { state: rowData })}>
+                        <Tooltip target=".form" content="form" position="right" />
+                        <FaWpforms className="form w-7 h-7 text-[#364190]"/>
+                    </button>
+                </div>
+            )
+        }
+
+
         if([9, 10, 11].includes(decryptedUser?.role_id)) {
             return (
                 <button onClick={() => navigate("/event/form-list", { state: rowData })}>
@@ -57,28 +77,22 @@ export const View = () => {
 
         return (
             <div className="flex gap-8">
-                {((decryptedUser?.role_id !== 1 ) || (rowData?.organization_id === 1)) && 
-                    <button onClick={() => handleUpdateEventNavigation(rowData)}>
-                        <Tooltip target=".edit" content="edit" position="right" />
-                        <PiNotePencil className="edit w-7 h-7 text-[#364190]"/>
-                    </button>
-                }
+                <button onClick={() => handleUpdateEventNavigation(rowData)}>
+                    <Tooltip target=".edit" content="edit" position="right" />
+                    <PiNotePencil className="edit w-7 h-7 text-[#364190]"/>
+                </button>
                 <button onClick={() => handleDetailEventNavigation(rowData)}>
                     <Tooltip target=".view" content="view" position="right" />
                     <PiListMagnifyingGlass className="view w-7 h-7 text-[#364190]"/>
                 </button>
-                {rowData?.event_status_id === 2 &&
-                    <>
-                    <button onClick={() => navigate("/event/participants", { state: rowData.participants })}>
-                        <Tooltip target=".participants" content="participants" position="right" />
-                        <TbUsersGroup className="participants w-7 h-7 text-[#364190]"/>
-                    </button>
-                    <button onClick={() => navigate("/event/form-list", { state: rowData })}>
-                        <Tooltip target=".form" content="form" position="right" />
-                        <FaWpforms className="form w-7 h-7 text-[#364190]"/>
-                    </button>
-                    </>
-                }
+                <button onClick={() => navigate("/event/participants", { state: rowData.participants })}>
+                    <Tooltip target=".participants" content="participants" position="right" />
+                    <TbUsersGroup className="participants w-7 h-7 text-[#364190]"/>
+                </button>
+                <button onClick={() => navigate("/event/form-list", { state: rowData })}>
+                    <Tooltip target=".form" content="form" position="right" />
+                    <FaWpforms className="form w-7 h-7 text-[#364190]"/>
+                </button>
             </div>
         )
     }
@@ -95,17 +109,6 @@ export const View = () => {
             return filteredEvents
         }
         return events
-    }
-
-    const setStatus = (rowData) => {
-        return (
-            <div className={`${rowData.eventstatus.name.toLowerCase() === 'active' ? 'text-violet-400'
-                : rowData.eventstatus.name.toLowerCase() === 'pending' ? 'text-yellow-400' 
-                : rowData.eventstatus.name.toLowerCase() === 'declined' ? 'text-red-400' 
-                : 'text-green-400' }`}>
-                {rowData.eventstatus.name}
-            </div>
-        )
     }
 
     useEffect(() => {
@@ -157,7 +160,6 @@ export const View = () => {
                 >
                     <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="name" header="Event" />
                     <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="program_model_name" body={programModelTemplate} header="Program model" />
-                    <Column headerClassName="bg-[#364190] text-white" body={setStatus} header="Status" />
                     <Column headerClassName="bg-[#FCA712] text-white" body={actionBodyTemplate} header="Action"></Column>
 
                 </DataTable>
