@@ -33,6 +33,7 @@ import { SkillViewScreen } from '@_src/components/Screen/Skill/admin/ViewScreen'
 import { SkillUpdateScreen } from '@_src/components/Screen/Skill/admin/UpdateScreen'
 import { ParticipantScreen } from '@_src/components/Screen/Event/ParticipantScreen'
 import { AttendanceScreen } from '@_src/components/Screen/Event/AttendanceScreen'
+import { AttachFormScreen } from '@_src/components/Screen/Forms/AttachFormScreen'
 
 import { Deeplink } from '@_src/components/Pages/Deeplink/Deeplink'
 
@@ -71,6 +72,7 @@ export const RouteList = () => {
                 <Route path="/event/form-detail" element={<FormDetailScreen />} />
                 <Route path="/event/form/upload" element={<UploadScreen />} />
                 <Route path="/event/form/download" element={<FormDownloadScreen />} />
+                <Route path="/event/form/attach" element={<AttachFormScreen />} />
 
                 <Route path="/organization/view" element={<OrgViewScreen />} />
                 <Route path="/organization/create" element={<OrgcreateScreen />} />

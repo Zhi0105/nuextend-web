@@ -9,6 +9,7 @@ import { RiCalendarEventFill } from "react-icons/ri";
 import { IoIosEye, IoIosCreate  } from "react-icons/io";
 import { DecryptUser } from '@_src/utils/helpers';
 import _ from 'lodash';
+import { PiDownloadSimpleBold } from 'react-icons/pi';
 
 export const AdminSidenav = () => {
     const { logout } = useContext(AuthContext)
@@ -173,6 +174,23 @@ export const AdminSidenav = () => {
                                 className="flex gap-6 cursor-pointer"
                             >
                                 <span>Organization</span>
+                            </Link>
+                        </div>
+                    </li>
+                )}
+                {decryptedUser?.role_id === 1 && (
+                    <li>
+                        <div className="flex gap-6">
+                            <PiDownloadSimpleBold 
+                                width={5}
+                                height={5}
+                                className='text-xl text-gray-500'
+                            />
+                            <Link
+                                to="/event/form/download"
+                                className="flex gap-6 cursor-pointer"
+                            >
+                                <span>Downloads</span>
                             </Link>
                         </div>
                     </li>

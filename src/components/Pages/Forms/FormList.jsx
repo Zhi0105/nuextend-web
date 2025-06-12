@@ -23,7 +23,8 @@ export const FormList = () => {
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedToken = token && DecryptString(token)
     const decryptedUser = token && DecryptUser(user)
-    const isAdminRole = [9, 10, 11].includes(decryptedUser?.role_id);
+    const isAdminRole = [1, 9, 10, 11].includes(decryptedUser?.role_id);
+    const isForSubmitRole = [9, 10, 11].includes(decryptedUser?.role_id);
     const [visible, setVisible] = useState(false);
     const [approveVisible, setApproveVisible] = useState(false);
 
@@ -295,7 +296,7 @@ export const FormList = () => {
     return (
         <div className="formlist-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] py-20">
             <div className="w-full flex gap-2 justify-end px-4">
-                {!isAdminRole && (
+                {decryptedUser?.role_id === 1 && (
                     <button
                         disabled={data?.is_posted}
                         onClick={() => handleEventpost({ token: decryptedToken, id: data?.id })}
@@ -304,7 +305,7 @@ export const FormList = () => {
                         {data?.is_posted ? "already posted" : "post event"}
                     </button>
                 )}
-                {!isAdminRole && (
+                {(!isForSubmitRole && !data?.is_posted) && (
                     <Link
                         to="/event/form/upload"
                         state={{ event: data, forms: formData?.data.data }}
