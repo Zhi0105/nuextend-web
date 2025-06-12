@@ -1,84 +1,73 @@
+import { useState } from 'react';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Link } from 'react-router-dom';
-
+import { Dropdown } from 'primereact/dropdown';
+import { getModels } from "@_src/services/model";
+        
 export const FormDownload = () => {
-
+    const [ selectedModel, setSelectedModel ] = useState(null)
+    const { data: modelData, isLoading: modelLoading } = getModels()
     const downloads = [
         {
             code: "ACD-CE-F-001",
             name: "Program Proposal Format",
-            link: "",
         },
         {
             code: "ACD-CE-F-002",
             name: "Project Proposal Format",
-            link: "",
         },
         {
             code: "ACD-CE-F-003",
             name: "Outreach Project Proposal Format",
-            link: "",
         },
         {
             code: "ACD-CE-F-004",
             name: "Checklist of Criteria for Extension Program Proposal",
-            link: "",
         },
         {
             code: "ACD-CE-F-005",
             name: "Checklist of Criteria for Project Proposal",
-            link: "",
         },
         {
             code: "ACD-CE-F-006",
             name: "Manifestation of Consent and Cooperation for the Extension Program",
-            link: "",
         },
         {
             code: "ACD-CE-F-007",
             name: "Manifestation of Consent and Cooperation for the Outreach Project",
-            link: "",
         },
         {
             code: "ACD-CE-F-008",
             name: "Target Group Needs Diagnosis Report Format",
-            link: "",
         },
         {
             code: "ACD-CE-F-009",
             name: "Extension Program Evaluation and Terminal Report Format",
-            link: "",
         },
         {
             code: "ACD-CE-F-010",
             name: "Outreach Project Evaluation and Documentation Report Format",
-            link: "",
         },
         {
             code: "ACD-CE-F-011",
             name: "Extension Program and Project Itinerary of Travel Format",
-            link: "",
         },
         {
             code: "ACD-CE-F-012",
             name: "Minutes of the Meeting Format",
-            link: "",
         },
         {
             code: "ACD-CE-F-013",
             name: "List of Attendees, Volunteers, and Donors Format",
-            link: "",
         },
         {
             code: "ACD-CE-F-014",
             name: "Post-Activity Report Format",
-            link: "",
         },
         {
             code: "ACD-CE-F-015",
             name: "Self-Learning Assessment Format",
-            link: "",
         },
         
         
@@ -97,10 +86,39 @@ export const FormDownload = () => {
 
     }
 
+    const modelMap = {
+        1: [2, 4, 6, 7, 10, 11, 12, 13, 9], // based on index
+        2: [1, 4, 6, 7, 10, 11, 12, 13, 9],
+        3: [0, 3, 5, 7, 10, 11, 12, 13, 8]
+    };
+
+    const filteredDownloads = selectedModel?.id
+        ? downloads.filter((_, idx) => modelMap[selectedModel.id]?.includes(idx))
+        : downloads;
+
+    
+    if(modelLoading) {
+        <div className="formdownload-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] py-20">
+            Loading models...
+        </div>
+    }
+
     return (
         <div className="formdownload-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] py-20">
+            <div className='w-full px-2'>
+                <Dropdown
+                    className="text-left md:w-14rem capitalize border border-gray-400" 
+                    value={selectedModel} 
+                    onChange={(e) => setSelectedModel(e.value)}
+                    options={modelData?.data} 
+                    optionLabel="name" 
+                    placeholder="filter by model" 
+                    checkmark={true} 
+                    highlightOnSelect={false} 
+                />
+            </div>
             <DataTable 
-                value={downloads} 
+                value={filteredDownloads} 
                 size="normal"
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 dataKey="id"

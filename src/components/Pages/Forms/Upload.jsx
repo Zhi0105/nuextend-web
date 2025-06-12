@@ -60,23 +60,28 @@ export const Upload = () => {``
             { id: 15, name: "Self-Learning Assessment Formatt" },
         ]
 
-        if(event.model_id === 1) { // outreach projects
-            const filteredNameList =  _.filter(nameList, (name) => [3,5,7,8,11,12,13,14].includes(name.id))
-            return  _.filter(filteredNameList, item => !_.includes(ExtractedFormCode, item.id))
+        const modelFormSequences = {
+            1: { first: [3, 5, 7, 8, 11, 12], second: [13, 14], third: [10] }, // Outreach
+            2: { first: [2, 5, 7, 8, 11, 12], second: [13, 14], third: [10] }, // Project
+            3: { first: [1, 4, 6, 8, 11, 12], second: [13, 14], third: [9] },  // Program
+        };
+
+        const getFilteredSequence = (ids) =>
+            _.filter(nameList, name => ids.includes(name.id) && !ExtractedFormCode.includes(name.id));
+
+        if (modelFormSequences[event.model_id]) {
+            const { first, second, third } = modelFormSequences[event.model_id];
+
+            const firstList = getFilteredSequence(first);
+            if (firstList.length > 0) return firstList;
+
+            const secondList = getFilteredSequence(second);
+            if (secondList.length > 0) return secondList;
+
+            return getFilteredSequence(third);
         }
 
-        if(event.model_id === 2) { // project
-            const filteredNameList =  _.filter(nameList, (name) => [2,5,7,8,11,12,13,14].includes(name.id))
-            return  _.filter(filteredNameList, item => !_.includes(ExtractedFormCode, item.id))
-        }
-        
-        if(event.model_id === 3) { // program
-            const filteredNameList = _.filter(nameList, (name) => [1,4,6,8,11,12,13,14].includes(name.id))
-            return _.filter(filteredNameList, item => !_.includes(ExtractedFormCode, item.id))
-
-        }
-
-        return nameList
+        return nameList;
     }
 
     const onSubmit = (data) => {
@@ -89,6 +94,30 @@ export const Upload = () => {``
         })
     };
 
+    const Note = () => {
+        const formInstructions = {
+        1: "Outreach, submit Form 3, Form 5, Form 7, and Form 8 first. Once approved, you may proceed to upload Form 11, Form 12, Form 13, and Form 14 during and after the activity. Complete the process by submitting Form 10 as the final report.",
+        2: "Project, upload Form 2, Form 5, Form 7, and Form 8 first. After approval, continue with Form 11, Form 12, Form 13, and Form 14 during and after the event. Conclude by submitting Form 10 as the termination report.",
+        3: "Program, begin with Form 1, Form 4, Form 6, and Form 8. Once accepted, proceed with Form 11, Form 12, Form 13, and Form 14 throughout the activity. Finalize the program by uploading Form 9."
+        };
+
+        return (
+            <div className="note-main flex flex-col text-sm gap-2 w-full bg-[#d2eef7] py-2 px-12">
+                <h1 className="uppercase text-sm text-[#115770]">Notes:</h1>
+                <p className="flex text-sm items-center gap-1 indent-4">
+                    Please follow the instructions below to upload the required forms for each activity category.
+                    Important: You must first upload the first six (6) required forms in your category before gathering volunteers or posting the event.
+                </p>
+                <div className="flex flex-col gap-2 pt-4">
+                <h1 className="uppercase text-sm text-[#115770]">Instruction:</h1>
+                    {(event?.model_id || model?.model_id) && (
+                        <p className="indent-4">{formInstructions[event?.model_id || model?.model_id]}</p>
+                    )}
+                </div>
+            </div>
+        )
+    }
+
     useEffect(() => {
         const subscription = watch((value, { name }) => {
             if (name === 'name' && value.name) {
@@ -100,7 +129,6 @@ export const Upload = () => {``
     return () => subscription.unsubscribe();
     }, [watch, setValue]);
 
-
     if(uploadLoading) {
         return (
             <div className="formlist-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
@@ -111,6 +139,9 @@ export const Upload = () => {``
 
     return (
         <div className="formlist-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
+            <div className="w-full py-8">
+                <Note />
+            </div>
             <form
                 onSubmit={handleSubmit(onSubmit)}
                 className="w-[40%] bg-transparent flex flex-col gap-4"

@@ -7,6 +7,7 @@ import { Column } from 'primereact/column';
 import { useEffect, useState } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { approveForm, rejectForm } from "@_src/services/form";
+import { eventPost } from "@_src/services/event";
 import { toast } from "react-toastify"
 import { Dialog } from 'primereact/dialog';
 import { useForm, Controller } from "react-hook-form";
@@ -22,7 +23,7 @@ export const FormList = () => {
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedToken = token && DecryptString(token)
     const decryptedUser = token && DecryptUser(user)
-    const isAdminRole = [1, 9, 10, 11].includes(decryptedUser?.role_id);
+    const isAdminRole = [9, 10, 11].includes(decryptedUser?.role_id);
     const [visible, setVisible] = useState(false);
     const [approveVisible, setApproveVisible] = useState(false);
 
@@ -53,7 +54,17 @@ export const FormList = () => {
             console.log("@RFE:", error)
         },
     });
-
+    const { mutate: handleEventpost, isLoading: eventPostLoading } = useMutation({
+        mutationFn: eventPost,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['post-event'] });
+            toast(data.message, { type: "success" })
+            navigate("/admin/event/view")
+            }, 
+        onError: (error) => {  
+            console.log("@EPE:", error)
+        },
+    });
 
     const handleAdminActionValidation = (data, role_id) => {
         if(role_id === 1 && data?.is_commex) { // commex
@@ -271,7 +282,7 @@ export const FormList = () => {
     }, [data, refetch])
 
 
-    if(formLoading || approveFormLoading || rejectFormLoading || fetchLoading) {
+    if(formLoading || approveFormLoading || rejectFormLoading || fetchLoading || eventPostLoading) {
         return (
             <div className="formlist-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
                 Loading... Please wait....
@@ -279,11 +290,20 @@ export const FormList = () => {
         )
     }
 
-    if(!formLoading || !approveFormLoading || !rejectFormLoading || !fetchLoading || formData) {
+    if(!formLoading || !approveFormLoading || !rejectFormLoading || !fetchLoading || !eventPostLoading || formData) {
 
     return (
         <div className="formlist-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] py-20">
-            <div className="w-full flex justify-end px-4">
+            <div className="w-full flex gap-2 justify-end px-4">
+                {!isAdminRole && (
+                    <button
+                        disabled={data?.is_posted}
+                        onClick={() => handleEventpost({ token: decryptedToken, id: data?.id })}
+                        className={`${data?.is_posted ? "bg-gray-200" : "bg-blue-200"} px-4 py-2`}
+                    >
+                        {data?.is_posted ? "already posted" : "post event"}
+                    </button>
+                )}
                 {!isAdminRole && (
                     <Link
                         to="/event/form/upload"

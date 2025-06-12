@@ -219,3 +219,19 @@ export const uploadForm = (payload ) => {
 
     return result
 }
+export const eventPost = (payload ) => {
+    const { id } = payload
+
+    const headers = {
+        Authorization: `Bearer ${payload?.token}`
+    }
+    const data = {
+        id,
+    };
+
+    const result = apiClient.post('api/v1/event/post', data, {headers}).then(res => {
+        return res.data
+    })
+
+    return result
+}
