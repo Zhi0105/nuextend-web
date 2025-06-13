@@ -76,7 +76,7 @@ export const FormDownload = () => {
     const downloadTemplate = (rowData) => {
         return (
             <Link
-                to={`http://127.0.0.1:8000/storage/pdf/downloadables/${rowData?.code} - ${rowData?.name}.pdf`}
+                to={`${import.meta.env.VITE_DOWNLOAD_URL}storage/pdf/downloadables/${rowData?.code} - ${rowData?.name}.pdf`}
                 target='_blank'
                 className='text-blue-400 text-sm'
             >
