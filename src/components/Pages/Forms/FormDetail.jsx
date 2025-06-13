@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 
 export const FormDetail = () => {
     const location = useLocation()
-    const data = location.state ;
+    const { data, event } = location.state ;
 
     const handleStatus = (status, remarks) => {
         if(!status && !remarks) return "Pending"
@@ -85,7 +85,7 @@ export const FormDetail = () => {
                     {/* COMMEX */}
 
                     {/* DEAN */}
-                    {handleAdminsValidation().dean && (
+                    {(handleAdminsValidation().dean && event?.user_id !== 1) && (
                         <>
                             <div className="flex gap-2">
                                 <h1 className="font-bold">Dean:</h1>

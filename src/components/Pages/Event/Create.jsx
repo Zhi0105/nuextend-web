@@ -151,8 +151,10 @@ export const Create = () => {
 
     useEffect(() => {
         if (targetgroupData?.data) {
-            setFilteredTargetGroups(targetgroupData.data);
+            const filteredTargetGroup = _.filter(targetgroupData?.data, (item) => item.organization_id === watch("organization.id"))
+            setFilteredTargetGroups(filteredTargetGroup);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [targetgroupData]);
 
     useEffect(() => {
@@ -160,7 +162,8 @@ export const Create = () => {
         selectedTargetGroup.current = [];
 
         if (targetgroupData?.data) {
-            setFilteredTargetGroups(targetgroupData.data);
+            const filteredTargetGroup = _.filter(targetgroupData?.data, (item) => item.organization_id === watch("organization.id"))
+            setFilteredTargetGroups(filteredTargetGroup);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [watchedProgramName]);

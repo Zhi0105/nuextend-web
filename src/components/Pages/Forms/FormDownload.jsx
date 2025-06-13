@@ -10,63 +10,63 @@ export const FormDownload = () => {
     const { data: modelData, isLoading: modelLoading } = getModels()
     const downloads = [
         {
-            code: "ACD-CE-F-001",
+            code: "NUB-ACD-CMX-F-001",
             name: "Program Proposal Format",
         },
         {
-            code: "ACD-CE-F-002",
+            code: "NUB-ACD-CMX-F-002",
             name: "Project Proposal Format",
         },
         {
-            code: "ACD-CE-F-003",
+            code: "NUB-ACD-CMX-F-003",
             name: "Outreach Project Proposal Format",
         },
         {
-            code: "ACD-CE-F-004",
+            code: "NUB-ACD-CMX-F-004",
             name: "Checklist of Criteria for Extension Program Proposal",
         },
         {
-            code: "ACD-CE-F-005",
+            code: "NUB-ACD-CMX-F-005",
             name: "Checklist of Criteria for Project Proposal",
         },
         {
-            code: "ACD-CE-F-006",
+            code: "NUB-ACD-CMX-F-006",
             name: "Manifestation of Consent and Cooperation for the Extension Program",
         },
         {
-            code: "ACD-CE-F-007",
+            code: "NUB-ACD-CMX-F-007",
             name: "Manifestation of Consent and Cooperation for the Outreach Project",
         },
         {
-            code: "ACD-CE-F-008",
+            code: "NUB-ACD-CMX-F-008",
             name: "Target Group Needs Diagnosis Report Format",
         },
         {
-            code: "ACD-CE-F-009",
+            code: "NUB-ACD-CMX-F-009",
             name: "Extension Program Evaluation and Terminal Report Format",
         },
         {
-            code: "ACD-CE-F-010",
+            code: "NUB-ACD-CMX-F-010",
             name: "Outreach Project Evaluation and Documentation Report Format",
         },
         {
-            code: "ACD-CE-F-011",
+            code: "NUB-ACD-CMX-F-011",
             name: "Extension Program and Project Itinerary of Travel Format",
         },
         {
-            code: "ACD-CE-F-012",
+            code: "NUB-ACD-CMX-F-012",
             name: "Minutes of the Meeting Format",
         },
         {
-            code: "ACD-CE-F-013",
+            code: "NUB-ACD-CMX-F-013",
             name: "List of Attendees, Volunteers, and Donors Format",
         },
         {
-            code: "ACD-CE-F-014",
+            code: "NUB-ACD-CMX-F-014",
             name: "Post-Activity Report Format",
         },
         {
-            code: "ACD-CE-F-015",
+            code: "NUB-ACD-CMX-F-015",
             name: "Self-Learning Assessment Format",
         },
         

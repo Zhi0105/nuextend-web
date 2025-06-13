@@ -228,7 +228,7 @@ export const FormList = () => {
     const actionBodyTemplate = (rowData) => {
         return (
             <div className="flex gap-8">
-                <button onClick={() => navigate('/event/form-detail', { state: rowData })} className="text-blue-400">
+                <button onClick={() => navigate('/event/form-detail', { state: { data: rowData, event: data } })} className="text-blue-400">
                     View
                 </button>
                 {(isAdminRole && handleAdminActionValidation(rowData, decryptedUser?.role_id)) && (
@@ -305,7 +305,7 @@ export const FormList = () => {
                         {data?.is_posted ? "already posted" : "post event"}
                     </button>
                 )}
-                {(!isForSubmitRole && !data?.is_posted) && (
+                {!isForSubmitRole  && (
                     <Link
                         to="/event/form/upload"
                         state={{ event: data, forms: formData?.data.data }}

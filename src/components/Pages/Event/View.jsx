@@ -65,6 +65,12 @@ export const View = () => {
                         <Tooltip target=".form" content="form" position="right" />
                         <FaWpforms className="form w-7 h-7 text-[#364190]"/>
                     </button>
+                    {rowData?.model_id === 3 && (
+                        <button onClick={() => navigate("/event/form/attach", {state: rowData })}>
+                            <Tooltip target=".sync" content="attach form" position="right" />
+                            <MdAttachment className="sync w-7 h-7 text-[#364190]"/>
+                        </button>
+                    )}
                 </div>
             )
         }

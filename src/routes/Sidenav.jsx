@@ -97,7 +97,7 @@ export const Sidenav = () => {
                             to="/event/form/download"
                             className="flex gap-6 cursor-pointer"
                         >
-                            <span>Downloads</span>
+                            <span>Format</span>
                         </Link>
                     </div>
                 </li>
