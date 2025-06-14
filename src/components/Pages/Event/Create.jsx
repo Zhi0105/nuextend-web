@@ -150,12 +150,18 @@ export const Create = () => {
     }, [])
 
     useEffect(() => {
-        if (targetgroupData?.data) {
-            const filteredTargetGroup = _.filter(targetgroupData?.data, (item) => item.organization_id === watch("organization.id"))
-            setFilteredTargetGroups(filteredTargetGroup);
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [targetgroupData]);
+        const subscription = watch((value, { name }) => {
+            if (name === "organization") {
+                const selectedOrgId = value?.organization?.id || value?.organization_id || value?.organization?.value?.id;
+                if (selectedOrgId && targetgroupData?.data) {
+                    const filtered = _.filter(targetgroupData.data, item => item.organization_id === selectedOrgId);
+                    setFilteredTargetGroups(filtered);
+                }
+            }
+        });
+
+        return () => subscription.unsubscribe();
+    }, [watch, targetgroupData]);
 
     useEffect(() => {
         // Reset excluded target group IDs and re-include all
@@ -163,10 +169,10 @@ export const Create = () => {
 
         if (targetgroupData?.data) {
             const filteredTargetGroup = _.filter(targetgroupData?.data, (item) => item.organization_id === watch("organization.id"))
-            setFilteredTargetGroups(filteredTargetGroup);
+            setFilteredTargetGroups([...filteredTargetGroup]);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [watchedProgramName]);
+    }, [watchedProgramName, watch("organization.id")]);
 
     if(modelLoading || typeLoading || unsdgLoading || skillLoading || targetgroupLoading) {
         return (
