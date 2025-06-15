@@ -30,3 +30,14 @@ body {
 .p-fileupload-file-badge {
   display: none;
 }
+
+
+@media print {
+  .certificate-bg {
+    background-image: url('/certificate.webp');
+    background-size: cover;
+    background-position: center;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

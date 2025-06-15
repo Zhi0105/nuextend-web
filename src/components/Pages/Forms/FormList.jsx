@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useUserStore } from '@_src/store/auth';
 import { DecryptString, DecryptUser } from "@_src/utils/helpers";
-import { getForms } from "@_src/services/event";
+import { eventTerminate, getForms } from "@_src/services/event";
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { useEffect, useState } from "react";
@@ -25,8 +25,8 @@ export const FormList = () => {
     const decryptedUser = token && DecryptUser(user)
     const isAdminRole = [1, 9, 10, 11].includes(decryptedUser?.role_id);
     const isForSubmitRole = [9, 10, 11].includes(decryptedUser?.role_id);
-    const [visible, setVisible] = useState(false);
-    const [approveVisible, setApproveVisible] = useState(false);
+    const [visibleRow, setVisibleRow] = useState(null);
+    const [approveVisibleRow, setApproveVisibleRow] = useState(null);
 
     const { data: formData, isLoading: formLoading, refetch, isFetching: fetchLoading } = getForms({token: decryptedToken, event: data.id})
 
@@ -35,7 +35,7 @@ export const FormList = () => {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['form'] });
             toast(data.message, { type: "success" })
-            setApproveVisible(false)
+            setApproveVisibleRow(null)
             refetch()
             }, 
         onError: (error) => {  
@@ -47,11 +47,11 @@ export const FormList = () => {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['form'] });
             toast(data.message, { type: "success" })
-            setVisible(false)
+            setVisibleRow(null)
             refetch()
             }, 
         onError: (error) => {
-            setVisible(false)  
+            setVisibleRow(null) 
             console.log("@RFE:", error)
         },
     });
@@ -64,6 +64,17 @@ export const FormList = () => {
             }, 
         onError: (error) => {  
             console.log("@EPE:", error)
+        },
+    });
+    const { mutate: handleEventTerminate, isLoading: eventTerminateLoading } = useMutation({
+        mutationFn: eventTerminate,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['terminate-event'] });
+            toast(data.message, { type: "success" })
+            navigate("/admin/event/view")
+            }, 
+        onError: (error) => {  
+            console.log("@ETE:", error)
         },
     });
 
@@ -235,22 +246,22 @@ export const FormList = () => {
                     <>
                         <button 
                             disabled={approveFormLoading} 
-                            onClick={() => setApproveVisible(true)} 
+                            onClick={() => setApproveVisibleRow(rowData)} 
                             className="text-green-400"
                         >
                             Approve
                         </button>
-                        <Dialog header="Remarks" visible={approveVisible} style={{ width: '50vw' }} onHide={() => {if (!approveVisible) return; setApproveVisible(false); }}>
+                        <Dialog header="Remarks" visible={approveVisibleRow?.id === rowData.id} style={{ width: '50vw' }} onHide={() => {if (!approveVisibleRow) return; setApproveVisibleRow(null); }}>
                             <ApproveDialog rowData={rowData}/>
                         </Dialog>
                         <button  
                             disabled={rejectFormLoading}  
-                            onClick={() => setVisible(true)} 
+                            onClick={() => setVisibleRow(rowData)} 
                             className="text-red-400"
                         >
                             Revise
                         </button>
-                        <Dialog header="Remarks" visible={visible} style={{ width: '50vw' }} onHide={() => {if (!visible) return; setVisible(false); }}>
+                        <Dialog header="Remarks" visible={visibleRow?.id === rowData.id} style={{ width: '50vw' }} onHide={() => {if (!visibleRow) return; visibleRow(null); }}>
                             <RejectDialog rowData={rowData}/>
                         </Dialog>
                     </>
@@ -258,7 +269,6 @@ export const FormList = () => {
             </div>
         )
     }
-
     const getFormData = (role_id) => {
         if (!formData?.data?.data) return [];
 
@@ -277,13 +287,36 @@ export const FormList = () => {
         return formData?.data.data
 
     }
+    const handleTerminate = () => {
+        const formdata = getFormData(decryptedUser?.role_id)
+
+        const validateTermination = _.some(formdata, item => {
+            return (
+                _.endsWith(_.get(item, 'code'), '009') ||
+                _.endsWith(_.get(item, 'code'), '010')
+            ) &&
+            _.get(item, 'is_commex') &&
+            _.get(item, 'is_dean') &&
+            _.get(item, 'is_asd') &&
+            _.get(item, 'is_ad');
+        });
+
+        if(!validateTermination) {
+            toast("Unable to terminate, incomplete event process.", {type: "warning"})
+        } else {
+            handleEventTerminate({
+                token: decryptedToken, id: data?.id
+            })
+        }
+
+    }
 
     useEffect(() => {
         refetch()
     }, [data, refetch])
 
 
-    if(formLoading || approveFormLoading || rejectFormLoading || fetchLoading || eventPostLoading) {
+    if(formLoading || approveFormLoading || rejectFormLoading || fetchLoading || eventPostLoading || eventTerminateLoading) {
         return (
             <div className="formlist-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
                 Loading... Please wait....
@@ -291,19 +324,30 @@ export const FormList = () => {
         )
     }
 
-    if(!formLoading || !approveFormLoading || !rejectFormLoading || !fetchLoading || !eventPostLoading || formData) {
+    if(!formLoading || !approveFormLoading || !rejectFormLoading || !fetchLoading || !eventPostLoading || !eventTerminateLoading || formData) {
 
     return (
         <div className="formlist-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] py-20">
             <div className="w-full flex gap-2 justify-end px-4">
                 {decryptedUser?.role_id === 1 && (
-                    <button
-                        disabled={data?.is_posted}
-                        onClick={() => handleEventpost({ token: decryptedToken, id: data?.id })}
-                        className={`${data?.is_posted ? "bg-gray-200" : "bg-blue-200"} px-4 py-2`}
-                    >
-                        {data?.is_posted ? "already posted" : "post event"}
-                    </button>
+                    <>
+                        {data?.event_status_id !== 2 && (
+                            <button
+                                disabled={eventTerminateLoading}
+                                onClick={handleTerminate}
+                                className="bg-blue-200 px-4 py-2"
+                            >
+                                Terminate
+                            </button>   
+                        )}
+                        <button
+                            disabled={data?.is_posted}
+                            onClick={() => handleEventpost({ token: decryptedToken, id: data?.id })}
+                            className={`${data?.is_posted ? "bg-gray-200" : "bg-blue-200"} px-4 py-2`}
+                        >
+                            {data?.is_posted ? "already posted" : "post event"}
+                        </button>
+                    </>
                 )}
                 {!isForSubmitRole  && (
                     <Link

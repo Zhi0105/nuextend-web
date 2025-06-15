@@ -36,7 +36,7 @@ import { AttendanceScreen } from '@_src/components/Screen/Event/AttendanceScreen
 import { AttachFormScreen } from '@_src/components/Screen/Forms/AttachFormScreen'
 
 import { Deeplink } from '@_src/components/Pages/Deeplink/Deeplink'
-
+import { Certificate } from '@_src/components/Pages/Certificate/Certificate'
 
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
@@ -48,6 +48,10 @@ export const RouteList = () => {
         <Routes location={location} key={location.pathname}>
             <Route element={<PrivateRoute />}>
             <Route path="/dashboard" element={<DashboardScreen />} />
+
+                <Route path="/certificate-print" element={<Certificate />} />
+            
+
                 <Route path="/email-verified-sendlink" element={<EmailSendLinkScreen />} />
                 <Route path="/email-verified" element={<EmailVerifiedScreen />} />
                 <Route path="/email-verified-error" element={<EmailVerifiedFailScreen />} />

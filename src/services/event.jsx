@@ -235,3 +235,19 @@ export const eventPost = (payload ) => {
 
     return result
 }
+export const eventTerminate = (payload ) => {
+    const { id } = payload
+
+    const headers = {
+        Authorization: `Bearer ${payload?.token}`
+    }
+    const data = {
+        id,
+    };
+
+    const result = apiClient.post('api/v1/event/terminate', data, {headers}).then(res => {
+        return res.data
+    })
+
+    return result
+}

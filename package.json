@@ -35,6 +35,8 @@
     "crypto-js": "^4.1.1",
     "dayjs": "^1.11.7",
     "framer-motion": "^10.8.5",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.1",
     "lodash": "^4.17.21",
     "lottie-react": "^2.4.0",
     "material-table": "^2.0.5",

@@ -3,7 +3,7 @@ import { useUserStore } from '@_src/store/auth';
 import { DecryptString, DecryptUser } from "@_src/utils/helpers";
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import { PiNotePencil, PiListMagnifyingGlass } from "react-icons/pi";
+import { PiNotePencil, PiListMagnifyingGlass, PiCertificate } from "react-icons/pi";
 import { TbUsersGroup } from "react-icons/tb";
 import { FaSearch, FaWpforms } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom'
@@ -12,11 +12,13 @@ import { FilterMatchMode } from "primereact/api";
 import { InputText } from "primereact/inputtext";
 import { MdAttachment } from "react-icons/md";
 import { Tooltip } from 'primereact/tooltip'
+import { useCertificatePreview } from "@_src/utils/useCertificatePreview";
 import _ from "lodash";
 
 
 export const View = () => {
     const navigate = useNavigate()
+    const previewCertificates = useCertificatePreview();
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedToken = token && DecryptString(token)
     const decryptedUser = token && DecryptUser(user)
@@ -32,6 +34,23 @@ export const View = () => {
         global: { value: null, matchMode: FilterMatchMode.CONTAINS }
     })
 
+
+    const handleGenerateCertificates = (data) => {
+        const participants = data?.participants
+        const fullnames = _.map(participants, (participant) => {
+
+            const user = participant?.user;
+            // Format: Lastname, Firstname Middlename
+            const lastname = user?.lastname || '';
+            const firstname = user?.firstname || '';
+            const middlename = user?.middlename || '';
+
+            const name = `${lastname}, ${firstname}${middlename ? ' ' + middlename : ''}`;
+            return name.trim();
+            });
+
+        previewCertificates(fullnames)
+    }
     
 
     const handleUpdateEventNavigation = (rowData) => {
@@ -69,6 +88,12 @@ export const View = () => {
                         <button onClick={() => navigate("/event/form/attach", {state: rowData })}>
                             <Tooltip target=".sync" content="attach form" position="right" />
                             <MdAttachment className="sync w-7 h-7 text-[#364190]"/>
+                        </button>
+                    )}
+                    {rowData?.event_status_id === 2 && (
+                        <button onClick={() => handleGenerateCertificates(rowData)}>
+                            <Tooltip target=".generate" content="generate certifications" position="right" />
+                            <PiCertificate className="generate w-7 h-7 text-[#364190]"/>
                         </button>
                     )}
                 </div>
