@@ -398,7 +398,7 @@ export const Create = () => {
                                             options={unsdgData?.data}
                                             optionLabel="name" 
                                             display="chip" 
-                                            placeholder="Select unsdg type" 
+                                            placeholder="UNSDG" 
                                             maxSelectedLabels={3} 
                                             className="w-full md:w-20rem border border-gray-500" 
                                         />

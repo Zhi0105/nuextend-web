@@ -42,9 +42,17 @@ export const Register = () => {
 
     useEffect(() => {
         if(!roleLoading) {
-            const includeItems = [2, 3, 4, 5]
-            const filteredRoles = _.filter(roleData.data, role => includeItems.includes(role.id))
-            setRoles(filteredRoles)
+            console.log(roleData)
+            const includeItems = [4, 3, 5, 2]
+            const filteredRoles = _.filter(roleData?.data, role => includeItems.includes(role.id))
+            const sortedRoles = _.sortBy(filteredRoles, role => includeItems.indexOf(role.id));
+            
+            // Capitalize role name
+            const capitalizedRoles = sortedRoles.map(role => ({
+                ...role,
+                name: role.name.charAt(0).toUpperCase() + role.name.slice(1).toLowerCase()
+            }));
+            setRoles(capitalizedRoles)
         }
     }, [roleData, roleLoading])
 

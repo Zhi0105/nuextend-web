@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { AES, enc } from "crypto-js";
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
@@ -63,4 +64,64 @@ export const CodeList = [
     { id: 14, name: "NUB-ACD-CMX-F-014" },
     { id: 15, name: "NUB-ACD-CMX-F-015" },
 
+]
+export const OutreachProcess = [
+    {
+        title: "Before Implementation",
+        description: "Submit the following forms to initiate the outreach project:",
+        forms: ["Form 3", "Form 5", "Form 7", "Form 8", "Form 11", "Form 12"],
+        note: "These forms are mandatory prior to project approval and implementation.",
+    },
+    {
+        title: "During and After Implementation",
+        description: "After the outreach project has started and activities have been carried out, submit:",
+        forms: ["Form 13", "Form 14"],
+        note: "These forms document the outreach activities and outcomes.",
+    },
+    {
+        title: "Termination Process",
+        description: "To conclude the outreach project, submit:",
+        forms: ["Form 10"],
+        note: "This final form completes the process and officially terminates the outreach project.",
+    },
+]
+export const ProjectProcess = [
+    {
+        title: "Before Implementation",
+        description: "Submit the following forms to initiate the project:",
+        forms: ["Form 2", "Form 5", "Form 7", "Form 8", "Form 11", "Form 12"],
+        note: "These are required for the project to be approved and launched.",
+    },
+    {
+        title: "During and After Implementation",
+        description: "Once the project is approved and executed, submit:",
+        forms: ["Form 13", "Form 14"],
+        note: "These serve as post-activity documentation and evaluation.",
+    },
+    {
+        title: "Termination Process",
+        description: "To officially end the project, submit:",
+        forms: ["Form 10"],
+        note: "This is the final reporting and closure form for the project.",
+    },
+]
+export const ProgramProcess = [
+    {
+        title: "Before Implementation",
+        description: "Submit the following forms to initiate the program:",
+        forms: ["Form 1", "Form 4", "Form 6", "Form 8", "Form 11", "Form 12"],
+        note: "These are prerequisites for program approval. Only upon approval can implementation begin.",
+    },
+    {
+        title: "During and After Implementation",
+        description: "Once the program is approved and carried out, submit::",
+        forms: ["Form 13", "Form 14"],
+        note: "These forms cover documentation and reporting of activities conducted.",
+    },
+    {
+        title: "Termination Process",
+        description: "To formally conclude the program, submit:",
+        forms: ["Form 9"],
+        note: "This final form signals the official termination of the program.",
+    },
 ]

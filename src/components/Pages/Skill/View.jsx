@@ -33,11 +33,11 @@ export const View = () => {
         return (
             <div className="flex gap-8">
                 <button onClick={() => navigate('/skill/update', { state: rowData })}>
-                    <Tooltip target=".edit" content="edit" position="right" />
+                    <Tooltip target=".edit" content="Edit" position="right" />
                     <PiNotePencil className="edit w-7 h-7 text-[#364190]"/>
                 </button>
                 <button onClick={() => handleRemoveSkill({ token: decryptedToken, id: rowData?.id })}>
-                    <Tooltip target=".remove" content="remove" position="right" />
+                    <Tooltip target=".remove" content="Remove" position="right" />
                     <FaTrash className="remove w-7 h-7 text-[#364190]"/>
                 </button>
             </div>

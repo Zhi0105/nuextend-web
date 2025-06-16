@@ -355,7 +355,7 @@ export const FormList = () => {
                         state={{ event: data, forms: formData?.data.data }}
                         className="bg-blue-200 px-4 py-2"
                     >
-                        Submit a form
+                        Form
                     </Link>
                 )}
             </div>

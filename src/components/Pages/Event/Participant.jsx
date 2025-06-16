@@ -10,9 +10,6 @@ export const Participant = () => {
     const location = useLocation()
     const participants = location.state 
 
-
-
-
     const nameTemplate = (rowData) => {
         return (
             <div>
@@ -20,20 +17,16 @@ export const Participant = () => {
             </div>
         )
     }
-
-    
     const actionBodyTemplate = (rowData) => {
         return (
             <div className="flex gap-8">
-                <Tooltip target=".attendance" content="attendance" position="right" />
+                <Tooltip target=".attendance" content="Attendance" position="right" />
                 <button onClick={() => navigate('/event/participants/attendance', {state: rowData})}>
                     <FaRegCalendarCheck className="attendance w-7 h-7 text-[#364190]"/>
                 </button>
             </div>
         )
     }
-
-
     return (
         <div className="participant-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
             <DataTable 

@@ -48,7 +48,7 @@ export const AdminSidenav = () => {
                         <span>Home</span>
                     </Link>
                 </li>
-                {decryptedUser?.role_id === 1 && (
+                {/* {decryptedUser?.role_id === 1 && (
                     <li>
                         <Link
                             to="/admin/create/dean"
@@ -62,7 +62,7 @@ export const AdminSidenav = () => {
                             <span>Dean Account</span>
                         </Link>
                     </li>
-                )}
+                )} */}
                 <li>
                     <div
                         className="flex items-center justify-between rounded cursor-pointer"

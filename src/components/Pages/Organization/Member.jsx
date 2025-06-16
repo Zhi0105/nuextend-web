@@ -173,7 +173,7 @@ export const Member = () => {
                             to="/organization/member/add"
                             className="bg-blue-200 px-4 py-2"
                         >
-                            Add member
+                            Member
                         </Link>
                     </div>
                 )}

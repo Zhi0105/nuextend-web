@@ -3,13 +3,15 @@ import { useUserStore } from '@_src/store/auth'
 import { useLocation, useNavigate } from "react-router-dom"
 import { Controller, useForm } from "react-hook-form";
 import { Dropdown } from "primereact/dropdown";
-import { CodeList, DecryptString } from "@_src/utils/helpers";
+import { CodeList, DecryptString, ProgramProcess, ProjectProcess } from "@_src/utils/helpers";
 import { FileUpload } from "primereact/fileupload";
 import { Button } from "primereact/button";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify"
 import { uploadForm } from "@_src/services/event";
+import { OutreachProcess } from "@_src/utils/helpers";
 import _ from "lodash";
+import { NoteProcess } from "@_src/utils/NoteProcess";
 
 export const Upload = () => {``
     const location = useLocation()
@@ -96,22 +98,19 @@ export const Upload = () => {``
 
     const Note = () => {
         const formInstructions = {
-        1: "Outreach, submit Form 3, Form 5, Form 7, and Form 8 first. Once approved, you may proceed to upload Form 11, Form 12, Form 13, and Form 14 during and after the activity. Complete the process by submitting Form 10 as the final report.",
-        2: "Project, upload Form 2, Form 5, Form 7, and Form 8 first. After approval, continue with Form 11, Form 12, Form 13, and Form 14 during and after the event. Conclude by submitting Form 10 as the termination report.",
-        3: "Program, begin with Form 1, Form 4, Form 6, and Form 8. Once accepted, proceed with Form 11, Form 12, Form 13, and Form 14 throughout the activity. Finalize the program by uploading Form 9."
+        1: OutreachProcess,
+        2: ProjectProcess,
+        3: ProgramProcess
         };
 
         return (
             <div className="note-main flex flex-col text-sm gap-2 w-full bg-[#d2eef7] py-2 px-12">
-                <h1 className="uppercase text-sm text-[#115770]">Notes:</h1>
-                <p className="flex text-sm items-center gap-1 indent-4">
-                    Please follow the instructions below to upload the required forms for each activity category.
-                    Important: You must first upload the first six (6) required forms in your category before gathering volunteers or posting the event.
-                </p>
-                <div className="flex flex-col gap-2 pt-4">
+                <div className="w-full flex flex-col gap-2 pt-4">
                 <h1 className="uppercase text-sm text-[#115770]">Instruction:</h1>
                     {(event?.model_id || model?.model_id) && (
-                        <p className="indent-4">{formInstructions[event?.model_id || model?.model_id]}</p>
+                        <NoteProcess 
+                            processSteps={formInstructions[event?.model_id || model?.model_id]}
+                        />
                     )}
                 </div>
             </div>

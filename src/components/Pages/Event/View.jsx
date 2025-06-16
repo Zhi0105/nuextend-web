@@ -73,26 +73,26 @@ export const View = () => {
             return (
                 <div className="flex gap-8">
                     <button onClick={() => handleDetailEventNavigation(rowData)}>
-                        <Tooltip target=".view" content="view" position="right" />
+                        <Tooltip target=".view" content="View" position="right" />
                         <PiListMagnifyingGlass className="view w-7 h-7 text-[#364190]"/>
                     </button>
                     <button onClick={() => navigate("/event/participants", { state: rowData.participants })}>
-                        <Tooltip target=".participants" content="participants" position="right" />
+                        <Tooltip target=".participants" content="Participants" position="right" />
                         <TbUsersGroup className="participants w-7 h-7 text-[#364190]"/>
                     </button>
                     <button onClick={() => navigate("/event/form-list", { state: rowData })}>
-                        <Tooltip target=".form" content="form" position="right" />
+                        <Tooltip target=".form" content="Form" position="right" />
                         <FaWpforms className="form w-7 h-7 text-[#364190]"/>
                     </button>
                     {rowData?.model_id === 3 && (
                         <button onClick={() => navigate("/event/form/attach", {state: rowData })}>
-                            <Tooltip target=".sync" content="attach form" position="right" />
+                            <Tooltip target=".sync" content="Attach Form" position="right" />
                             <MdAttachment className="sync w-7 h-7 text-[#364190]"/>
                         </button>
                     )}
                     {rowData?.event_status_id === 2 && (
                         <button onClick={() => handleGenerateCertificates(rowData)}>
-                            <Tooltip target=".generate" content="generate certifications" position="right" />
+                            <Tooltip target=".generate" content="Generate Certifications" position="right" />
                             <PiCertificate className="generate w-7 h-7 text-[#364190]"/>
                         </button>
                     )}
@@ -104,7 +104,7 @@ export const View = () => {
         if([9, 10, 11].includes(decryptedUser?.role_id)) {
             return (
                 <button onClick={() => navigate("/event/form-list", { state: rowData })}>
-                    <Tooltip target=".form" content="form" position="right" />
+                    <Tooltip target=".form" content="Form" position="right" />
                     <FaWpforms className="form w-7 h-7 text-[#364190]"/>
                 </button>
             )
@@ -113,24 +113,24 @@ export const View = () => {
         return (
             <div className="flex gap-8">
                 <button onClick={() => handleUpdateEventNavigation(rowData)}>
-                    <Tooltip target=".edit" content="edit" position="right" />
+                    <Tooltip target=".edit" content="Edit" position="right" />
                     <PiNotePencil className="edit w-7 h-7 text-[#364190]"/>
                 </button>
                 <button onClick={() => handleDetailEventNavigation(rowData)}>
-                    <Tooltip target=".view" content="view" position="right" />
+                    <Tooltip target=".view" content="View" position="right" />
                     <PiListMagnifyingGlass className="view w-7 h-7 text-[#364190]"/>
                 </button>
                 <button onClick={() => navigate("/event/participants", { state: rowData.participants })}>
-                    <Tooltip target=".participants" content="participants" position="right" />
+                    <Tooltip target=".participants" content="Participants" position="right" />
                     <TbUsersGroup className="participants w-7 h-7 text-[#364190]"/>
                 </button>
                 <button onClick={() => navigate("/event/form-list", { state: rowData })}>
-                    <Tooltip target=".form" content="form" position="right" />
+                    <Tooltip target=".form" content="Form" position="right" />
                     <FaWpforms className="form w-7 h-7 text-[#364190]"/>
                 </button>
                 {rowData?.model_id === 3 && (
                     <button onClick={() => navigate("/event/form/attach", {state: rowData })}>
-                        <Tooltip target=".sync" content="attach form" position="right" />
+                        <Tooltip target=".sync" content="Attach Form" position="right" />
                         <MdAttachment className="sync w-7 h-7 text-[#364190]"/>
                     </button>
                 )}
