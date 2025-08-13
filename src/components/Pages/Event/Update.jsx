@@ -10,6 +10,7 @@ import { Button } from "primereact/button";
 import { MultiSelect } from 'primereact/multiselect';
 import { Calendar } from 'primereact/calendar';
 import { InputTextarea } from "primereact/inputtextarea";
+import { InputNumber } from "primereact/inputnumber";
 import { getModels } from "@_src/services/model";
 import { getEventTypes } from "@_src/services/event";
 import { getUnsdgs } from "@_src/services/unsdgs";
@@ -38,6 +39,7 @@ export const Update = () => {
                 name:  "",
                 address:  "",
                 description: "",
+                budget_proposal: 0,
                 organization: "",
                 model: "",
                 event_type: "",
@@ -55,15 +57,16 @@ export const Update = () => {
             reset({
                 term: SetTermValue() || "",
                 program_model_name: event?.program_model_name || "",
-                name: event?.name || "",
-                address: event?.address || "",
-                description: event?.description || "",
+                name: event?.activity[0].name || "",
+                address: event?.activity[0].address || "",
+                description: event?.activity[0].description || "",
+                budget_proposal: event?.budget_proposal || 0,
                 organization: _.find(orgData.data, { id: event.organization_id }) || "",
                 model:  _.find(modelData.data, { id: event.model_id }) || "",
                 event_type: _.find(typeData.data, { id: event.event_type_id }) || "",
                 unsdgs: [ ...filteredUNSDG ],
                 skills: [ ...filteredSkills ],
-                duration: [ new Date(event.start_date), new Date(event.end_date) ]
+                duration: [ new Date(event?.activity[0].start_date), new Date(event?.activity[0].end_date) ]
             });
         }
     }, [ orgData, modelData, typeData, event, unsdgData, skillData, reset ]);
@@ -73,7 +76,7 @@ export const Update = () => {
         return dayjs(new Date(date)).format('MM-DD-YYYY')
     }
     const onSubmit = (data) => {
-        const { program_model_name, organization, model, event_type, name, address, term, duration, description, skills, unsdgs } = data
+        const { program_model_name, organization, model, event_type, name, address, term, duration, description, budget_proposal, skills, unsdgs } = data
         const payload = {
             token: decryptedToken,
             user_id: decryptedUser?.id,
@@ -88,6 +91,7 @@ export const Update = () => {
             start_date: setFormatDate(duration[0]),
             end_date: setFormatDate(duration[1]),
             description,
+            budget_proposal,
             skills: _.map(skills, 'id'),
             unsdgs: _.map(unsdgs, 'id')
         }
@@ -365,6 +369,30 @@ export const Update = () => {
                     {errors.description && (
                         <p className="text-sm italic mt-1 text-red-400 indent-2">
                             description is required.*
+                        </p>
+                    )}
+                </div>
+                <div className="budget">
+                    <Controller
+                        control={control}
+                        rules={{
+                        required: true,
+                        }}
+                        render={({ field: { onChange, value } }) => (
+                            <InputNumber
+                                inputClassName={`${errors.budget_proposal && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                                name="budget_proposal"
+                                value={value} 
+                                onValueChange={onChange}
+                                rows={4}
+                                placeholder="Enter your budget proposal"
+                            />
+                        )}
+                        name="budget_proposal"
+                    />
+                    {errors.budget_proposal && (
+                        <p className="text-sm italic mt-1 text-red-400 indent-2">
+                            budget is required.*
                         </p>
                     )}
                 </div>

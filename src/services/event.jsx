@@ -91,6 +91,7 @@ export const createEvent = (payload) => {
         start_date,
         end_date,
         description,
+        budget_proposal,
         skills,
         unsdgs } = payload
 
@@ -112,6 +113,7 @@ export const createEvent = (payload) => {
         start_date,
         end_date,
         description,
+        budget_proposal,
         skills: [...skills],
         unsdgs: [...unsdgs]
     };
@@ -137,6 +139,7 @@ export const updateEvent = (payload) => {
         start_date,
         end_date,
         description,
+        budget_proposal,
         skills,
         unsdgs } = payload
 
@@ -157,6 +160,7 @@ export const updateEvent = (payload) => {
         start_date,
         end_date,
         description,
+        budget_proposal,
         skills: [...skills],
         unsdgs: [...unsdgs]
     };

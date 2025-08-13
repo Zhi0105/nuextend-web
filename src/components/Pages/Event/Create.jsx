@@ -14,6 +14,7 @@ import { Calendar } from 'primereact/calendar';
 import { Button } from "primereact/button";
 import { Stepper } from 'primereact/stepper';
 import { StepperPanel } from 'primereact/stepperpanel';
+import { InputNumber } from "primereact/inputnumber";
 import { DecryptString, DecryptUser, SetTermValue } from "@_src/utils/helpers";
 import { getTargetGroups } from "@_src/services/targetgroup";
 import dayjs from 'dayjs';
@@ -39,12 +40,12 @@ export const Create = () => {
 
     const { handleSubmit, control, trigger, watch, getValues, reset, formState: { errors }} = useForm({
             defaultValues: {
-                program_model_name: "",
                 term: SetTermValue() || "",
                 target_group_name: "",
                 name: "",
                 address: "",
                 description: "",
+                budget_proposal: 0,
                 organization: "",
                 model: "",
                 event_type: "",
@@ -55,9 +56,21 @@ export const Create = () => {
             },
     });
     const selectedTargetGroup = useRef([]);
-    const watchedProgramName = watch("program_model_name");
+
+    const computeFilteredTargetGroups = useCallback(() => {
+        const org = getValues("organization");
+        const orgId = org?.id;
+
+
+        if (!orgId || !targetgroupData?.data) return [];
+
+        const base = _.filter(targetgroupData.data, (item) => item.organization_id === orgId);
+        return _.filter(base, (item) => !selectedTargetGroup.current.includes(item.id));
+    }, [getValues, targetgroupData]);
+
+    
     const onSubmit = (data) => {
-        const { program_model_name, target_group_name, target_group, organization, model, event_type, name, address, term, duration, description, skills, unsdgs } = data
+        const { target_group_name, target_group, organization, model, event_type, name, address, term, duration, description, budget_proposal, skills, unsdgs } = data
         const payload = {
             token: decryptedToken,
             user_id: decryptedUser?.id,
@@ -66,7 +79,6 @@ export const Create = () => {
             model_id: model?.id,
             event_type_id: event_type?.id,
             event_status_id: decryptedUser?.role_id === 1 ? 2 : 1,
-            program_model_name,
             target_group_name,
             name,
             address,
@@ -74,6 +86,7 @@ export const Create = () => {
             start_date: setFormatDate(duration[0]),
             end_date: setFormatDate(duration[1]),
             description,
+            budget_proposal,
             skills: _.map(skills, 'id'),
             unsdgs: _.map(unsdgs, 'id')
         }
@@ -82,17 +95,15 @@ export const Create = () => {
                 if(data?.data.model_id !== 3) {
                     reset()
                 } else {
-                    selectedTargetGroup.current.push(data?.data.target_group_id);
+                    if (data?.data?.target_group_id) {
+                        selectedTargetGroup.current.push(data.data.target_group_id);
+                    }
+                    // selectedTargetGroup.current.push(data?.data.target_group_id);
 
-                    const updatedTargetGroups = _.filter(targetgroupData.data, (target) => 
-                        !selectedTargetGroup.current.includes(target.id)
-                    );
-
-                    setFilteredTargetGroups(updatedTargetGroups);
+                    setFilteredTargetGroups(computeFilteredTargetGroups());
                     reset({
                         term: getValues("term"),
                         model:getValues("model"),
-                        program_model_name: getValues("program_model_name"),
                         target_group: "",
                         organization: getValues("organization"),
                         event_type: "",
@@ -100,6 +111,7 @@ export const Create = () => {
                         address: "",
                         duration: [],
                         description: "",
+                        budget_proposal: 0,
                         skills: [],
                         unsdgs: [],
                     })
@@ -107,15 +119,6 @@ export const Create = () => {
             }
         })
     };
-
-
-    const modelCallback = useCallback((model) => {
-        if(model !== 3) {
-            return false
-        }
-        return true
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [watch('model')])
 
     
     const targetgroupCallback = useCallback((model) => {
@@ -134,6 +137,7 @@ export const Create = () => {
         return true
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [watch('model')])
+    
 
     const setOrganizationList = (organizations) => {
         return _.filter(organizations, (org) => [6, 7].includes(org.pivot.role_id))
@@ -150,29 +154,22 @@ export const Create = () => {
     }, [])
 
     useEffect(() => {
-        const subscription = watch((value, { name }) => {
-            if (name === "organization") {
-                const selectedOrgId = value?.organization?.id || value?.organization_id || value?.organization?.value?.id;
-                if (selectedOrgId && targetgroupData?.data) {
-                    const filtered = _.filter(targetgroupData.data, item => item.organization_id === selectedOrgId);
-                    setFilteredTargetGroups(filtered);
-                }
-            }
-        });
+    const subscription = watch((_, { name }) => {
+        if (name === "organization") {
+        // optional: clear exclusions when org changes
+        selectedTargetGroup.current = [];
+        setFilteredTargetGroups(computeFilteredTargetGroups());
+        }
+    });
+    return () => subscription.unsubscribe();
+}, [watch, computeFilteredTargetGroups]);
 
-        return () => subscription.unsubscribe();
-    }, [watch, targetgroupData]);
 
     useEffect(() => {
-        // Reset excluded target group IDs and re-include all
-        selectedTargetGroup.current = [];
+    // when target groups load or defaults are set, compute initial list
+    setFilteredTargetGroups(computeFilteredTargetGroups());
+    }, [computeFilteredTargetGroups]);
 
-        if (targetgroupData?.data) {
-            const filteredTargetGroup = _.filter(targetgroupData?.data, (item) => item.organization_id === watch("organization.id"))
-            setFilteredTargetGroups([...filteredTargetGroup]);
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [watchedProgramName, watch("organization.id")]);
 
     if(modelLoading || typeLoading || unsdgLoading || skillLoading || targetgroupLoading) {
         return (
@@ -238,54 +235,6 @@ export const Create = () => {
                             />
                         </div>
                     </StepperPanel>
-                    {modelCallback(watch("model.id")) && (
-                        <StepperPanel>
-                            <div className="program_model_name">
-                                <Controller
-                                    control={control}
-                                    rules={{
-                                    required: true,
-                                    pattern: /[\S\s]+[\S]+/,
-                                    }}
-                                    render={({ field: { onChange, value } }) => (
-                                    <InputText
-                                        value={value}
-                                        onChange={onChange}
-                                        name="program_model_name"
-                                        type="text"
-                                        id="program_model_name"
-                                        placeholder="Enter your program model name"
-                                        className={`${errors.program_model_name && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
-                                    />
-                                    )}
-                                    name="program_model_name"
-                                />
-                                {errors.program_model_name && (
-                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
-                                        program model name is required.*
-                                    </p>
-                                )}
-                            </div>
-                            <div className="flex pt-4 justify-between px-4">
-                                <Button 
-                                    className="bg-[#2211cc] text-[#c7c430] px-4 py-2" 
-                                    label="Back" 
-                                    severity="secondary" 
-                                    onClick={() => stepperRef.current.prevCallback()} 
-                                />
-                                <Button 
-                                    className="bg-[#2211cc] text-[#c7c430] px-4 py-2" 
-                                    label="Next" 
-                                    iconPos="right" 
-                                    onClick={() => {
-                                        trigger('program_model_name').then((valid) => {
-                                            if (valid) stepperRef.current.nextCallback();
-                                        });
-                                    }}
-                                />
-                            </div>
-                        </StepperPanel>
-                    )}
                     <StepperPanel>
                         <div className="flex flex-col gap-4">
                             <div className="term">
@@ -534,6 +483,30 @@ export const Create = () => {
                                 {errors.description && (
                                     <p className="text-sm italic mt-1 text-red-400 indent-2">
                                         description is required.*
+                                    </p>
+                                )}
+                            </div>
+                            <div className="budget">
+                                <Controller
+                                    control={control}
+                                    rules={{
+                                    required: true,
+                                    }}
+                                    render={({ field: { onChange, value } }) => (
+                                        <InputNumber
+                                            inputClassName={`${errors.budget_proposal && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                                            name="budget_proposal"
+                                            value={value} 
+                                            onValueChange={onChange}
+                                            rows={4}
+                                            placeholder="Enter your budget proposal"
+                                        />
+                                    )}
+                                    name="budget_proposal"
+                                />
+                                {errors.budget_proposal && (
+                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
+                                        budget is required.*
                                     </p>
                                 )}
                             </div>

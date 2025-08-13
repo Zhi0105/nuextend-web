@@ -137,13 +137,13 @@ export const View = () => {
             </div>
         )
     }
-    const programModelTemplate = (rowData) => {
-        return (
-            <div>
-                {rowData?.program_model_name ?? "N/A"}
-            </div>
-        )
-    }
+    // const programModelTemplate = (rowData) => {
+    //     return (
+    //         <div>
+    //             {rowData?.program_model_name ?? "N/A"}
+    //         </div>
+    //     )
+    // }
     const handleEventListIfDeanUser = (events) => {
         if(decryptedUser?.role_id === 9) {
             const filteredEvents = _.filter(events, (event) => event.user.department_id === decryptedUser?.department_id)
@@ -166,7 +166,19 @@ export const View = () => {
     }
 
     if(!eventLoading || !userEventLoading || !eventRefetchLoading || !userEventRefetchLoading || eventData || userEventData) {
-        const events = ![1, 9, 10, 11].includes(decryptedUser?.role_id) ? userEventData?.data : handleEventListIfDeanUser(eventData?.data.data)        
+        const rawEvents = ![1, 9, 10, 11].includes(decryptedUser?.role_id)
+        ? userEventData?.data
+        : handleEventListIfDeanUser(eventData?.data.data);
+
+        // 🔧 normalize so we can filter easily
+        const events = (rawEvents ?? []).map((e) => ({
+        ...e,
+        eventName: e?.activity?.[0]?.name ?? "",
+        // add more flat fields if you want to search them too
+        // programModelName: e?.program_model_name ?? "",
+        }));
+            
+        
         const activeEvents = _.filter(events, (event) => event.event_status_id === 1)
         const completedEvents = _.filter(events, (event) => event.event_status_id === 2)
         
@@ -204,9 +216,10 @@ export const View = () => {
                     removableSort
                     filters={filters}
                     filterDisplay="row"
+                    globalFilterFields={['eventName']} 
                 >
-                    <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="name" header="Event" />
-                    <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="program_model_name" body={programModelTemplate} header="Program model" />
+                    <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="eventName" header="Event" />
+                    {/* <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="program_model_name" body={programModelTemplate} header="Program model" /> */}
                     <Column headerClassName="bg-[#FCA712] text-white" body={actionBodyTemplate} header="Action"></Column>
 
                 </DataTable>
@@ -244,9 +257,10 @@ export const View = () => {
                     removableSort
                     filters={completedFilters}
                     filterDisplay="row"
+                    globalFilterFields={['eventName']}
                 >
-                    <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="name" header="Event" />
-                    <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="program_model_name" body={programModelTemplate} header="Program model" />
+                    <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="eventName" header="Event" />
+                    {/* <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="program_model_name" body={programModelTemplate} header="Program model" /> */}
                     <Column headerClassName="bg-[#FCA712] text-white" body={actionBodyTemplate} header="Action"></Column>
 
                 </DataTable>

@@ -161,7 +161,9 @@ export const Register = () => {
                                     control={control}
                                     rules={{
                                     required: true,
-                                    pattern: /^\d{4}-\d{6}$/,
+                                    // pattern: /^\d{4}-\d{6}$/,
+                                    pattern: /^\d{4}-\d+$/
+
                                     }}
                                     render={({ field: { onChange, value } }) => (
                                     <input
