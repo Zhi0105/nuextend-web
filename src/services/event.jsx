@@ -2,6 +2,14 @@
 import { apiClient } from "@_src/http-commons"
 import { useQuery } from "@tanstack/react-query"
 
+// helper to normalize different API shapes into an array
+const unwrapEvents = (res) => {
+    const d = res?.data;
+    if (Array.isArray(d)) return d;
+    if (Array.isArray(d?.data)) return d.data;
+    if (Array.isArray(res)) return res;
+    return [];
+};
 
 
 export const getEventStatus = () => {
@@ -27,53 +35,63 @@ export const getEventTypes = () => {
     })
 }
 export const getEvents = (payload) => {
-    const headers = {
-        Authorization: `Bearer ${payload?.token}`
-    }
-
     return useQuery({
-        queryKey: ['event'],
-        queryFn: async() => {
-            const result = await apiClient.get('api/v1/event/all', {headers})
-            return result
+        queryKey: ["events", Boolean(payload?.token)],
+        enabled: Boolean(payload?.token) && true,
+        staleTime: 0,                            // stale agad
+        refetchOnMount: 'always',                // 👈 laging refetch on revisit
+        refetchOnWindowFocus: false,    
+        retry: (failureCount, err) =>
+        err?.response?.status === 429 ? false : failureCount < 3,
+        queryFn: async () => {
+        const headers = payload?.token ? { Authorization: `Bearer ${payload?.token}` } : {};
+        const res = await apiClient.get("/api/v1/event/all", { headers });
+        return unwrapEvents(res);
         },
-        staleTime: 5 * 60000,
-        refetchOnWindowFocus: true,
-    });
+        select: (rows) =>
+        rows.map((e) => ({
+            ...e,
+            eventName: e?.activity?.[0]?.name ?? "",
+    })),
+});
 
 }
 export const getUserEvents = (payload) => {
     return useQuery({
-        queryKey: ['user-event'],
-        queryFn: async() => {
-
-            const { token } = payload
-
-            const headers = {
-                Authorization: `Bearer ${token}`
-            }
-            const result = await apiClient.get(`api/v1/event/${payload.user_id}`, {headers})
-            return result?.data
+        queryKey: ["user-events", payload?.user_id, Boolean(payload?.token)],
+        enabled: Boolean(payload?.token && payload?.user_id) && true,
+        staleTime: 0,                            // stale agad
+        refetchOnMount: 'always',                // 👈 laging refetch on revisit
+        refetchOnWindowFocus: false,    
+        retry: (failureCount, err) =>
+        err?.response?.status === 429 ? false : failureCount < 3,
+        queryFn: async () => {
+        const headers = payload?.token ? { Authorization: `Bearer ${payload?.token}` } : {};
+        const res = await apiClient.get(`/api/v1/event/${payload?.user_id}`, { headers });
+        return unwrapEvents(res);
         },
-        staleTime: 5 * 60000,
-        refetchOnWindowFocus: true,
-    })
+        select: (rows) =>
+        rows.map((e) => ({
+            ...e,
+            eventName: e?.activity?.[0]?.name ?? "",
+        })),
+    });
 }
 export const getForms = (payload) => {
-    const headers = {
-        Authorization: `Bearer ${payload?.token}`
-    }
+    const headers = payload?.token ? { Authorization: `Bearer ${payload?.token}` } : undefined;
 
     return useQuery({
-        queryKey: ['form'],
-        queryFn: async() => {
-            const result = await apiClient.get(`api/v1/form/${payload.event}`, {headers})
-            return result
+        queryKey: ['form', payload?.event],                // per-event cache
+        queryFn: async () => {
+        const res = await apiClient.get(`/api/v1/form/${payload?.event}`, { headers });
+        return res.data;                        // return the data directly
         },
-        staleTime: 5 * 60000,
-        refetchOnWindowFocus: true,
+        enabled: !!payload?.token && !!payload?.event,              // gate the query
+        staleTime: 0,                            // stale agad
+        refetchOnMount: 'always',                // 👈 laging refetch on revisit
+        refetchOnWindowFocus: false,             // iwas extra hits
+        retry: 1,
     });
-
 }
 export const createEvent = (payload) => {
     const {
@@ -218,6 +236,19 @@ export const uploadForm = (payload ) => {
     }
 
     const result = apiClient.post('api/v1/forms', formData, {headers}).then(res => {
+        return res.data
+    })
+
+    return result
+}
+export const removeForm = (payload ) => {
+    const { form_id } = payload
+
+    const headers = {
+        Authorization: `Bearer ${payload?.token}`
+    }
+
+    const result = apiClient.delete(`api/v1/forms/${form_id}`, {headers}).then(res => {
         return res.data
     })
 

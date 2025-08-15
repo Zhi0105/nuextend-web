@@ -38,8 +38,13 @@ import { AttachFormScreen } from '@_src/components/Screen/Forms/AttachFormScreen
 import { Deeplink } from '@_src/components/Pages/Deeplink/Deeplink'
 import { Certificate } from '@_src/components/Pages/Certificate/Certificate'
 
+import { ProjectScreen } from '@_src/components/Screen/Forms/Upload/ProjectScreen'
+import { OutreachScreen } from '@_src/components/Screen/Forms/Upload/OutreachScreen'
+import { ProgramScreen } from '@_src/components/Screen/Forms/Upload/ProgramScreen'
+
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
+
 
 export const RouteList = () => {
     const location = useLocation()
@@ -70,13 +75,23 @@ export const RouteList = () => {
                 <Route path="/admin/event/update" element={<AdminUpdateScreen />} />
                 <Route path="/admin/event/detail" element={<AdminDetailScreen />} />
                 <Route path="/admin/create/dean" element={<CreateDeanScreen />} />
-                
 
+
+                {/* OLD FORM ROUTE */}
                 <Route path="/event/form-list" element={<FormListScreen />} />
                 <Route path="/event/form-detail" element={<FormDetailScreen />} />
                 <Route path="/event/form/upload" element={<UploadScreen />} />
                 <Route path="/event/form/download" element={<FormDownloadScreen />} />
                 <Route path="/event/form/attach" element={<AttachFormScreen />} />
+                {/* OLD FORM ROUTE */}
+
+                {/* NEW FORM ROUTE */}
+                <Route path="/event/form/project" element={<ProjectScreen />} />
+                <Route path="/event/form/outreach" element={<OutreachScreen />} />
+                <Route path="/event/form/program" element={<ProgramScreen />} />
+                
+                {/* NEW FORM ROUTE */}
+
 
                 <Route path="/organization/view" element={<OrgViewScreen />} />
                 <Route path="/organization/create" element={<OrgcreateScreen />} />
