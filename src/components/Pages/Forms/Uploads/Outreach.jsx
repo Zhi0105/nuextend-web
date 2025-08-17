@@ -10,6 +10,7 @@ import { toast } from "react-toastify"
 import { Dialog } from 'primereact/dialog';
 import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
+import { Instruction } from "@_src/components/Partial/Instruction";
 import _ from "lodash";
 
 export const Outreach = () => {
@@ -329,6 +330,10 @@ export const Outreach = () => {
     return (
         <div className="outreach-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-0 sm:pl-[200px] py-20">
             <div className="w-full max-w-5xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+                {/* INSTRUCTIONS */}
+                <div className="mb-5">
+                    <Instruction model_id={event?.model_id} />
+                </div>
                 {/* header */}
                 <div className="bg-[#153e6f] px-4 py-3 text-center font-bold text-white">
                     Outreach Forms

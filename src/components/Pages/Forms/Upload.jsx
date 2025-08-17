@@ -59,7 +59,7 @@ export const Upload = () => {``
             { id: 12, name: "Minutes of the Meeting Format.pdf" },
             { id: 13, name: "List of Attendees, Volunteers, and Donors Format" },
             { id: 14, name: "Post-Activity Report Format" },
-            { id: 15, name: "Self-Learning Assessment Formatt" },
+            { id: 15, name: "Self-Learning Assessment Format" },
         ]
 
         const modelFormSequences = {
