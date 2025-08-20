@@ -96,44 +96,33 @@ export const getForms = (payload) => {
 export const createEvent = (payload) => {
     const {
         user_id,
-        program_model_name,
-        target_group_name,
-        target_group_id,
         organization_id,
         model_id,
         event_type_id,
         event_status_id,
-        name,
-        address,
+        target_group_id,
         term,
-        start_date,
-        end_date,
-        description,
         budget_proposal,
         skills,
-        unsdgs } = payload
+        unsdgs,
+        activities
+    } = payload
 
     const headers = {
         Authorization: `Bearer ${payload?.token}`
     }
     const data = {
         user_id,
-        program_model_name,
-        target_group_name,
-        target_group_id,
         organization_id,
         model_id,
         event_type_id,
         event_status_id,
-        name,
-        address,
+        target_group_id,
         term,
-        start_date,
-        end_date,
-        description,
         budget_proposal,
         skills: [...skills],
-        unsdgs: [...unsdgs]
+        unsdgs: [...unsdgs],
+        activities: [...activities]
     };
 
     const result = apiClient.post('api/v1/event/create', data, {headers}).then(res => {
@@ -146,7 +135,7 @@ export const updateEvent = (payload) => {
     const {
         id,
         user_id,
-        program_model_name,
+        activity_id,
         organization_id,
         model_id,
         event_type_id,
@@ -167,7 +156,7 @@ export const updateEvent = (payload) => {
     const data = {
         id,
         user_id,
-        program_model_name,
+        activity_id,
         organization_id,
         model_id,
         event_type_id,

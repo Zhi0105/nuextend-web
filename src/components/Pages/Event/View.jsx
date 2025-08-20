@@ -107,7 +107,6 @@ export const View = () => {
         }
     }
 
-
     const handleGenerateCertificates = (data) => {
         const participants = data?.participants ?? [];
         const fullnames = _.map(participants, (p) => {
@@ -143,91 +142,81 @@ export const View = () => {
         if (rowData.model_id === 3) navigate("/event/form/program", { state: { event: rowData } });
     };
 
-    const actionBodyTemplate = (rowData) => {
+    const actionBodyTemplateForActivity = (rowData) => {
+        const eventRow = rowData?.__event || rowData; // fallback
+
+        // re-use your same branching by role, but call handlers with eventRow
         if ([1].includes(roleId)) {
+            return (
+            <div className="flex gap-8">
+                <button onClick={() => handleDetailEventNavigation(eventRow)}>
+                <Tooltip target=".view" content="View" position="right" />
+                <PiListMagnifyingGlass className="view w-7 h-7 text-[#364190]" />
+                </button>
+                <button onClick={() => navigate("/event/participants", { state: eventRow.participants })}>
+                <Tooltip target=".participants" content="Participants" position="right" />
+                <TbUsersGroup className="participants w-7 h-7 text-[#364190]" />
+                </button>
+                <button onClick={() => handleFormNavigation(eventRow)}>
+                <Tooltip target=".form" content="Form" position="right" />
+                <FaWpforms className="form w-7 h-7 text-[#364190]" />
+                </button>
+                <button
+                disabled={eventRow?.is_posted || eventPostLoading}
+                onClick={() => handleEventpost({ token: decryptedToken, id: eventRow?.id })}
+                >
+                <Tooltip
+                    target={`#post-${eventRow.id}`}
+                    content={eventRow?.is_posted ? "Already posted" : "Post"}
+                    position="right"
+                />
+                <MdOutlinePostAdd
+                    id={`post-${eventRow.id}`}
+                    className={`w-7 h-7 ${eventRow?.is_posted ? "text-gray-200" : "text-[#364190]"}`}
+                />
+                </button>
+                <button disabled={eventTerminateLoading} onClick={() => handleTerminate(eventRow)}>
+                <Tooltip target=".terminate" content="Terminate" position="right" />
+                <RiIndeterminateCircleLine className="terminate w-7 h-7 text-[#364190]" />
+                </button>
+                {eventRow?.event_status_id === 2 && (
+                <button onClick={() => handleGenerateCertificates(eventRow)}>
+                    <Tooltip target=".generate" content="Generate Certifications" position="right" />
+                    <PiCertificate className="generate w-7 h-7 text-[#364190]" />
+                </button>
+                )}
+            </div>
+            );
+        }
+
+        if ([9, 10, 11].includes(roleId)) {
+            return (
+            <button onClick={() => handleFormNavigation(eventRow)}>
+                <Tooltip target=".form" content="Form" position="right" />
+                <FaWpforms className="form w-7 h-7 text-[#364190]" />
+            </button>
+            );
+        }
+
         return (
             <div className="flex gap-8">
-                <button onClick={() => handleDetailEventNavigation(rowData)}>
-                    <Tooltip target=".view" content="View" position="right" />
-                    <PiListMagnifyingGlass className="view w-7 h-7 text-[#364190]" />
-                </button>
-                <button onClick={() => navigate("/event/participants", { state: rowData.participants })}>
-                    <Tooltip target=".participants" content="Participants" position="right" />
-                    <TbUsersGroup className="participants w-7 h-7 text-[#364190]" />
-                </button>
-                <button onClick={() => handleFormNavigation(rowData)}>
-                    <Tooltip target=".form" content="Form" position="right" />
-                    <FaWpforms className="form w-7 h-7 text-[#364190]" />
-                </button>  
-                <button
-                    disabled={rowData?.is_posted || eventPostLoading}
-                    onClick={() => handleEventpost({ token: decryptedToken, id: rowData?.id })}
-                >
-                    <Tooltip
-                        target={`#post-${rowData.id}`}
-                        content={rowData?.is_posted ? "Already posted" : "Post"}
-                        position="right"
-                    />
-                    <MdOutlinePostAdd
-                        id={`post-${rowData.id}`}
-                        className={`w-7 h-7 ${rowData?.is_posted ? "text-gray-200" : "text-[#364190]"}`}
-                    />
-                </button>
-                <button
-                    disabled={eventTerminateLoading}
-                    onClick={() => handleTerminate(rowData)}
-                >
-                    <Tooltip target=".terminate" content="terminate" position="right" />
-                    <RiIndeterminateCircleLine className="terminate w-7 h-7 text-[#364190]" />
-                </button> 
-            {/* {rowData?.model_id === 3 && (
-                <button onClick={() => navigate("/event/form/attach", { state: rowData })}>
-                <Tooltip target=".sync" content="Attach Form" position="right" />
-                <MdAttachment className="sync w-7 h-7 text-[#364190]" />
-                </button>
-            )} */}
-            {rowData?.event_status_id === 2 && (
-                <button onClick={() => handleGenerateCertificates(rowData)}>
-                <Tooltip target=".generate" content="Generate Certifications" position="right" />
-                <PiCertificate className="generate w-7 h-7 text-[#364190]" />
-                </button>
-            )}
-            </div>
-        );
-        }
-        if ([9, 10, 11].includes(roleId)) {
-        return (
-            <button onClick={() => handleFormNavigation(rowData)}>
-            <Tooltip target=".form" content="Form" position="right" />
-            <FaWpforms className="form w-7 h-7 text-[#364190]" />
-            </button>
-        );
-        }
-        return (
-        <div className="flex gap-8">
             <button onClick={() => handleUpdateEventNavigation(rowData)}>
-            <Tooltip target=".edit" content="Edit" position="right" />
-            <PiNotePencil className="edit w-7 h-7 text-[#364190]" />
+                <Tooltip target=".edit" content="Edit" position="right" />
+                <PiNotePencil className="edit w-7 h-7 text-[#364190]" />
             </button>
-            <button onClick={() => handleDetailEventNavigation(rowData)}>
-            <Tooltip target=".view" content="View" position="right" />
-            <PiListMagnifyingGlass className="view w-7 h-7 text-[#364190]" />
+            <button onClick={() => handleDetailEventNavigation(eventRow)}>
+                <Tooltip target=".view" content="View" position="right" />
+                <PiListMagnifyingGlass className="view w-7 h-7 text-[#364190]" />
             </button>
-            <button onClick={() => navigate("/event/participants", { state: rowData.participants })}>
-            <Tooltip target=".participants" content="Participants" position="right" />
-            <TbUsersGroup className="participants w-7 h-7 text-[#364190]" />
+            <button onClick={() => navigate("/event/participants", { state: eventRow.participants })}>
+                <Tooltip target=".participants" content="Participants" position="right" />
+                <TbUsersGroup className="participants w-7 h-7 text-[#364190]" />
             </button>
-            <button onClick={() => handleFormNavigation(rowData)}>
-            <Tooltip target=".form" content="Form" position="right" />
-            <FaWpforms className="form w-7 h-7 text-[#364190]" />
+            <button onClick={() => handleFormNavigation(eventRow)}>
+                <Tooltip target=".form" content="Form" position="right" />
+                <FaWpforms className="form w-7 h-7 text-[#364190]" />
             </button>
-            {/* {rowData?.model_id === 3 && (
-            <button onClick={() => navigate("/event/form/attach", { state: rowData })}>
-                <Tooltip target=".sync" content="Attach Form" position="right" />
-                <MdAttachment className="sync w-7 h-7 text-[#364190]" />
-            </button>
-            )} */}
-        </div>
+            </div>
         );
     };
 
@@ -238,9 +227,28 @@ export const View = () => {
         return events;
     };
 
+    const extractActivities = (events = []) =>
+        _.flatMap(events, (evt) => {
+            const activities = _.get(evt, 'activity', []);
+            return _.map(activities, (act) => ({
+            // what you display & search against
+            activity_id: act?.id,
+            activityName: act?.name ?? '',   // keep original if needed elsewhere
+            activity_address: act?.address ?? '',
+            activity_description: act?.description ?? '',
+            activity_start_date: act?.start_date ?? '',
+            activity_end_date: act?.end_date ?? '',
+            // make a unique key per activity
+            _rowId: `${evt?.id ?? 'e'}-${act?.id ?? act?.code ?? _.uniqueId('a-')}`,
+            __event: evt,
+            ...evt
+        }));
+    });
     const rawEvents = needsUserEvents ? myEvents : handleEventListIfDeanUser(allEvents);
     const activeEvents = _.filter(rawEvents, (event) => event.event_status_id === 1);
     const completedEvents = _.filter(rawEvents, (event) => event.event_status_id === 2);
+    const activeActivities = extractActivities(activeEvents);
+    const completedActivities = extractActivities(completedEvents);
 
     if (eventLoading || userEventLoading || eventRefetchLoading || userEventRefetchLoading) {
         return (
@@ -273,10 +281,10 @@ export const View = () => {
         </div>
 
         <DataTable
-            value={activeEvents}
+            value={activeActivities}
             size="normal"
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-            dataKey="id"
+            dataKey="_rowId"
             emptyMessage="Event(s) Not Found."
             className="datatable-responsive min-w-full px-2 py-2"
             currentPageReportTemplate="Showing {first} to {last} of {totalRecords} active events"
@@ -285,10 +293,10 @@ export const View = () => {
             removableSort
             filters={filters}
             filterDisplay="row"
-            globalFilterFields={["eventName"]}
+            globalFilterFields={["activityName"]}
         >
-            <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="eventName" header="Event" />
-            <Column headerClassName="bg-[#FCA712] text-white" body={actionBodyTemplate} header="Action" />
+            <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="activityName" header="Event" />
+            <Column headerClassName="bg-[#FCA712] text-white" body={actionBodyTemplateForActivity} header="Action" />
         </DataTable>
 
         <div className="w-full px-4 text-xl font-bold mt-6">
@@ -312,10 +320,10 @@ export const View = () => {
         </div>
 
         <DataTable
-            value={completedEvents}
+            value={completedActivities}
             size="normal"
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-            dataKey="id"
+            dataKey="_rowId"
             emptyMessage="Event(s) Not Found."
             className="datatable-responsive min-w-full px-2 py-2"
             currentPageReportTemplate="Showing {first} to {last} of {totalRecords} completed events"
@@ -324,10 +332,11 @@ export const View = () => {
             removableSort
             filters={completedFilters}
             filterDisplay="row"
-            globalFilterFields={["eventName"]}
+            globalFilterFields={["activityName"]}
+
         >
-            <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="eventName" header="Event" />
-            <Column headerClassName="bg-[#FCA712] text-white" body={actionBodyTemplate} header="Action" />
+            <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="activityName" header="Event" />
+            <Column headerClassName="bg-[#FCA712] text-white" body={actionBodyTemplateForActivity} header="Action" />
         </DataTable>
         </div>
     );

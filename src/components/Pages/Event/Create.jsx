@@ -1,22 +1,21 @@
 import { useContext, useRef, useEffect, useCallback, useState } from "react";
 import { EventContext } from "@_src/contexts/EventContext";
-import { InputTextarea } from "primereact/inputtextarea";
 import { Dropdown } from "primereact/dropdown";
 import { useUserStore } from '@_src/store/auth';
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useFieldArray  } from "react-hook-form";
 import { getModels } from "@_src/services/model";
 import { getEventTypes } from "@_src/services/event";
 import { getUnsdgs } from "@_src/services/unsdgs";
 import { getSkills } from "@_src/services/skills";
 import { InputText } from "primereact/inputtext";
 import { MultiSelect } from 'primereact/multiselect';
-import { Calendar } from 'primereact/calendar';
 import { Button } from "primereact/button";
 import { Stepper } from 'primereact/stepper';
 import { StepperPanel } from 'primereact/stepperpanel';
 import { InputNumber } from "primereact/inputnumber";
 import { DecryptString, DecryptUser, SetTermValue } from "@_src/utils/helpers";
 import { getTargetGroups } from "@_src/services/targetgroup";
+import { Activity } from "@_src/components/Partial/Activity";
 import dayjs from 'dayjs';
 import _ from "lodash";
 
@@ -38,13 +37,10 @@ export const Create = () => {
         return dayjs(new Date(date)).format('MM-DD-YYYY')
     }
 
-    const { handleSubmit, control, trigger, watch, getValues, reset, formState: { errors }} = useForm({
+    const { handleSubmit, control, trigger, watch, setValue, getValues, reset, formState: { errors }} = useForm({
             defaultValues: {
                 term: SetTermValue() || "",
                 target_group_name: "",
-                name: "",
-                address: "",
-                description: "",
                 budget_proposal: 0,
                 organization: "",
                 model: "",
@@ -52,43 +48,63 @@ export const Create = () => {
                 target_group: "",
                 unsdgs: [],
                 skills: [],
-                duration: []
+                activities: []
             },
     });
+    const { fields, append, remove } = useFieldArray({ control, name: "activities" });
+
+    const activitiesValues = watch("activities") || [];
+    const modelId = watch("model.id");
+
+    const handleAddActivity = useCallback(() => {
+        append({ name: "", address: "" , description: "", duration: null  })
+    }, [append])
+    const handleRemoveActivity = useCallback((index) => {
+        remove(index);
+    }, [remove]);
+    const handleActivityChange = (index, key, value) => {
+        setValue(`activities.${index}.${key}`, value, {
+            shouldDirty: true,
+            shouldValidate: true,
+        });
+    };
+
+
+
     const selectedTargetGroup = useRef([]);
 
     const computeFilteredTargetGroups = useCallback(() => {
         const org = getValues("organization");
         const orgId = org?.id;
-
-
         if (!orgId || !targetgroupData?.data) return [];
-
         const base = _.filter(targetgroupData.data, (item) => item.organization_id === orgId);
         return _.filter(base, (item) => !selectedTargetGroup.current.includes(item.id));
     }, [getValues, targetgroupData]);
 
     
     const onSubmit = (data) => {
-        const { target_group_name, target_group, organization, model, event_type, name, address, term, duration, description, budget_proposal, skills, unsdgs } = data
+        const { target_group, organization, model, event_type, term, activities, budget_proposal, skills, unsdgs } = data
+        const updatedActivities = _.map(activities, (activity) => ({
+            name: activity.name,
+            description: activity.description,
+            address: activity.address,
+            start_date: setFormatDate(activity.duration[0]),
+            end_date: setFormatDate(activity.duration[1])
+        }));
+
         const payload = {
             token: decryptedToken,
             user_id: decryptedUser?.id,
-            target_group_id: target_group?.id,
             organization_id: organization?.id,
             model_id: model?.id,
-            event_type_id: event_type?.id,
+            event_type_id: event_type?.id,   
             event_status_id: decryptedUser?.role_id === 1 ? 2 : 1,
-            target_group_name,
-            name,
-            address,
+            target_group_id: target_group?.id,
             term,
-            start_date: setFormatDate(duration[0]),
-            end_date: setFormatDate(duration[1]),
-            description,
             budget_proposal,
             skills: _.map(skills, 'id'),
-            unsdgs: _.map(unsdgs, 'id')
+            unsdgs: _.map(unsdgs, 'id'),
+            activities: [...updatedActivities],
         }
         createEvent(payload, {
             onSuccess: (data) => {
@@ -102,42 +118,22 @@ export const Create = () => {
 
                     setFilteredTargetGroups(computeFilteredTargetGroups());
                     reset({
-                        term: getValues("term"),
-                        model:getValues("model"),
-                        target_group: "",
                         organization: getValues("organization"),
+                        model:getValues("model"),
                         event_type: "",
-                        name: "",
-                        address: "",
-                        duration: [],
-                        description: "",
+                        term: getValues("term"),
+                        target_group: "",
                         budget_proposal: 0,
                         skills: [],
                         unsdgs: [],
+                        activities: []
                     })
                 }
             }
         })
     };
 
-    
-    const targetgroupCallback = useCallback((model) => {
-        if(model !== 1) {
-            return false
-        }
-        return true
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [watch('model')])
 
-    const targetgroupIDCallback = useCallback((model) => {
-        if(model === 1) {
-            targetGroupreFetch()
-            return false
-        }
-        return true
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [watch('model')])
-    
 
     const setOrganizationList = (organizations) => {
         return _.filter(organizations, (org) => [6, 7].includes(org.pivot.role_id))
@@ -170,6 +166,24 @@ export const Create = () => {
     setFilteredTargetGroups(computeFilteredTargetGroups());
     }, [computeFilteredTargetGroups]);
 
+    useEffect(() => {
+        if (modelId === 1) {
+        targetGroupreFetch();
+        }
+
+    }, [modelId, targetGroupreFetch]);
+
+    useEffect(() => {
+        if (modelId && modelId !== 3) {
+            // clear all activities first
+            remove(); 
+            // then append 1 empty activity
+            handleAddActivity();
+        }
+    }, [modelId, handleAddActivity, remove]);
+
+    const showTargetGroupDropdown = modelId !== 1;
+    const askForTargetGroupName = modelId === 1;
 
     if(modelLoading || typeLoading || unsdgLoading || skillLoading || targetgroupLoading) {
         return (
@@ -308,7 +322,7 @@ export const Create = () => {
                                     <p className="text-sm text-red-400 indent-2">Please select your event type*</p>
                                 )}
                             </div>
-                            {targetgroupIDCallback(watch("model.id")) && (
+                            {showTargetGroupDropdown  && (
                                 <div className="targetgroup">
                                     <Controller
                                         control={control}
@@ -382,33 +396,7 @@ export const Create = () => {
                                     <p className="text-sm text-red-400 indent-2">Please select skills needed for your event*</p>
                                 )}
                             </div>
-                            <div className="name">
-                                <Controller
-                                    control={control}
-                                    rules={{
-                                    required: true,
-                                    pattern: /[\S\s]+[\S]+/,
-                                    }}
-                                    render={({ field: { onChange, value } }) => (
-                                    <InputText
-                                        value={value}
-                                        onChange={onChange}
-                                        name="name"
-                                        type="text"
-                                        id="name"
-                                        placeholder="Enter your event name"
-                                        className={`${errors.name && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
-                                    />
-                                    )}
-                                    name="name"
-                                />
-                                {errors.name && (
-                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
-                                        event name is required.*
-                                    </p>
-                                )}
-                            </div>
-                            {targetgroupCallback(watch("model.id")) && (
+                            {askForTargetGroupName && (
                                 <div className="target_group">
                                     <Controller
                                         control={control}
@@ -436,56 +424,6 @@ export const Create = () => {
                                     )}
                                 </div>
                             )}
-                            <div className="location">
-                                <Controller
-                                    control={control}
-                                    rules={{
-                                    required: true,
-                                    pattern: /[\S\s]+[\S]+/,
-                                    }}
-                                    render={({ field: { onChange, value } }) => (
-                                    <InputText
-                                        value={value}
-                                        onChange={onChange}
-                                        name="address"
-                                        type="text"
-                                        id="address"
-                                        placeholder="Enter your event location"
-                                        className={`${errors.address && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
-                                    />
-                                    )}
-                                    name="address"
-                                />
-                                {errors.address && (
-                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
-                                        event location is required.*
-                                    </p>
-                                )}
-                            </div>
-                            <div className="description">
-                                <Controller
-                                    control={control}
-                                    rules={{
-                                    required: true,
-                                    }}
-                                    render={({ field: { onChange, value } }) => (
-                                        <InputTextarea
-                                            className={`${errors.description && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
-                                            name="description"
-                                            value={value} 
-                                            onChange={onChange}
-                                            rows={4}
-                                            placeholder="Enter your event description"
-                                        />
-                                    )}
-                                    name="description"
-                                />
-                                {errors.description && (
-                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
-                                        description is required.*
-                                    </p>
-                                )}
-                            </div>
                             <div className="budget">
                                 <Controller
                                     control={control}
@@ -510,29 +448,43 @@ export const Create = () => {
                                     </p>
                                 )}
                             </div>
-                            <div className="duration">
-                                <Controller
-                                    control={control}
-                                    rules={{
-                                    required: true,
-                                    }}
-                                    render={({ field: { onChange, value } }) => (
-                                        <Calendar
-                                            className="w-1/2"
-                                            value={value} 
-                                            onChange={onChange} 
-                                            selectionMode="range" 
-                                            readOnlyInput 
-                                            hideOnRangeSelection 
-                                            placeholder="please select event dates"
-                                        />                    
-                                    )}
-                                    name="duration"
+                            <div className="flex pt-4 justify-between px-4">
+                                <Button 
+                                    className="bg-[#2211cc] text-[#c7c430] px-4 py-2" 
+                                    label="Back" 
+                                    severity="secondary" 
+                                    onClick={() => stepperRef.current.prevCallback()} 
                                 />
-                                {errors.duration && (
-                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
-                                        Please select duration dates for your event.*
-                                    </p>
+                                <Button 
+                                    className="bg-[#2211cc] text-[#c7c430] px-4 py-2" 
+                                    label="Next" 
+                                    iconPos="right" 
+                                    onClick={() => {
+                                        trigger().then((valid) => {
+                                            if (valid) stepperRef.current.nextCallback();
+                                        });
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </StepperPanel> 
+                    <StepperPanel>
+                        <div>
+                            <div className="w-full capitalize flex flex-col gap-2">
+                                <Activity 
+                                    modelId={modelId}
+                                    activities={activitiesValues}
+                                    activityKeys={fields.map(f => f.id)}
+                                    onRemove={handleRemoveActivity}
+                                    onChange={handleActivityChange}
+                                />
+                                {modelId === 3 && (
+                                    <span
+                                        className="text-[25px] text-[#5b9bd1] cursor-pointer"
+                                        onClick={handleAddActivity}
+                                    >
+                                    +
+                                    </span>
                                 )}
                             </div>
                             <div className="flex pt-4 justify-between">

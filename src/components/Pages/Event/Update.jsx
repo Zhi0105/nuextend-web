@@ -33,21 +33,19 @@ export const Update = () => {
     const { data: skillData, isLoading: skillLoading } = getSkills()
 
     const { handleSubmit, control, reset, formState: { errors }} = useForm({
-            defaultValues: {
-                term:  "",
-                program_model_name: "",
-                name:  "",
-                address:  "",
-                description: "",
-                budget_proposal: 0,
-                organization: "",
-                model: "",
-                event_type: "",
-                event_status: "",
-                unsdgs: [],
-                skills: [],
-                duration: []
-            },
+        defaultValues: {
+            term:  "",
+            name:  "",
+            address:  "",
+            description: "",
+            budget_proposal: 0,
+            organization: "",
+            model: "",
+            event_type: "",
+            unsdgs: [],
+            skills: [],
+            duration: []
+        },
     });
 
     useEffect(() => {
@@ -56,35 +54,37 @@ export const Update = () => {
                 const filteredSkills = skillData.data.filter((item) => event.skills.some((evItem) => evItem.name === item.name))
             reset({
                 term: SetTermValue() || "",
-                program_model_name: event?.program_model_name || "",
-                name: event?.activity[0].name || "",
-                address: event?.activity[0].address || "",
-                description: event?.activity[0].description || "",
+                name: event?.activityName || "",
+                address: event?.activity_address || "",
+                description: event?.activity_description || "",
                 budget_proposal: event?.budget_proposal || 0,
                 organization: _.find(orgData.data, { id: event.organization_id }) || "",
                 model:  _.find(modelData.data, { id: event.model_id }) || "",
                 event_type: _.find(typeData.data, { id: event.event_type_id }) || "",
                 unsdgs: [ ...filteredUNSDG ],
                 skills: [ ...filteredSkills ],
-                duration: [ new Date(event?.activity[0].start_date), new Date(event?.activity[0].end_date) ]
+                duration: [ new Date(event?.activity_start_date), new Date(event?.activity_end_date) ]
             });
         }
     }, [ orgData, modelData, typeData, event, unsdgData, skillData, reset ]);
 
+    useEffect(() => {
+        console.log(event)
+    }, [event])
 
     const setFormatDate = (date) => {
         return dayjs(new Date(date)).format('MM-DD-YYYY')
     }
     const onSubmit = (data) => {
-        const { program_model_name, organization, model, event_type, name, address, term, duration, description, budget_proposal, skills, unsdgs } = data
+        const { organization, model, event_type, name, address, term, duration, description, budget_proposal, skills, unsdgs } = data
         const payload = {
             token: decryptedToken,
             user_id: decryptedUser?.id,
             id: event?.id,
+            activity_id: event?.activity_id,
             organization_id: organization?.id,
             model_id: model?.id,
             event_type_id: event_type?.id,
-            program_model_name,
             name,
             address,
             term,
@@ -268,34 +268,6 @@ export const Update = () => {
                         <p className="text-sm text-red-400 indent-2">Please select skills needed for your event*</p>
                     )}
                 </div>
-                {event?.model_id === 3 && (
-                    <div className="program_model_name">
-                        <Controller
-                            control={control}
-                            rules={{
-                            required: true,
-                            pattern: /[\S\s]+[\S]+/,
-                            }}
-                            render={({ field: { onChange, value } }) => (
-                            <InputText
-                                value={value}
-                                onChange={onChange}
-                                name="program_model_name"
-                                type="text"
-                                id="program_model_name"
-                                placeholder="Enter your event program_model_name"
-                                className={`${errors.program_model_name && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
-                            />
-                            )}
-                            name="program_model_name"
-                        />
-                        {errors.program_model_name && (
-                            <p className="text-sm italic mt-1 text-red-400 indent-2">
-                                event program model name is required.*
-                            </p>
-                        )}
-                    </div>
-                )}
                 <div className="name">
                     <Controller
                         control={control}
