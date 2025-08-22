@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { DecryptString, DecryptUser } from "@_src/utils/helpers";
+import { DecryptString, DecryptUser, ProjectPhases } from "@_src/utils/helpers";
 import { useUserStore } from '@_src/store/auth'
 import { useLocation } from "react-router-dom"
 import { removeForm, uploadForm, getForms } from "@_src/services/event";
@@ -296,6 +296,39 @@ export const Project = () => {
         return "text-slate-500";
     }
 
+    // UPLOADING STEP LOGIC START
+    const handleGetPhaseId = (id) => {
+        for (const p in ProjectPhases) {
+            if (ProjectPhases[p].includes(id)) return Number(p);
+        }
+        return 1;
+    }
+    const handleIfAllApproved = (ids, formsState) => {
+        return ids.every((fid) => {
+            const f = formsState.find((x) => x.id === fid);
+            return f && f.status === "approved";
+        });
+    }
+    const getPhaseUnlockStatus = (formRow, formsState) => {
+        const phase = handleGetPhaseId(formRow.id);
+        const p1Done = handleIfAllApproved(ProjectPhases[1], formsState);
+        const p2Done = handleIfAllApproved(ProjectPhases[2], formsState);
+
+        if (phase === 1) return { unlocked: true };
+
+        if (phase === 2) {
+            if (!p1Done) return { unlocked: false };
+            return { unlocked: true };
+        }
+
+        // phase === 3
+        if (!p1Done) return { unlocked: false };
+        if (!p2Done) return { unlocked: false };
+        return { unlocked: true };
+    }
+    // UPLOADING STEP LOGIC END
+
+
     useEffect(() => {
         if (!formData) return;
         setForms(prev =>
@@ -401,19 +434,32 @@ export const Project = () => {
                                             </div>
                                         ) : (
                                             <div className="flex items-center gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => openPicker(form.id)}
-                                                disabled={uploadLoading || removeLoading}
-                                                className="inline-flex items-center rounded-md bg-[#013a63] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 disabled:opacity-60"
-                                            >
-                                                    {uploadingRow === form.id
-                                                    ? "Uploading…"
-                                                    : removingRow === form.id
-                                                    ? "Removing…"
-                                                    : "Upload"}
-                                            </button>
-                                            <span className="text-slate-400">No file attached</span>
+                                                {(() => {
+                                                    const { unlocked } = getPhaseUnlockStatus(form, forms);
+                                                    const uploadDisabled = uploadLoading || removeLoading || !unlocked;
+
+                                                    return (
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openPicker(form.id)}
+                                                            disabled={uploadDisabled}
+                                                            className="inline-flex items-center rounded-md bg-[#013a63] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                                                        >
+                                                        {uploadingRow === form.id
+                                                            ? "Uploading…"
+                                                            : removingRow === form.id
+                                                            ? "Removing…"
+                                                            : unlocked
+                                                            ? "Upload"
+                                                            : "Locked"}
+                                                        </button>
+                                                        <span className="text-slate-400">
+                                                            No file attached
+                                                        </span>
+                                                    </>
+                                                    );
+                                                })()}
                                             </div>
                                         )}
 

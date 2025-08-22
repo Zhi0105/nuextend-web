@@ -11,6 +11,7 @@ import { Dialog } from 'primereact/dialog';
 import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
 import { Instruction } from "@_src/components/Partial/Instruction";
+import { OutreachPhases } from "@_src/utils/helpers";
 import _ from "lodash";
 
 export const Outreach = () => {
@@ -299,6 +300,39 @@ export const Outreach = () => {
         return "text-slate-500";
     }
 
+    //  UPLOADING STEP LOGIC START
+    const handleGetPhaseId = (id) => {
+        for (const p in OutreachPhases) {
+            if (OutreachPhases[p].includes(id)) return Number(p);
+        }
+        return 1;
+    }
+    const handleIfAllApproved = (ids, formsState) => {
+        return ids.every((fid) => {
+            const f = formsState.find((x) => x.id === fid);
+            return f && f.status === "approved";
+        });
+    }
+    const getPhaseUnlockStatus = (formRow, formsState) => {
+        const phase = handleGetPhaseId(formRow.id);
+        const p1Done = handleIfAllApproved(OutreachPhases[1], formsState);
+        const p2Done = handleIfAllApproved(OutreachPhases[2], formsState);
+
+        if (phase === 1) return { unlocked: true };
+
+        if (phase === 2) {
+            if (!p1Done) return { unlocked: false };
+            return { unlocked: true };
+        }
+
+        // phase === 3
+        if (!p1Done) return { unlocked: false };
+        if (!p2Done) return { unlocked: false };
+        return { unlocked: true };
+    }
+    // UPLOADING STEP LOGIC END
+
+
     useEffect(() => {
         if (!formData) return;
         setForms(prev =>
@@ -403,19 +437,45 @@ export const Outreach = () => {
                                             </div>
                                         ) : (
                                             <div className="flex items-center gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => openPicker(form.id)}
-                                                disabled={uploadLoading || removeLoading}
-                                                className="inline-flex items-center rounded-md bg-[#013a63] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 disabled:opacity-60"
-                                            >
-                                                    {uploadingRow === form.id
-                                                    ? "Uploading…"
-                                                    : removingRow === form.id
-                                                    ? "Removing…"
-                                                    : "Upload"}
-                                            </button>
-                                            <span className="text-slate-400">No file attached</span>
+                                                {(() => {
+                                                    const { unlocked } = getPhaseUnlockStatus(form, forms);
+                                                    const uploadDisabled = uploadLoading || removeLoading || !unlocked;
+
+                                                    return (
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => openPicker(form.id)}
+                                                            disabled={uploadDisabled}
+                                                            className="inline-flex items-center rounded-md bg-[#013a63] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                                                        >
+                                                        {uploadingRow === form.id
+                                                            ? "Uploading…"
+                                                            : removingRow === form.id
+                                                            ? "Removing…"
+                                                            : unlocked
+                                                            ? "Upload"
+                                                            : "Locked"}
+                                                        </button>
+                                                        <span className="text-slate-400">
+                                                            No file attached
+                                                        </span>
+                                                    </>
+                                                    );
+                                                })()}
+                                                {/* <button
+                                                    type="button"
+                                                    onClick={() => openPicker(form.id)}
+                                                    disabled={uploadLoading || removeLoading}
+                                                    className="inline-flex items-center rounded-md bg-[#013a63] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 disabled:opacity-60"
+                                                >
+                                                        {uploadingRow === form.id
+                                                        ? "Uploading…"
+                                                        : removingRow === form.id
+                                                        ? "Removing…"
+                                                        : "Upload"}
+                                                </button>
+                                                <span className="text-slate-400">No file attached</span> */}
                                             </div>
                                         )}
 

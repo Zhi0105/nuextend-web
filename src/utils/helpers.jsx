@@ -125,3 +125,39 @@ export const ProgramProcess = [
         note: "This final form signals the official termination of the program.",
     },
 ]
+export const OutreachPhases = {
+    1: [
+        "NUB-ACD-CMX-F-003",
+        "NUB-ACD-CMX-F-005",
+        "NUB-ACD-CMX-F-007",
+        "NUB-ACD-CMX-F-008",
+        "NUB-ACD-CMX-F-011",
+        "NUB-ACD-CMX-F-012",
+    ],
+    2: ["NUB-ACD-CMX-F-013", "NUB-ACD-CMX-F-014"],
+    3: ["NUB-ACD-CMX-F-010"],
+}
+export const ProjectPhases = {
+    1: [
+        "NUB-ACD-CMX-F-002",
+        "NUB-ACD-CMX-F-005",
+        "NUB-ACD-CMX-F-007",
+        "NUB-ACD-CMX-F-008",
+        "NUB-ACD-CMX-F-011",
+        "NUB-ACD-CMX-F-012",
+    ],
+    2: ["NUB-ACD-CMX-F-013", "NUB-ACD-CMX-F-014"],
+    3: ["NUB-ACD-CMX-F-010"],
+}
+export const ProgramPhases = {
+    1: [
+        "NUB-ACD-CMX-F-001",
+        "NUB-ACD-CMX-F-004",
+        "NUB-ACD-CMX-F-006",
+        "NUB-ACD-CMX-F-008",
+        "NUB-ACD-CMX-F-011",
+        "NUB-ACD-CMX-F-012",
+    ],
+    2: ["NUB-ACD-CMX-F-013", "NUB-ACD-CMX-F-014"],
+    3: ["NUB-ACD-CMX-F-009"],
+}
