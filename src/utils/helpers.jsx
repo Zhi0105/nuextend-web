@@ -161,3 +161,19 @@ export const ProgramPhases = {
     2: ["NUB-ACD-CMX-F-013", "NUB-ACD-CMX-F-014"],
     3: ["NUB-ACD-CMX-F-009"],
 }
+export const APPROVAL_REQUIREMENTS = {
+    "NUB-ACD-CMX-F-001": 4,
+    "NUB-ACD-CMX-F-002": 4,
+    "NUB-ACD-CMX-F-004": 2,
+    "NUB-ACD-CMX-F-005": 2,
+    "NUB-ACD-CMX-F-006": 1,
+    "NUB-ACD-CMX-F-007": 1,
+    "NUB-ACD-CMX-F-008": 1,
+    "NUB-ACD-CMX-F-009": 4,
+    "NUB-ACD-CMX-F-010": 4,
+    "NUB-ACD-CMX-F-011": 2,
+    "NUB-ACD-CMX-F-012": 2,
+    "NUB-ACD-CMX-F-013": 1,
+    "NUB-ACD-CMX-F-014": 2,
+};
+export const getRequiredApprovals = (code) => (code && APPROVAL_REQUIREMENTS[code]) || 4;

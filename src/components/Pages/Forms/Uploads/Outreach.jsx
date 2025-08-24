@@ -11,7 +11,7 @@ import { Dialog } from 'primereact/dialog';
 import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
 import { Instruction } from "@_src/components/Partial/Instruction";
-import { OutreachPhases } from "@_src/utils/helpers";
+import { OutreachPhases, getRequiredApprovals } from "@_src/utils/helpers";
 import _ from "lodash";
 
 export const Outreach = () => {
@@ -38,7 +38,7 @@ export const Outreach = () => {
     ];
 
     const [forms, setForms] = useState(
-        initialForms.map((form) => ({ ...form, fileName: "", url: "", status: "none",  approvalsCount: 0 })) // none | pending_review | approved | declined
+        initialForms.map((form) => ({ ...form, fileName: "", url: "", status: "none",  approvalsCount: 0, requiredApprovals: getRequiredApprovals(form.code) })) // none | pending_review | approved | declined
     );
     const [uploadingRow, setUploadingRow] = useState(null);
     const [removingRow, setRemovingRow] = useState(null);
@@ -85,20 +85,20 @@ export const Outreach = () => {
 
         // 1) Optimistic update para responsive agad yung UI
         onMutate: async (variables) => {
-            // stop outgoing refetches para di mag-race
             await queryClient.cancelQueries({ queryKey: ['forms', event.id] });
 
-            // optimistic local state: +1 approvalsCount; status -> approved if 4/4
-            setForms((prev) =>
-            prev.map((r) => {
+            setForms(prev =>
+                prev.map(r => {
                 if (r.id !== variables.code) return r;
-                const nextCount = Math.min(4, (r.approvalsCount || 0) + 1);
+                const required = r.requiredApprovals || getRequiredApprovals(variables.code);
+                const nextCount = Math.min(required, (r.approvalsCount || 0) + 1);
                 return {
-                ...r,
-                approvalsCount: nextCount,
-                status: nextCount === 4 ? 'approved' : 'pending_review',
+                    ...r,
+                    approvalsCount: nextCount,
+                    status: nextCount >= required ? 'approved' : 'pending_review',
+                    requiredApprovals: required,
                 };
-            })
+                })
             );
         },
 
@@ -266,30 +266,36 @@ export const Outreach = () => {
         // ------- STATUS HELPERS -------
     const deriveStatusFromMatch = (match) => {
         const approvalsCount =
-        Number(!!match?.is_commex) +
-        Number(!!match?.is_ad) +
-        Number(!!match?.is_asd) +
-        Number(!!match?.is_dean);
+            Number(!!match?.is_commex) +
+            Number(!!match?.is_ad) +
+            Number(!!match?.is_asd) +
+            Number(!!match?.is_dean);
 
         const hasAnyRemarks =
-        (match?.ad_remarks?.length || 0) > 0 ||
-        (match?.asd_remarks?.length || 0) > 0 ||
-        (match?.commex_remarks?.length || 0) > 0 ||
-        (match?.dean_remarks?.length || 0) > 0;
+            (match?.ad_remarks?.length || 0) > 0 ||
+            (match?.asd_remarks?.length || 0) > 0 ||
+            (match?.commex_remarks?.length || 0) > 0 ||
+            (match?.dean_remarks?.length || 0) > 0;
+
+        const required = getRequiredApprovals(match?.code);
 
         let status = "pending_review";
         if (hasAnyRemarks) status = "declined";
-        else if (approvalsCount === 4) status = "approved";
+        else if (approvalsCount >= required) status = "approved";
 
-        return { status, approvalsCount };
+        return { status, approvalsCount, required };
     };
 
-    const displayStatusText = (status, approvalsCount, hasFile) => {
-        if (!hasFile) return "No file";
+    const displayStatusText = (status, approvalsCount, hasFile, required) => {
+        if (!hasFile) return `Pending 0/${required}`;
         if (status === "declined") return "Declined";
+        const safeCount = Math.min(approvalsCount || 0, required);
+        // kapag complete, plain "Approved" lang
         if (status === "approved") return "Approved";
-        if (approvalsCount > 0 && approvalsCount < 4) return `Approved ${approvalsCount}/4`;
-        return "Pending";
+
+        // habang hindi pa complete, show ratio
+        if (safeCount > 0 && safeCount < required) return `Approved ${safeCount}/${required}`;
+        return `Pending`;
     };
 
         /* --- helpers --- */
@@ -332,26 +338,25 @@ export const Outreach = () => {
     }
     // UPLOADING STEP LOGIC END
 
-
     useEffect(() => {
         if (!formData) return;
         setForms(prev =>
             prev.map(r => {
-            const match = _.find(formData?.data, { code: r.id }); // dahil hook now returns res.data
+            const match = _.find(formData?.data, { code: r.id });
             if (!match) return r;
-
-            const { status, approvalsCount } = deriveStatusFromMatch(match);
-            return  {
-                    ...r,
-                    fileName: _.last(match?.name.split(' - ')),
-                    url: match?.file,
-                    status,
-                    approvalsCount,
-                    file_id: match?.id,
-                }
+            const { status, approvalsCount, required } = deriveStatusFromMatch(match);
+            return {
+                ...r,
+                fileName: _.last(match?.name.split(" - ")),
+                url: match?.file,
+                status,
+                approvalsCount,
+                requiredApprovals: required,
+                file_id: match?.id,
+            };
             })
         );
-    }, [formData])
+    }, [formData]);
 
     if(formLoading) {
         return (
@@ -390,9 +395,13 @@ export const Outreach = () => {
                             {forms.map((form, index) => {
                                 const isOdd = index % 2 === 1;
                                 const hasFile = !!form.fileName;
-                                const disabledActions = !hasFile || form.status === "declined" || form.approvalsCount === 4;
-                                const label = displayStatusText(form.status, form.approvalsCount, hasFile);
-                                const colorClass = statusColor(form.status, form.approvalsCount, hasFile);
+                                const required = form.requiredApprovals || getRequiredApprovals(form.code);
+                                const disabledActions =
+                                !hasFile ||
+                                form.status === "declined" ||
+                                (form.approvalsCount || 0) >= (form.requiredApprovals || getRequiredApprovals(form.code));
+                                const label = displayStatusText(form.status, form.approvalsCount || 0, !!form.fileName, required);
+                                const colorClass = statusColor(form.status);
 
                                 return (
                                     <tr key={form.id} className={isOdd ? "bg-yellow-50" : ""}>
@@ -463,19 +472,6 @@ export const Outreach = () => {
                                                     </>
                                                     );
                                                 })()}
-                                                {/* <button
-                                                    type="button"
-                                                    onClick={() => openPicker(form.id)}
-                                                    disabled={uploadLoading || removeLoading}
-                                                    className="inline-flex items-center rounded-md bg-[#013a63] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 disabled:opacity-60"
-                                                >
-                                                        {uploadingRow === form.id
-                                                        ? "Uploading…"
-                                                        : removingRow === form.id
-                                                        ? "Removing…"
-                                                        : "Upload"}
-                                                </button>
-                                                <span className="text-slate-400">No file attached</span> */}
                                             </div>
                                         )}
 
