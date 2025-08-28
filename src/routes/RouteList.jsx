@@ -42,6 +42,10 @@ import { ProjectScreen } from '@_src/components/Screen/Forms/Upload/ProjectScree
 import { OutreachScreen } from '@_src/components/Screen/Forms/Upload/OutreachScreen'
 import { ProgramScreen } from '@_src/components/Screen/Forms/Upload/ProgramScreen'
 
+import { ProjectScreen as GenerateProject } from '@_src/components/Screen/Forms/Generate/ProjectScreen'
+import { OutreachScreen as GenerateOutreach } from '@_src/components/Screen/Forms/Generate/OutreachScreen'
+import { ProgramScreen as GenerateProgram } from '@_src/components/Screen/Forms/Generate/ProgramScreen'
+
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
 
@@ -89,8 +93,13 @@ export const RouteList = () => {
                 <Route path="/event/form/project" element={<ProjectScreen />} />
                 <Route path="/event/form/outreach" element={<OutreachScreen />} />
                 <Route path="/event/form/program" element={<ProgramScreen />} />
-                
                 {/* NEW FORM ROUTE */}
+
+                {/* PDF GENERATES */}
+                <Route path="/event/form/generate/project" element={<GenerateProject />} />
+                <Route path="/event/form/generate/outreach" element={<GenerateOutreach />} />
+                <Route path="/event/form/generate/program" element={<GenerateProgram />} />
+                {/* PDF GENERATES */}
 
 
                 <Route path="/organization/view" element={<OrgViewScreen />} />

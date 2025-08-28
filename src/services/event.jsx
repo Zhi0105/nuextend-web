@@ -12,6 +12,24 @@ const unwrapEvents = (res) => {
 };
 
 
+const normalize = (res) => {
+    const d = res?.data ?? res;
+    if (Array.isArray(d)) return d;
+    if (Array.isArray(d?.data)) return d.data;
+    return [];
+};
+
+export const fetchEventTypes = async () => {
+    const res = await apiClient.get("api/v1/event_types/all");
+    const rows = normalize(res);
+    return rows.map((r) => ({
+        label: r?.name ?? r?.label ?? r?.title ?? String(r?.id ?? r?.value ?? r?.code ?? ""),
+        value: r?.id ?? r?.value ?? r?.code ?? r?.slug ?? r?.name ?? "",
+    }));
+};
+
+const DEFAULT_OPT = { label: "— Select type —", value: "" };
+
 export const getEventStatus = () => {
     return useQuery({
         queryKey: ['evemt-status'],
@@ -25,14 +43,27 @@ export const getEventStatus = () => {
 }
 export const getEventTypes = () => {
     return useQuery({
-        queryKey: ['event-types'],
-        queryFn: async() => {
-            const result = await apiClient.get('api/v1/event_types/all')
-            return result?.data
-        },
-        staleTime: 5 * 60000,
-        refetchOnWindowFocus: true,
-    })
+        queryKey: ["event-types"],
+        queryFn: fetchEventTypes,
+        // show options agad (no spinner) while request runs
+        placeholderData: (old) => old ?? [DEFAULT_OPT],
+        // always include default first item
+        select: (opts) => [DEFAULT_OPT, ...opts],
+        // keep & reuse across visits para no refetch flicker
+        staleTime: 24 * 60 * 60 * 1000, // 1 day
+        cacheTime: 24 * 60 * 60 * 1000,
+        refetchOnMount: false,
+        refetchOnWindowFocus: false,
+    });    
+    // return useQuery({
+    //     queryKey: ['event-types'],
+    //     queryFn: async() => {
+    //         const result = await apiClient.get('api/v1/event_types/all')
+    //         return result?.data
+    //     },
+    //     staleTime: 5 * 60000,
+    //     refetchOnWindowFocus: true,
+    // })
 }
 export const getEvents = (payload) => {
     return useQuery({

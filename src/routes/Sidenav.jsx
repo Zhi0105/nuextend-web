@@ -1,20 +1,27 @@
-import React, { useContext } from 'react'
+import React, { useContext, useState } from 'react'
 import { useUserStore } from '@_src/store/auth';
 import { AuthContext } from "@_src/contexts/AuthContext"
 import { FaSignOutAlt } from "react-icons/fa";
 import { IoHome } from "react-icons/io5";
 import { Link } from 'react-router-dom';
-import { FaHome, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaHome, FaChevronDown, FaChevronUp, FaRegFilePdf } from "react-icons/fa";
 import { RiCalendarEventFill } from "react-icons/ri";
 import { IoIosEye, IoIosCreate  } from "react-icons/io";
 import { PiDownloadSimpleBold } from "react-icons/pi";
+import { MdOutlinePictureAsPdf } from "react-icons/md";
 import { DecryptUser } from '@_src/utils/helpers';
 import _ from 'lodash';
 
 export const Sidenav = () => {
+    
     const { logout } = useContext(AuthContext)
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedUser = token && DecryptUser(user)
+    const [generateVisible, setGenerateVisible] = useState(false);
+    
+    const toggleGenerate = () => {
+        setGenerateVisible(!generateVisible)
+    };
 
     const validateUserRole = (role) => {
         if(role === 3) {
@@ -101,6 +108,67 @@ export const Sidenav = () => {
                         </Link>
                     </div>
                 </li>
+
+                <li>
+                    <div
+                        className="flex items-center justify-between rounded cursor-pointer"
+                        onClick={() => toggleGenerate()}
+                    >
+                        <div className="flex gap-6">
+                            <MdOutlinePictureAsPdf 
+                                width={5}
+                                height={5}
+                                className='text-xl text-gray-500'
+                            />
+                            <span>Generate pdf</span>
+                        </div>
+                        {generateVisible ? <FaChevronUp /> : <FaChevronDown />}
+                    </div>
+                    {generateVisible && (
+                        <ul className="ml-6 mt-1 space-y-1">
+                            <li>
+                                <Link
+                                    to="/event/form/generate/outreach"
+                                    className="flex gap-6 cursor-pointer"
+                                    >
+                                    <FaRegFilePdf 
+                                        width={5}
+                                        height={5}
+                                        className='text-xl text-gray-500'
+                                    />
+                                    <span>Outreach</span>
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    to="/event/form/generate/project"
+                                    className="flex gap-6 cursor-pointer"
+                                    >
+                                    <FaRegFilePdf 
+                                        width={5}
+                                        height={5}
+                                        className='text-xl text-gray-500'
+                                    />
+                                    <span>Project</span>
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    to="/event/form/generate/program"
+                                    className="flex gap-6 cursor-pointer"
+                                    >
+                                    <FaRegFilePdf 
+                                        width={5}
+                                        height={5}
+                                        className='text-xl text-gray-500'
+                                    />
+                                    <span>Program</span>
+                                </Link>
+                            </li>
+                        </ul>
+                    )}
+                </li>
+
                 <li
                     onClick={logout}
                     className="flex gap-6 cursor-pointer"

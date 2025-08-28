@@ -4,19 +4,25 @@ import { useUserStore } from '@_src/store/auth';
 import { FaSignOutAlt } from "react-icons/fa";
 import { IoHome } from "react-icons/io5";
 import { Link } from 'react-router-dom';
-import { FaHome, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaHome, FaChevronDown, FaChevronUp, FaRegFilePdf } from "react-icons/fa";
 import { RiCalendarEventFill } from "react-icons/ri";
 import { IoIosEye, IoIosCreate  } from "react-icons/io";
 import { DecryptUser } from '@_src/utils/helpers';
-import _ from 'lodash';
 import { PiDownloadSimpleBold } from 'react-icons/pi';
+import { MdOutlinePictureAsPdf } from "react-icons/md";
+import _ from 'lodash';
 
 export const AdminSidenav = () => {
     const { logout } = useContext(AuthContext)
     const [eventVisible, setEventVisible] = useState(false);
     const [skillVisible, setSkillVisible] = useState(false)
+    const [generateVisible, setGenerateVisible] = useState(false);
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedUser = token && DecryptUser(user)
+    
+    const toggleGenerate = () => {
+        setGenerateVisible(!generateVisible)
+    };
 
     const toggleEvents = () => {
         setEventVisible(!eventVisible)
@@ -178,6 +184,65 @@ export const AdminSidenav = () => {
                         </div>
                     </li>
                 )}
+                <li>
+                    <div
+                        className="flex items-center justify-between rounded cursor-pointer"
+                        onClick={() => toggleGenerate()}
+                    >
+                        <div className="flex gap-6">
+                            <MdOutlinePictureAsPdf 
+                                width={5}
+                                height={5}
+                                className='text-xl text-gray-500'
+                            />
+                            <span>Generate pdf</span>
+                        </div>
+                        {generateVisible ? <FaChevronUp /> : <FaChevronDown />}
+                    </div>
+                    {generateVisible && (
+                        <ul className="ml-6 mt-1 space-y-1">
+                            <li>
+                                <Link
+                                    to="/event/form/generate/outreach"
+                                    className="flex gap-6 cursor-pointer"
+                                    >
+                                    <FaRegFilePdf 
+                                        width={5}
+                                        height={5}
+                                        className='text-xl text-gray-500'
+                                    />
+                                    <span>Outreach</span>
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    to="/event/form/generate/project"
+                                    className="flex gap-6 cursor-pointer"
+                                    >
+                                    <FaRegFilePdf 
+                                        width={5}
+                                        height={5}
+                                        className='text-xl text-gray-500'
+                                    />
+                                    <span>Project</span>
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    to="/event/form/generate/program"
+                                    className="flex gap-6 cursor-pointer"
+                                    >
+                                    <FaRegFilePdf 
+                                        width={5}
+                                        height={5}
+                                        className='text-xl text-gray-500'
+                                    />
+                                    <span>Program</span>
+                                </Link>
+                            </li>
+                        </ul>
+                    )}
+                </li>
                 {decryptedUser?.role_id === 1 && (
                     <li>
                         <div className="flex gap-6">
