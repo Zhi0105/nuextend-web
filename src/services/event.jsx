@@ -32,7 +32,7 @@ const DEFAULT_OPT = { label: "— Select type —", value: "" };
 
 export const getEventStatus = () => {
     return useQuery({
-        queryKey: ['evemt-status'],
+        queryKey: ['event-status'],
         queryFn: async() => {
             const result = await apiClient.get('api/v1/event_status/all')
             return result?.data

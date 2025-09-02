@@ -46,6 +46,11 @@ import { ProjectScreen as GenerateProject } from '@_src/components/Screen/Forms/
 import { OutreachScreen as GenerateOutreach } from '@_src/components/Screen/Forms/Generate/OutreachScreen'
 import { ProgramScreen as GenerateProgram } from '@_src/components/Screen/Forms/Generate/ProgramScreen'
 
+import { OutreachDataScreen } from '@_src/components/Screen/Forms/Generate/Data/OutreachDataScreen'
+import { ProjectDataScreen } from '@_src/components/Screen/Forms/Generate/Data/ProjectDataScreen'
+import { ProgramDataScreen } from '@_src/components/Screen/Forms/Generate/Data/ProgramDataScreen'
+
+
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
 
@@ -99,6 +104,12 @@ export const RouteList = () => {
                 <Route path="/event/form/generate/project" element={<GenerateProject />} />
                 <Route path="/event/form/generate/outreach" element={<GenerateOutreach />} />
                 <Route path="/event/form/generate/program" element={<GenerateProgram />} />
+
+
+                <Route path="/event/form/generate/outreach/data" element={<OutreachDataScreen />} />
+                <Route path="/event/form/generate/project/data" element={<ProjectDataScreen />} />
+                <Route path="/event/form/generate/program/data" element={<ProgramDataScreen />} />
+                
                 {/* PDF GENERATES */}
 
 
@@ -110,6 +121,8 @@ export const RouteList = () => {
                 <Route path="/skill/create" element={<SkillCreateScreen />} />    
                 <Route path="/skill/update" element={<SkillUpdateScreen />} />    
                 <Route path="/skill/view" element={<SkillViewScreen />} />    
+
+
             </Route>
 
             <Route element={<LoginRoute />}>

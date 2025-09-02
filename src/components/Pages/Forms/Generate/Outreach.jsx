@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { Card } from "primereact/card";
 import { InputText } from "primereact/inputtext";
@@ -10,6 +11,13 @@ import { Fieldset } from "primereact/fieldset";
 import { Chips } from "primereact/chips";
 import { Divider } from "primereact/divider";
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from "@react-pdf/renderer";
+import { createOutreach, updateOutreach } from "@_src/services/proposal";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { toast } from "react-toastify";
+import { useUserStore } from '@_src/store/auth';
+import { DecryptString, toDateOrNull } from "@_src/utils/helpers";
+import dayjs from 'dayjs';
+
 
 // 1) Register font (same approach as your Program component)
 Font.register({
@@ -214,12 +222,52 @@ const OutreachPDF = ({ data }) => {
 };
 
 export const Outreach = ({ onSubmit }) => {
+    const navigate = useNavigate()
+    const location = useLocation()
+    const queryClient = useQueryClient()
+    const { token } = useUserStore((state) => ({ token: state.token }));
+    const decryptedToken = token && DecryptString(token)
+    const proposalData = location.state
+
+
+    const { mutate: handleCreateOutreachProposal, isLoading: createProposalLoading } = useMutation({
+        mutationFn: createOutreach,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['proposal'] });
+            toast(data.message, { type: "success" })
+            reset()
+            }, 
+        onError: (error) => {
+            toast(error?.response.data.message, { type: "warning" })
+
+            console.log("@COPE:", error)
+        },
+    });
+
+    const { mutate: handleUpdateOutreachProposal, isLoading: updateProposalLoading } = useMutation({
+        mutationFn: updateOutreach,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['proposal'] });
+            toast(data.message, { type: "success" })
+            }, 
+        onError: (error) => {
+            toast(error?.response.data.message, { type: "warning" })
+
+            console.log("@UOPE:", error)
+        },
+    });
+
+    const setFormatDate = (date) => {
+        return dayjs(new Date(date)).format('MM-DD-YYYY')
+    }
+
     const {
         control,
         register,
         handleSubmit,
         formState: { errors },
         watch,
+        reset
     } = useForm({
         defaultValues: {
         // Top-level
@@ -266,18 +314,89 @@ export const Outreach = ({ onSubmit }) => {
     const submit = (data) => {
         if (onSubmit) onSubmit(data);
         console.log("Submitted Outreach:", data);
+        
+        if(proposalData?.id) {
+            handleUpdateOutreachProposal({
+                token: decryptedToken,
+                id: proposalData?.id,
+                title: data?.title,
+                description: data?.description,
+                targetGroup: data?.targetGroup,
+                startDate: setFormatDate(data?.startDate),
+                endDate: setFormatDate(data?.endDate),
+                activityPlanBudget: [ ...data.activityPlanBudget ],
+                detailedBudget: [ ...data.detailedBudget ],
+                budgetSourcing: [ ...data.budgetSourcing ],
+                projectLeader: data?.projectLeader,
+                mobile: data?.mobile,
+                email: data?.email
+            })
+        } else {
+            handleCreateOutreachProposal({
+                token: decryptedToken,
+                title: data?.title,
+                description: data?.description,
+                targetGroup: data?.targetGroup,
+                startDate: setFormatDate(data?.startDate),
+                endDate: setFormatDate(data?.endDate),
+                activityPlanBudget: [ ...data.activityPlanBudget ],
+                detailedBudget: [ ...data.detailedBudget ],
+                budgetSourcing: [ ...data.budgetSourcing ],
+                projectLeader: data?.projectLeader,
+                mobile: data?.mobile,
+                email: data?.email
+            })
+        }
+        
     };
+
+
+    const CardTitle = () => {
+        return (
+            <div className="flex justify-between">
+                <h1 className="font-bold text-2xl">
+                    Outreach Proposal
+                </h1>
+                <h1>
+                    <Button 
+                        onClick={() => navigate("/event/form/generate/outreach/data")}
+                        type="button" 
+                        className="text-blue-400" 
+                        label="View all proposal"
+                    />
+                </h1>
+            </div>
+        )
+    }
 
     const Err = ({ name }) =>
         errors?.[name] ? (
         <small className="p-error block mt-1">{errors[name]?.message || "Required"}</small>
         ) : null;
+        
+    useEffect(() => {
+        if(proposalData) {
+            reset({
+                title: proposalData?.title ?? '' ,
+                description: proposalData?.description ?? '',
+                targetGroup: proposalData?.targetGroup ?? '',
+                startDate: toDateOrNull(proposalData?.startDate),
+                endDate: toDateOrNull(proposalData?.endDate),
+                activityPlanBudget: Array.isArray(proposalData?.activityPlanBudget) ? [...proposalData.activityPlanBudget] : [],
+                detailedBudget: Array.isArray(proposalData?.detailedBudget) ? [...proposalData.detailedBudget] : [],
+                budgetSourcing: Array.isArray(proposalData?.budgetSourcing) ? [...proposalData.budgetSourcing] : [],
+                projectLeader: proposalData?.projectLeader ?? '',
+                mobile: proposalData?.mobile ?? '', 
+                email: proposalData?.email ?? ''
+            })
+        }
+    }, [proposalData, reset])
 
     return (
         <div className="outreach-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
             <form onSubmit={handleSubmit(submit)} className="space-y-24 px-4">
                 {/* Header / Basic Info */}
-                <Card title="Outreach Proposal" className="shadow-2 rounded-2xl">
+                <Card title={<CardTitle />} className="shadow-2 rounded-2xl">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block mb-2">Title</label>
@@ -653,7 +772,13 @@ export const Outreach = ({ onSubmit }) => {
 
                 {/* Actions */}
                 <div className="flex items-center gap-3">
-                    <Button type="submit" className="text-green-600" icon="pi pi-check" label="Submit" />
+                    <Button 
+                        type="submit" 
+                        className="text-green-600" 
+                        icon="pi pi-check" 
+                        label={createProposalLoading || updateProposalLoading ? "loading..." : "Submit"}
+                        disabled={createProposalLoading || updateProposalLoading} 
+                    />
                     <Button type="reset" className="text-red-400" icon="pi pi-refresh" label="Reset" severity="secondary" />
 
                     <PDFDownloadLink document={<OutreachPDF data={watch()} />} fileName={`Outreach-proposal.pdf`}>

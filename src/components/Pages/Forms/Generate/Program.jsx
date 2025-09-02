@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { Card } from "primereact/card";
 import { InputText } from "primereact/inputtext";
@@ -10,7 +10,13 @@ import { Fieldset } from "primereact/fieldset";
 import { Chips } from "primereact/chips";
 import { Divider } from "primereact/divider";
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from "@react-pdf/renderer";
-
+import { useNavigate, useLocation } from "react-router-dom";
+import { createProgram, updateProgram } from "@_src/services/proposal";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { toast } from "react-toastify";
+import { useUserStore } from '@_src/store/auth';
+import { DecryptString, toDateOrNull, toStringArray, toStringArrayFromObjects } from "@_src/utils/helpers";
+import dayjs from "dayjs";
 
 // 1) Register font
 Font.register({
@@ -133,13 +139,50 @@ const ProgramPDF = ({ data }) => {
 }
 
 export const Program = ({ onSubmit }) => {
+    const navigate = useNavigate()
+    const location = useLocation()
+    const queryClient = useQueryClient()
+    const { token } = useUserStore((state) => ({ token: state.token }));
+    const decryptedToken = token && DecryptString(token)
+    const proposalData = location.state
     
+    const { mutate: handleCreateProgramProposal, isLoading: createProposalLoading } = useMutation({
+        mutationFn: createProgram,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['proposal'] });
+            toast(data.message, { type: "success" })
+            reset()
+            }, 
+        onError: (error) => {
+            toast(error?.response.data.message, { type: "warning" })
+
+            console.log("@CPPE:", error)
+        },
+    });
+    const { mutate: handleUpdateProgramProposal, isLoading: updateProgramLoading } = useMutation({
+        mutationFn: updateProgram,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['proposal'] });
+            toast(data.message, { type: "success" })
+            }, 
+        onError: (error) => {
+            toast(error?.response.data.message, { type: "warning" })
+
+            console.log("@UPPE:", error)
+        },
+    });
+
+    const setFormatDate = (date) => {
+        return dayjs(new Date(date)).format('MM-DD-YYYY')
+    }
+
     const {
         control,
         register,
         handleSubmit,
         formState: { errors },
         watch,
+        reset
     } = useForm({
         defaultValues: {
         // Top-level details
@@ -191,19 +234,130 @@ export const Program = ({ onSubmit }) => {
         if (onSubmit) onSubmit(data);
         // Demo: log & show alert. Replace as needed.
         console.log("Submitted:", data);
+        if(proposalData?.id) {
+            handleUpdateProgramProposal({
+                token: decryptedToken,
+                id: proposalData?.id,
+                title: data?.title,
+                implementer: data?.implementer,
+                programTeamMembers: [ ...data.programTeamMembers ],
+                targetGroup: data?.targetGroup,
+                cooperatingAgencies: [ ...data.cooperatingAgencies ],
+                duration: data?.duration,
+                proposalBudget: data?.proposalBudget,
+                background: data?.background,
+                overallGoal: data?.overallGoal,
+                scholarlyConnection: data?.scholarlyConnection,
+                coordinator: data?.coordinator,
+                mobileNumber: data?.mobileNumber,
+                email: data?.email,
+                componentProjects: [ ...data.componentProjects ],
+                projects: [ ...data.projects ],
+                activityPlans: Array.isArray(data?.activityPlans)
+                ? data.activityPlans.map((a) => ({
+                    activity: a?.activity ?? "",
+                    outputs: a?.outputs ?? "",
+                    timeline: setFormatDate(a?.timeline), 
+                    personnel: a?.personnel ?? "",
+                    }))
+                : [{ activity: "", outputs: "", timeline: null, personnel: "" }]
+            })
+        } else {
+            handleCreateProgramProposal({
+                token: decryptedToken,
+                title: data?.title,
+                implementer: data?.implementer,
+                programTeamMembers: [ ...data.programTeamMembers ],
+                targetGroup: data?.targetGroup,
+                cooperatingAgencies: [ ...data.cooperatingAgencies ],
+                duration: data?.duration,
+                proposalBudget: data?.proposalBudget,
+                background: data?.background,
+                overallGoal: data?.overallGoal,
+                scholarlyConnection: data?.scholarlyConnection,
+                coordinator: data?.coordinator,
+                mobileNumber: data?.mobileNumber,
+                email: data?.email,
+                componentProjects: [ ...data.componentProjects ],
+                projects: [ ...data.projects ],
+                activityPlans: Array.isArray(data?.activityPlans)
+                ? data.activityPlans.map((a) => ({
+                    activity: a?.activity ?? "",
+                    outputs: a?.outputs ?? "",
+                    timeline: setFormatDate(a?.timeline), 
+                    personnel: a?.personnel ?? "",
+                    }))
+                : [{ activity: "", outputs: "", timeline: null, personnel: "" }]
+            })
+        }
     };
-
+    
+    const CardTitle = () => {
+        return (
+            <div className="flex justify-between">
+                <h1 className="font-bold text-2xl">
+                    Program Proposal
+                </h1>
+                <h1>
+                    <Button 
+                        onClick={() => navigate("/event/form/generate/program/data")}
+                        type="button" 
+                        className="text-blue-400" 
+                        label="View all proposal"
+                    />
+                </h1>
+            </div>
+        )
+    }
+    
     // Simple helper for error text
     const Err = ({ name }) =>
         errors?.[name] ? (
         <small className="p-error block mt-1">{errors[name]?.message || "Required"}</small>
     ) : null;
 
+    useEffect(() => {
+        if(proposalData) {
+            reset({
+                title: proposalData?.title ?? '' ,
+                implementer: proposalData?.implementer ?? '',
+                programTeamMembers: toStringArray(proposalData?.programTeamMembers),
+                targetGroup: proposalData?.targetGroup ?? '',
+                cooperatingAgencies: toStringArray(proposalData?.cooperatingAgencies),
+                duration: proposalData?.duration ?? '',
+                proposalBudget: proposalData?.proposalBudget ?? '',
+                background: proposalData?.background ?? '',
+                overallGoal: proposalData?.overallGoal ?? '',
+                scholarlyConnection: proposalData?.scholarlyConnection ?? '',
+                coordinator: proposalData?.coordinator ?? '',
+                mobileNumber: proposalData?.mobileNumber ?? '',
+                email: proposalData?.email ?? '',
+                componentProjects:  Array.isArray(proposalData?.componentProjects) ? [...proposalData.componentProjects] : [],
+                projects: Array.isArray(proposalData?.projects) && proposalData.projects.length
+                ? proposalData.projects.map((p) => ({
+                    projectTitle: p?.projectTitle ?? p?.title ?? "",
+                    teamLeader: p?.teamLeader ?? "",
+                    teamMembers: toStringArrayFromObjects(p?.program_project_team_members, "name"), // <-- Chips wants string[]
+                    objectives: p?.objectives ?? "",
+                    }))
+                : [{ projectTitle: "", teamLeader: "", teamMembers: [], objectives: "" }],
+                activityPlans: Array.isArray(proposalData?.activityPlans)
+                ? proposalData.activityPlans.map((a) => ({
+                    activity: a?.activity ?? "",
+                    outputs: a?.outputs ?? "",
+                    timeline: toDateOrNull(a?.timeline), // <-- Date for Calendar
+                    personnel: a?.personnel ?? "",
+                    }))
+                : [{ activity: "", outputs: "", timeline: null, personnel: "" }]
+            })
+        }
+    }, [proposalData, reset])
+
     return (
         <div className="program-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
             <form onSubmit={handleSubmit(submit)} className="space-y-24">
                 {/* Program Header */}
-                <Card title="Program proposal" className="shadow-2 rounded-2xl">
+                <Card title={<CardTitle />} className="shadow-2 rounded-2xl">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block mb-2">Title</label>
@@ -586,7 +740,13 @@ export const Program = ({ onSubmit }) => {
 
                 {/* Actions */}
                 <div className="flex items-center gap-3">
-                    <Button type="submit" className="text-green-600" icon="pi pi-check" label="Submit" />
+                    <Button 
+                        type="submit" 
+                        className="text-green-600" 
+                        icon="pi pi-check" 
+                        label={createProposalLoading || updateProgramLoading ? "loading..." : "Submit"}
+                        disabled={createProposalLoading || updateProgramLoading} 
+                    />
                     <Button type="reset" className="text-red-400" icon="pi pi-refresh" label="Reset" severity="secondary" />
                     <PDFDownloadLink
                         document={<ProgramPDF data={watch()} />}

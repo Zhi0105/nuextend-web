@@ -177,3 +177,29 @@ export const APPROVAL_REQUIREMENTS = {
     "NUB-ACD-CMX-F-014": 2,
 };
 export const getRequiredApprovals = (code) => (code && APPROVAL_REQUIREMENTS[code]) || 4;
+
+export const toDateOrNull = (v) => {
+    if (!v) return null;
+    // already a Date
+    if (v instanceof Date && !isNaN(v.getTime())) return v;
+    // dayjs parse (handles ISO, "MM-DD-YYYY", "MM/DD/YYYY", timestamps, etc.)
+    const d = dayjs(v);
+    return d.isValid() ? d.toDate() : null;
+};
+
+export const toStringArray = (arr) =>
+    (Array.isArray(arr) ? arr : [])
+        .map((v) => {
+        if (typeof v === "string") return v.trim();
+        if (v && typeof v === "object") return (v.name ?? v.full_name ?? v.label ?? "").toString().trim();
+        return "";
+    })
+    .filter(Boolean);
+
+export const toStringArrayFromObjects = (arr, key = "name") =>
+(Array.isArray(arr) ? arr : [])
+.map((o) => (o && typeof o === "object" ? String(o[key] ?? "").trim() : ""))
+.filter(Boolean);
+
+export const toMemberObjects = (arr) =>
+  Array.isArray(arr) ? arr.filter(Boolean).map((name) => ({ name })) : [];

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { Card } from "primereact/card";
 import { InputText } from "primereact/inputtext";
@@ -11,7 +11,13 @@ import { Fieldset } from "primereact/fieldset";
 import { Divider } from "primereact/divider";
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from "@react-pdf/renderer";
 import { getEventTypes } from "@_src/services/event";
-
+import { useNavigate, useLocation } from "react-router-dom";
+import { createProject, updateProject } from "@_src/services/proposal";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { toast } from "react-toastify";
+import { useUserStore } from '@_src/store/auth';
+import { DecryptString, toDateOrNull } from "@_src/utils/helpers";
+import dayjs from 'dayjs';
 
 // Register fonts (same approach as your Outreach component)
 Font.register({
@@ -205,9 +211,48 @@ const SectionTitle = ({ children }) => (
 );
 
 export const Project = ({ onSubmit }) => {
+    const navigate = useNavigate()
+    const location = useLocation()
+    const queryClient = useQueryClient()
+    const { token } = useUserStore((state) => ({ token: state.token }));
+    const decryptedToken = token && DecryptString(token)
+    const proposalData = location.state
+    
     const { data: eventTypeOptions = [{ label: "— Select type —", value: "" }] } = getEventTypes();
 
-    const { control, register, handleSubmit, formState: { errors }, watch } = useForm({
+    const { mutate: handleCreateProjectProposal, isLoading: createProposalLoading } = useMutation({
+        mutationFn: createProject,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['proposal'] });
+            toast(data.message, { type: "success" })
+            reset()
+            }, 
+        onError: (error) => {
+            toast(error?.response.data.message, { type: "warning" })
+
+            console.log("@COPE:", error)
+        },
+    });
+    const { mutate: handleUpdateProjectProposal, isLoading: updateProposalLoading } = useMutation({
+        mutationFn: updateProject,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['proposal'] });
+            toast(data.message, { type: "success" })
+            }, 
+        onError: (error) => {
+            toast(error?.response.data.message, { type: "warning" })
+
+            console.log("@UPPE:", error)
+        },
+    });
+    
+    const setFormatDate = (date) => {
+        return dayjs(new Date(date)).format('MM-DD-YYYY')
+    }
+
+
+
+    const { control, register, handleSubmit, formState: { errors }, watch, reset } = useForm({
         defaultValues: {
             projectTitle: "",
             projectType: "",
@@ -256,14 +301,115 @@ export const Project = ({ onSubmit }) => {
     const submit = (data) => {
         if (onSubmit) onSubmit(data);
         console.log("Submitted project:", data);
+        if(proposalData?.id) {
+            handleUpdateProjectProposal({
+                token: decryptedToken,
+                id: proposalData?.id,
+                projectTitle: data?.projectTitle,
+                projectType: data?.projectType,
+                proponents: data?.proponents,
+                collaborators: data?.collaborators,
+                participants: data?.participants,
+                partners: data?.partners,
+                implementationDate: setFormatDate(data?.implementationDate),
+                durationHours: data?.durationHours,
+                area: data?.area,
+                budgetRequirement: data?.budgetRequirement,
+                budgetRequested: data?.budgetRequested,
+                background: data?.background,
+                objectives: [ ...data.objectives ],
+                impactOutcome: [ ...data.impactOutcome ],
+                risks: [ ...data.risks ],
+                staffing: [ ...data.staffing ],
+                workPlan: [ ...data.workPlan ],
+                detailedBudget: [ ...data.detailedBudget ],
+                otherInfo: data?.otherInfo,
+                projectLeader: data?.projectLeader,
+                mobile: data?.mobile,
+                email: data?.email
+            })
+        } else {
+            handleCreateProjectProposal({
+                token: decryptedToken,
+                projectTitle: data?.projectTitle,
+                projectType: data?.projectType,
+                proponents: data?.proponents,
+                collaborators: data?.collaborators,
+                participants: data?.participants,
+                partners: data?.partners,
+                implementationDate: setFormatDate(data?.implementationDate),
+                durationHours: data?.durationHours,
+                area: data?.area,
+                budgetRequirement: data?.budgetRequirement,
+                budgetRequested: data?.budgetRequested,
+                background: data?.background,
+                objectives: [ ...data.objectives ],
+                impactOutcome: [ ...data.impactOutcome ],
+                risks: [ ...data.risks ],
+                staffing: [ ...data.staffing ],
+                workPlan: [ ...data.workPlan ],
+                detailedBudget: [ ...data.detailedBudget ],
+                otherInfo: data?.otherInfo,
+                projectLeader: data?.projectLeader,
+                mobile: data?.mobile,
+                email: data?.email
+            })
+        }
+    
     };
 
+    const CardTitle = () => {
+        return (
+            <div className="flex justify-between">
+                <h1 className="font-bold text-2xl">
+                    Project Proposal
+                </h1>
+                <h1>
+                    <Button 
+                        onClick={() => navigate("/event/form/generate/project/data")}
+                        type="button" 
+                        className="text-blue-400" 
+                        label="View all proposal"
+                    />
+                </h1>
+            </div>
+        )
+    }
+    
 
+    useEffect(() => {
+        if(proposalData) {
+            reset({
+                projectTitle: proposalData?.projectTitle ?? '' ,
+                projectType: proposalData?.projectType ?? 0,
+                proponents: proposalData?.proponents ?? '',
+                collaborators: proposalData?.collaborators ?? '',
+                participants: proposalData?.participants ?? '',
+                partners: proposalData?.partners ?? '',
+                implementationDate: toDateOrNull(proposalData?.implementationDate) ?? '',
+                durationHours: proposalData?.durationHours ?? 0,
+                area: proposalData?.area ?? 0,
+                budgetRequirement: proposalData?.budgetRequirement ?? 0,
+                budgetRequested: proposalData?.budgetRequested ?? 0,
+                background: proposalData?.background ?? '',
+                objectives: Array.isArray(proposalData?.objectives) ? [...proposalData.objectives] : [] ,
+                impactOutcome: Array.isArray(proposalData?.impactOutcome) ? [...proposalData.impactOutcome] : [],
+                risks: Array.isArray(proposalData?.risks) ? [...proposalData.risks] : [] ,
+                staffing: Array.isArray(proposalData?.staffing) ? [...proposalData.staffing] : [] ,
+                workPlan: Array.isArray(proposalData?.workPlan) ? [...proposalData.workPlan] : [] ,
+                detailedBudget: Array.isArray(proposalData?.detailedBudget) ? [...proposalData.detailedBudget] : [],
+                otherInfo: proposalData?.otherInfo ?? '',
+                projectLeader: proposalData?.projectLeader ?? '',
+                mobile: proposalData?.mobile ?? '',
+                email: proposalData?.email ?? ''
+            })
+        }
+    }, [proposalData, reset])
 
     return (
         <div className="project-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
             <form onSubmit={handleSubmit(submit)} className="space-y-16 w-full max-w-6xl px-4">
-                <Card title="Project Proposal" className="shadow-2 rounded-2xl">
+                <Card title={<CardTitle />} className="shadow-2 rounded-2xl">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block mb-2">Title</label>
@@ -643,7 +789,13 @@ export const Project = ({ onSubmit }) => {
 
                 {/* Actions */}
                 <div className="flex items-center gap-3">
-                    <Button type="submit" className="text-green-600" icon="pi pi-check" label="Submit" />
+                    <Button 
+                        type="submit" 
+                        className="text-green-600" 
+                        icon="pi pi-check" 
+                        label={ createProposalLoading || updateProposalLoading? "loading..." : "Submit"}
+                        disabled={createProposalLoading || updateProposalLoading} 
+                    />
                     <Button type="reset" className="text-red-400" icon="pi pi-refresh" label="Reset" severity="secondary" />
                     <PDFDownloadLink document={<ProjectPDF  data={{ ...watch(), projectTypeLabel }} />} fileName={`Project-proposal.pdf`}>
                         {({ loading }) => (
@@ -653,9 +805,9 @@ export const Project = ({ onSubmit }) => {
                 </div>
 
                 {/* Dev JSON Preview */}
-                <Fieldset legend="Preview JSON (dev)">
+                {/* <Fieldset legend="Preview JSON (dev)">
                 <pre className="whitespace-pre-wrap text-sm bg-gray-50 p-3 rounded-xl overflow-auto">{JSON.stringify(watch(), null, 2)}</pre>
-                </Fieldset>
+                </Fieldset> */}
             </form>
         </div>
     );
