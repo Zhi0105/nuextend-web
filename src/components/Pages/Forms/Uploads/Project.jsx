@@ -481,7 +481,7 @@ export const Project = () => {
                                         />
                                         </td>
                                         {/* approve / decline */}
-                                        {[1, 9, 10, 11].includes(decryptedUser?.role_id) && (
+                                        {[1, 9, 10, 11].includes(decryptedUser?.role_id)  && form.status !== "approved" && (
                                             <td className="px-4 py-4 align-top">
                                                 <div className="flex flex-col gap-2">
                                                     <button
