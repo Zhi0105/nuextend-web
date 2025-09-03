@@ -44,7 +44,7 @@ export const Create = () => {
                 budget_proposal: 0,
                 organization: "",
                 model: "",
-                event_type: "",
+                event_type: null,
                 target_group: "",
                 unsdgs: [],
                 skills: [],
@@ -97,7 +97,7 @@ export const Create = () => {
             user_id: decryptedUser?.id,
             organization_id: organization?.id,
             model_id: model?.id,
-            event_type_id: event_type?.id,   
+            event_type_id: event_type,   
             event_status_id: decryptedUser?.role_id === 1 ? 2 : 1,
             target_group_id: target_group?.id,
             term,
@@ -138,7 +138,7 @@ export const Create = () => {
     const setOrganizationList = (organizations) => {
         return _.filter(organizations, (org) => [6, 7].includes(org.pivot.role_id))
     }
-;
+    
     useEffect(() => {
         if (decryptedUser?.role_id === 1) {
             reset({
@@ -309,8 +309,9 @@ export const Create = () => {
                                             className="w-full md:w-14rem capitalize border border-gray-400" 
                                             value={value} 
                                             onChange={onChange} 
-                                            options={typeData?.data} 
-                                            optionLabel="name" 
+                                            options={typeData}
+                                            optionLabel="label" 
+                                            optionValue="value" 
                                             placeholder="Select Type" 
                                             checkmark={true} 
                                             highlightOnSelect={false} 
