@@ -50,6 +50,8 @@ import { OutreachDataScreen } from '@_src/components/Screen/Forms/Generate/Data/
 import { ProjectDataScreen } from '@_src/components/Screen/Forms/Generate/Data/ProjectDataScreen'
 import { ProgramDataScreen } from '@_src/components/Screen/Forms/Generate/Data/ProgramDataScreen'
 
+import { ActivityScreen } from '@_src/components/Screen/Event/ActivityScreen'
+
 
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
@@ -77,6 +79,7 @@ export const RouteList = () => {
                 <Route path="/event/create" element={<CreateScreen />} />
                 <Route path="/event/update" element={<UpdateScreen />} />
                 <Route path="/event/detail" element={<DetailScreen />} />
+                <Route path="/event/activities" element={<ActivityScreen />} />
                 <Route path="/event/participants" element={<ParticipantScreen />} />
                 <Route path="/event/participants/attendance" element={<AttendanceScreen />} />
                 <Route path="/admin/event/create" element={<AdminCreateScreen />} />

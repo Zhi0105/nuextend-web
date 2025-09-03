@@ -16,6 +16,7 @@ import { MdAttachment } from "react-icons/md";
 import { Tooltip } from "primereact/tooltip";
 import { useCertificatePreview } from "@_src/utils/useCertificatePreview";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { VscLayoutActivitybarLeft } from "react-icons/vsc";
 import { toast } from "react-toastify"
 import _ from "lodash";
 
@@ -153,9 +154,15 @@ export const View = () => {
                 <Tooltip target=".view" content="View" position="right" />
                 <PiListMagnifyingGlass className="view w-7 h-7 text-[#364190]" />
                 </button>
-                <button onClick={() => navigate("/event/participants", { state: eventRow.participants })}>
+                {/* <button onClick={() => navigate("/event/participants", { state: eventRow.participants })}>
                 <Tooltip target=".participants" content="Participants" position="right" />
                 <TbUsersGroup className="participants w-7 h-7 text-[#364190]" />
+                </button> */}
+                <button 
+                    onClick={() => navigate("/event/activities", { state: eventRow })}
+                >
+                <Tooltip target=".activities" content="Activities" position="right" />
+                <VscLayoutActivitybarLeft className="activities w-7 h-7 text-[#364190]" />
                 </button>
                 <button onClick={() => handleFormNavigation(eventRow)}>
                 <Tooltip target=".form" content="Form" position="right" />
@@ -208,9 +215,15 @@ export const View = () => {
                 <Tooltip target=".view" content="View" position="right" />
                 <PiListMagnifyingGlass className="view w-7 h-7 text-[#364190]" />
             </button>
-            <button onClick={() => navigate("/event/participants", { state: eventRow.participants })}>
+            {/* <button onClick={() => navigate("/event/participants", { state: eventRow.participants })}>
                 <Tooltip target=".participants" content="Participants" position="right" />
                 <TbUsersGroup className="participants w-7 h-7 text-[#364190]" />
+            </button> */}
+            <button 
+                onClick={() => navigate("/event/activities", { state: eventRow })}
+            >
+            <Tooltip target=".activities" content="Activities" position="right" />
+            <VscLayoutActivitybarLeft className="activities w-7 h-7 text-[#364190]" />
             </button>
             <button onClick={() => handleFormNavigation(eventRow)}>
                 <Tooltip target=".form" content="Form" position="right" />

@@ -502,7 +502,7 @@ export const Outreach = () => {
                                                     disabled={disabledActions}
                                                     className="inline-flex items-center justify-center rounded-md bg-rose-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                                                     >
-                                                    Decline
+                                                    Revise
                                                     </button>
                                                     
                                                 </div>
