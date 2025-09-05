@@ -1,4 +1,6 @@
+import { useContext } from "react";
 import { getEvents, getUserEvents, eventPost, eventTerminate } from "@_src/services/event";
+import { EventContext } from "@_src/contexts/EventContext";
 import { useUserStore } from "@_src/store/auth";
 import { DecryptString, DecryptUser } from "@_src/utils/helpers";
 import { DataTable } from "primereact/datatable";
@@ -14,6 +16,7 @@ import { FilterMatchMode } from "primereact/api";
 import { InputText } from "primereact/inputtext";
 import { MdAttachment } from "react-icons/md";
 import { Tooltip } from "primereact/tooltip";
+import { FaTrash } from "react-icons/fa";
 import { useCertificatePreview } from "@_src/utils/useCertificatePreview";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { VscLayoutActivitybarLeft } from "react-icons/vsc";
@@ -28,6 +31,7 @@ export const View = () => {
         user: state.user,
         token: state.token,
     }));
+    const { removeEvent, removeEventLoading } = useContext(EventContext)
 
     const decryptedToken = useMemo(() => (token ? DecryptString(token) : null), [token]);
     const decryptedUser = useMemo(() => (token ? DecryptUser(user) : null), [token, user]);
@@ -192,6 +196,10 @@ export const View = () => {
                     <PiCertificate className="generate w-7 h-7 text-[#364190]" />
                 </button>
                 )}
+                <button disabled={removeEventLoading} onClick={() => removeEvent({ token: decryptedToken, id: eventRow?.id })}>
+                    <Tooltip target=".remove" content="remove" position="right" />
+                    <FaTrash className="remove w-7 h-7 text-[#364190]" />
+                </button>
             </div>
             );
         }
@@ -228,6 +236,10 @@ export const View = () => {
             <button onClick={() => handleFormNavigation(eventRow)}>
                 <Tooltip target=".form" content="Form" position="right" />
                 <FaWpforms className="form w-7 h-7 text-[#364190]" />
+            </button>
+            <button disabled={removeEventLoading} onClick={() => removeEvent({ token: decryptedToken, id: eventRow?.id })}>
+                <Tooltip target=".remove" content="remove" position="right" />
+                <FaTrash className="remove w-7 h-7 text-[#364190]" />
             </button>
             </div>
         );

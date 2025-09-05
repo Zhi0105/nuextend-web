@@ -35,6 +35,7 @@ export const Update = () => {
     const { handleSubmit, control, reset, formState: { errors }} = useForm({
         defaultValues: {
             term:  "",
+            target_group: "",
             name:  "",
             address:  "",
             description: "",
@@ -54,13 +55,14 @@ export const Update = () => {
                 const filteredSkills = skillData.data.filter((item) => event.skills.some((evItem) => evItem.name === item.name))
             reset({
                 term: SetTermValue() || "",
+                target_group: event?.target_group ?? "",
                 name: event?.activityName || "",
                 address: event?.activity_address || "",
                 description: event?.activity_description || "",
                 budget_proposal: event?.budget_proposal || 0,
                 organization: _.find(orgData.data, { id: event.organization_id }) || "",
                 model:  _.find(modelData.data, { id: event.model_id }) || "",
-                event_type: _.find(typeData.data, { id: event.event_type_id }) || "",
+                event_type: event?.event_type_id ?? "",
                 unsdgs: [ ...filteredUNSDG ],
                 skills: [ ...filteredSkills ],
                 duration: [ new Date(event?.activity_start_date), new Date(event?.activity_end_date) ]
@@ -76,7 +78,7 @@ export const Update = () => {
         return dayjs(new Date(date)).format('MM-DD-YYYY')
     }
     const onSubmit = (data) => {
-        const { organization, model, event_type, name, address, term, duration, description, budget_proposal, skills, unsdgs } = data
+        const { organization, target_group, model, event_type, name, address, term, duration, description, budget_proposal, skills, unsdgs } = data
         const payload = {
             token: decryptedToken,
             user_id: decryptedUser?.id,
@@ -84,7 +86,8 @@ export const Update = () => {
             activity_id: event?.activity_id,
             organization_id: organization?.id,
             model_id: model?.id,
-            event_type_id: event_type?.id,
+            event_type_id: event_type,
+            target_group,
             name,
             address,
             term,
@@ -207,8 +210,9 @@ export const Update = () => {
                                 className="w-full md:w-14rem capitalize border border-gray-400" 
                                 value={value} 
                                 onChange={onChange} 
-                                options={typeData?.data} 
-                                optionLabel="name" 
+                                options={typeData} 
+                                optionLabel="label" 
+                                optionValue="value" 
                                 placeholder="Select Type" 
                                 checkmark={true} 
                                 highlightOnSelect={false} 
@@ -291,6 +295,32 @@ export const Update = () => {
                     {errors.name && (
                         <p className="text-sm italic mt-1 text-red-400 indent-2">
                             event name is required.*
+                        </p>
+                    )}
+                </div>
+                <div className="target_group">
+                    <Controller
+                        control={control}
+                        rules={{
+                        required: true,
+                        pattern: /[\S\s]+[\S]+/,
+                        }}
+                        render={({ field: { onChange, value } }) => (
+                        <InputText
+                            value={value}
+                            onChange={onChange}
+                            name="target_group"
+                            type="text"
+                            id="target_group"
+                            placeholder="Enter your target group name"
+                            className={`${errors.target_group && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                        />
+                        )}
+                        name="target_group"
+                    />
+                    {errors.target_group && (
+                        <p className="text-sm italic mt-1 text-red-400 indent-2">
+                            event target group name is required.*
                         </p>
                     )}
                 </div>

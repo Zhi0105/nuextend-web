@@ -67,7 +67,7 @@ export const getEventTypes = () => {
 }
 export const getEvents = (payload) => {
     return useQuery({
-        queryKey: ["events", Boolean(payload?.token)],
+        queryKey: ["event", Boolean(payload?.token)],
         enabled: Boolean(payload?.token) && true,
         staleTime: 0,                            // stale agad
         refetchOnMount: 'always',                // 👈 laging refetch on revisit
@@ -89,7 +89,7 @@ export const getEvents = (payload) => {
 }
 export const getUserEvents = (payload) => {
     return useQuery({
-        queryKey: ["user-events", payload?.user_id, Boolean(payload?.token)],
+        queryKey: ["event", payload?.user_id, Boolean(payload?.token)],
         enabled: Boolean(payload?.token && payload?.user_id) && true,
         staleTime: 0,                            // stale agad
         refetchOnMount: 'always',                // 👈 laging refetch on revisit
@@ -131,7 +131,7 @@ export const createEvent = (payload) => {
         model_id,
         event_type_id,
         event_status_id,
-        target_group_id,
+        target_group,
         term,
         budget_proposal,
         skills,
@@ -148,7 +148,7 @@ export const createEvent = (payload) => {
         model_id,
         event_type_id,
         event_status_id,
-        target_group_id,
+        target_group,
         term,
         budget_proposal,
         skills: [...skills],
@@ -171,6 +171,7 @@ export const updateEvent = (payload) => {
         model_id,
         event_type_id,
         event_status_id,
+        target_group,
         name,
         address,
         term,
@@ -192,6 +193,7 @@ export const updateEvent = (payload) => {
         model_id,
         event_type_id,
         event_status_id,
+        target_group,
         name,
         address,
         term,
@@ -204,6 +206,20 @@ export const updateEvent = (payload) => {
     };
 
     const result = apiClient.post('api/v1/event/update', data, {headers}).then(res => {
+        return res.data
+    })
+
+    return result
+}
+export const removeEvent = (payload) => {
+    const { id } = payload
+
+    const headers = {
+        Authorization: `Bearer ${payload?.token}`
+    }
+    const data = { id };
+
+    const result = apiClient.post('api/v1/event/delete', data, {headers}).then(res => {
         return res.data
     })
 

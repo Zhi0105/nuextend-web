@@ -1,7 +1,7 @@
 import { EventContext } from "@_src/contexts/EventContext";
 import { useUserStore } from '@_src/store/auth'
 import { useQueryClient, useMutation } from "@tanstack/react-query";
-import { acceptEvent, createEvent, rejectEvent, updateEvent } from "@_src/services/event";
+import { acceptEvent, createEvent, rejectEvent, removeEvent, updateEvent } from "@_src/services/event";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify"
 import { DecryptUser } from "@_src/utils/helpers";
@@ -36,6 +36,16 @@ export const EventProviders = ({ children }) => {
         onError: (error) => {  
             console.log("@UE:", error)
         },
+    });
+    const { mutate: handleRemoveEvent, isLoading: removeEventLoading } = useMutation({
+            mutationFn: removeEvent,
+            onSuccess: (data) => {
+                queryClient.invalidateQueries({ queryKey: ['event'] });
+                toast(data.message, { type: "success" })
+                }, 
+            onError: (error) => {  
+                console.log("@RE:", error)
+            },
     });
     const { mutate: handleAcceptEvent, isLoading: acceptEventLoading } = useMutation({
         mutationFn: acceptEvent,
@@ -89,6 +99,8 @@ export const EventProviders = ({ children }) => {
                 createEventLoading: createEventLoading,
                 updateEvent: (data) => handleUpdateEvent(data),
                 updateEventLoading: updateEventLoading,
+                removeEvent: (data) => handleRemoveEvent(data),
+                removeEventLoading: removeEventLoading,
                 acceptEvent: (data) => handleAcceptEvent(data),
                 acceptEventLoading: acceptEventLoading,
                 rejectEvent: (data) => handleRejectEvent(data),
