@@ -20,6 +20,16 @@ export const Project = () => {
     const decryptedUser = token && DecryptUser(user)
     const queryClient = useQueryClient()    
     const decryptedToken = token && DecryptString(token)
+
+    const eventOwnerId =
+    event?.created_by ??
+    event?.user_id ??
+    event?.owner_id ??
+    event?.author_id ??
+    null;
+
+    const isEventOwner = !!decryptedUser?.id && decryptedUser.id === eventOwnerId;
+
     const { data: formData, isLoading: formLoading  } = getForms({token: decryptedToken, event: event?.id})
 
         // fixed rows (you can tweak names/codes)
@@ -237,6 +247,7 @@ export const Project = () => {
     const openPicker = (rowId) => inputsRef.current[rowId]?.click();
 
     const onPick = (rowId, e) => {
+        if (!isEventOwner) return;        // hard stop if not owner
         const file = e.target.files?.[0];
         if (!file) return;
         setUploadingRow(rowId);
@@ -252,6 +263,7 @@ export const Project = () => {
         );
     };
     const onDelete = (form_id, rowId) => {
+        if (!isEventOwner) return;        // hard stop if not owner
         setRemovingRow(rowId);
         handleRemoveUploadedForm({
             token: decryptedToken,
@@ -421,14 +433,16 @@ export const Project = () => {
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => onDelete(form.file_id, form.id)}
-                                                        disabled={removeLoading}
-                                                        className="inline-flex items-center rounded-md bg-[#013a63] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-                                                    >
-                                                        {removingRow === form.id ? "Removing…" : "Delete"}
-                                                    </button>
+                                                    {isEventOwner && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => onDelete(form.file_id, form.id)}
+                                                            disabled={removeLoading}
+                                                            className="inline-flex items-center rounded-md bg-[#013a63] px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                                                        >
+                                                            {removingRow === form.id ? "Removing…" : "Delete"}
+                                                        </button>
+                                                    )}
                                                     {form.url ? (
                                                         <a
                                                             href={form.url}
@@ -446,6 +460,11 @@ export const Project = () => {
                                                 {(() => {
                                                     const { unlocked } = getPhaseUnlockStatus(form, forms);
                                                     const uploadDisabled = uploadLoading || removeLoading || !unlocked;
+
+                                                    if (!isEventOwner) {
+                                                        // non-owners see a passive state only
+                                                        return <span className="text-slate-400">No file attached</span>;
+                                                    }
 
                                                     return (
                                                     <>
