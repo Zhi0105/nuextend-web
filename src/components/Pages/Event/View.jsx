@@ -59,6 +59,17 @@ export const View = () => {
         enabled: needsUserEvents,
     });
 
+    const deanFilteredEvents = useMemo(() => {
+        if (roleId !== 9) return allEvents;
+        const deanDeptId = decryptedUser?.department_id;
+        if (!deanDeptId) return [];
+
+        return (allEvents ?? []).filter((evt) => {
+        const ownerDept = _.get(evt, "user.department_id") ?? _.get(evt, "department_id");
+        return ownerDept === deanDeptId;
+        });
+    }, [roleId, decryptedUser?.department_id, allEvents]);
+
     const [filters, setFilters] = useState({
         global: { value: null, matchMode: FilterMatchMode.CONTAINS },
     });
@@ -245,12 +256,12 @@ export const View = () => {
         );
     };
 
-    const handleEventListIfDeanUser = (events) => {
-        if (roleId === 9) {
-        return _.filter(events, (event) => event?.user?.department_id === decryptedUser?.department_id);
-        }
-        return events;
-    };
+    // const handleEventListIfDeanUser = (events) => {
+    //     if (roleId === 9) {
+    //     return _.filter(events, (event) => event?.user?.department_id === decryptedUser?.department_id);
+    //     }
+    //     return events;
+    // };
 
     const extractActivities = (events = []) =>
         _.flatMap(events, (evt) => {
@@ -269,7 +280,7 @@ export const View = () => {
             ...evt
         }));
     });
-    const rawEvents = needsUserEvents ? myEvents : handleEventListIfDeanUser(allEvents);
+    const rawEvents = needsUserEvents ? myEvents : deanFilteredEvents;
     const activeEvents = _.filter(rawEvents, (event) => event.event_status_id === 1);
     const completedEvents = _.filter(rawEvents, (event) => event.event_status_id === 2);
     const activeActivities = extractActivities(activeEvents);

@@ -45,8 +45,23 @@ export const Project = () => {
         { id: "NUB-ACD-CMX-F-010", name: "Outreach Project Evaluation and Documentation Report Format", code: "NUB-ACD-CMX-F-010" }
     ];
 
+    // const [forms, setForms] = useState(
+    //     initialForms.map((form) => ({ ...form, fileName: "", url: "", status: "none", approvalsCount: 0, requiredApprovals: getRequiredApprovals(form.code) })) // none | pending_review | approved | declined
+    // );
     const [forms, setForms] = useState(
-        initialForms.map((form) => ({ ...form, fileName: "", url: "", status: "none", approvalsCount: 0, requiredApprovals: getRequiredApprovals(form.code) })) // none | pending_review | approved | declined
+        initialForms.map((form) => ({
+            ...form,
+            fileName: "",
+            url: "",
+            status: "none",               // none | pending_review | approved | declined
+            approvalsCount: 0,
+            requiredApprovals: getRequiredApprovals(form.code),
+            // per-role flags (default false)
+            is_commex: false,
+            is_dean: false,
+            is_asd: false,
+            is_ad: false,
+        }))
     );
     const [uploadingRow, setUploadingRow] = useState(null);
     const [removingRow, setRemovingRow] = useState(null);
@@ -99,11 +114,19 @@ export const Project = () => {
                 if (r.id !== variables.code) return r;
                 const required = r.requiredApprovals || getRequiredApprovals(variables.code);
                 const nextCount = Math.min(required, (r.approvalsCount || 0) + 1);
+                // set role flag based on approver
+                const roleId = variables.role_id;
+                const roleFlagUpdates =
+                roleId === 1  ? { is_commex: true } :
+                roleId === 9  ? { is_dean: true }   :
+                roleId === 10 ? { is_asd: true }    :
+                roleId === 11 ? { is_ad: true }     : {};
                 return {
                     ...r,
                     approvalsCount: nextCount,
                     status: nextCount >= required ? 'approved' : 'pending_review',
                     requiredApprovals: required,
+                    ...roleFlagUpdates
                 };
                 })
             );
@@ -171,6 +194,7 @@ export const Project = () => {
     });
 
     const acceptForm = (form) => {
+        if (hasUserRoleApproved(form)) return; // already approved by this role
         handleAcceptForm({
             token: decryptedToken,
             id: form?.file_id,
@@ -275,11 +299,17 @@ export const Project = () => {
 
           // ------- STATUS HELPERS -------
     const deriveStatusFromMatch = (match) => {
+        const is_commex = !!match?.is_commex;
+        const is_dean   = !!match?.is_dean;
+        const is_asd    = !!match?.is_asd;
+        const is_ad     = !!match?.is_ad;
+
         const approvalsCount =
-            Number(!!match?.is_commex) +
-            Number(!!match?.is_ad) +
-            Number(!!match?.is_asd) +
-            Number(!!match?.is_dean);
+            // Number(!!match?.is_commex) +
+            // Number(!!match?.is_ad) +
+            // Number(!!match?.is_asd) +
+            // Number(!!match?.is_dean);
+            Number(is_commex) + Number(is_ad) + Number(is_asd) + Number(is_dean);
 
         const hasAnyRemarks =
             (match?.ad_remarks?.length || 0) > 0 ||
@@ -344,6 +374,15 @@ export const Project = () => {
         if (!p2Done) return { unlocked: false };
         return { unlocked: true };
     }
+    const hasUserRoleApproved = (row) => {
+        switch (decryptedUser?.role_id) {
+        case 1:  return !!row.is_commex;
+            case 9:  return !!row.is_dean;
+            case 10: return !!row.is_asd;
+            case 11: return !!row.is_ad;
+            default: return false;
+        }
+    };
     // UPLOADING STEP LOGIC END
 
 
@@ -353,7 +392,8 @@ export const Project = () => {
             prev.map(r => {
             const match = _.find(formData?.data, { code: r.id });
             if (!match) return r;
-            const { status, approvalsCount, required } = deriveStatusFromMatch(match);
+            // const { status, approvalsCount, required } = deriveStatusFromMatch(match);
+            const { status, approvalsCount, required, is_commex, is_dean, is_asd, is_ad } = deriveStatusFromMatch(match)
             return {
                 ...r,
                 fileName: _.last(match?.name.split(" - ")),
@@ -362,6 +402,10 @@ export const Project = () => {
                 approvalsCount,
                 requiredApprovals: required,
                 file_id: match?.id,
+                is_commex,
+                is_dean,
+                is_asd,
+                is_ad,
             };
             })
         );
@@ -500,7 +544,13 @@ export const Project = () => {
                                         />
                                         </td>
                                         {/* approve / decline */}
-                                        {[1, 9, 10, 11].includes(decryptedUser?.role_id)  && form.status !== "approved" && (
+                                        {/* {[1, 9, 10, 11].includes(decryptedUser?.role_id)  && form.status !== "approved" && ( */}
+                                        {(() => {
+                                            const isApprover = [1, 9, 10, 11].includes(decryptedUser?.role_id);
+                                            const alreadyApprovedByMe = hasUserRoleApproved(form);
+                                            const hasFile = !!form.fileName;
+                                            const canSee = isApprover && hasFile && !alreadyApprovedByMe && form.status !== "approved";
+                                            return canSee ? (
                                             <td className="px-4 py-4 align-top">
                                                 <div className="flex flex-col gap-2">
                                                     <button
@@ -522,7 +572,9 @@ export const Project = () => {
                                                     
                                                 </div>
                                             </td>
-                                        )}
+                                        // )}
+                                            ) : null;
+                                        })()}
                                     </tr>
                                 );
                             })}

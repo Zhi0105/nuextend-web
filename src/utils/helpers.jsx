@@ -203,3 +203,4 @@ export const toStringArrayFromObjects = (arr, key = "name") =>
 
 export const toMemberObjects = (arr) =>
   Array.isArray(arr) ? arr.filter(Boolean).map((name) => ({ name })) : [];
+
