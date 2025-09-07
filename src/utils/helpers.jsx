@@ -134,7 +134,7 @@ export const OutreachPhases = {
         "NUB-ACD-CMX-F-011",
         "NUB-ACD-CMX-F-012",
     ],
-    2: ["NUB-ACD-CMX-F-013", "NUB-ACD-CMX-F-014"],
+    2: ["NUB-ACD-CMX-F-013"],
     3: ["NUB-ACD-CMX-F-010"],
 }
 export const ProjectPhases = {
@@ -146,7 +146,7 @@ export const ProjectPhases = {
         "NUB-ACD-CMX-F-011",
         "NUB-ACD-CMX-F-012",
     ],
-    2: ["NUB-ACD-CMX-F-013", "NUB-ACD-CMX-F-014"],
+    2: ["NUB-ACD-CMX-F-013"],
     3: ["NUB-ACD-CMX-F-010"],
 }
 export const ProgramPhases = {
@@ -158,7 +158,7 @@ export const ProgramPhases = {
         "NUB-ACD-CMX-F-011",
         "NUB-ACD-CMX-F-012",
     ],
-    2: ["NUB-ACD-CMX-F-013", "NUB-ACD-CMX-F-014"],
+    2: ["NUB-ACD-CMX-F-013"],
     3: ["NUB-ACD-CMX-F-009"],
 }
 export const APPROVAL_REQUIREMENTS = {
