@@ -105,11 +105,23 @@ export const Report = () => {
     }));
     }, [reportData]);
 
+    const totalBudget = useMemo(() => {
+        return (rows || []).reduce((sum, r) => {
+            const val = Number.isFinite(r.budget) ? r.budget : Number(r.budget ?? 0);
+            return sum + (Number.isFinite(val) ? val : 0);
+        }, 0);
+    }, [rows]);
+
+    const totalBudgetFormatted = useMemo(
+    () => totalBudget.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+    [totalBudget]
+    );
+
     // optional: file link + budget format
     const fileBody = (row) =>
     row.file ? (
-        <a href={`${import.meta.env.VITE_API_URL}${_.trimStart(row.file, '/')}`} target="_blank" rel="noreferrer" className="text-blue-600 underline">
-            Download
+        <a href={`${import.meta.env.VITE_API_URL}${_.trimStart(row.file, '/')}`} target="_blank" rel="noreferrer" className="text-blue-600">
+            View
         </a>
     ) : ("-");
 
@@ -176,17 +188,14 @@ export const Report = () => {
                 </div>
             </form>  
 
-            <div className="w-11/12 lg:w-9/12 mb-6">
+            <div className="w-full lg:w-9/12 mb-6">
                 <div className="flex items-center gap-2 px-2 mb-3">
-                    <span className="p-input-icon-left">
-                    <i className="pi pi-search" />
                     <InputText
                         className="text-sm p-2"
                         value={globalFilter}
                         onChange={(e) => setGlobalFilter(e.target.value)}
                         placeholder="Search reports"
                     />
-                    </span>
                 </div>
 
                 <DataTable
@@ -218,6 +227,9 @@ export const Report = () => {
                     <Column headerClassName="bg-[#364190] text-white" className="font-bold" header="File" body={fileBody} />
                     <Column headerClassName="bg-[#FCA712] text-white" className="font-bold" header="Action" body={actionBodyTemplate} />
                 </DataTable>
+                <div>
+                    <h1><span className="font-bold text-xl">Total Budget : </span>₱ {totalBudgetFormatted}</h1>
+                </div>
             </div>
         </div>
     )
