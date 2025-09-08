@@ -5,23 +5,27 @@ import { Column } from 'primereact/column';
 import { useState } from "react";
 import { InputText } from "primereact/inputtext";
 import { TbUsersGroup } from "react-icons/tb";
-
+import { HiDocumentReport } from "react-icons/hi";
 export const Activity = () => {
     const navigate = useNavigate()
     const location = useLocation()
     const data = location.state 
     const [globalFilter, setGlobalFilter] = useState("")
     
-    const actionBodyTemplate = () => {
-            return (
-                <div className="flex gap-8">
-                    <button onClick={() => navigate("/event/participants", { state: data?.participants })}>
+    const actionBodyTemplate = (rowData) => {
+        return (
+            <div className="flex gap-8">
+                <button onClick={() => navigate("/event/participants", { state: data?.participants })}>
                     <Tooltip target=".participants" content="Participants" position="right" />
                     <TbUsersGroup className="participants w-7 h-7 text-[#364190]" />
-                    </button>
-                </div>
-            )
-        }
+                </button>
+                <button onClick={() => navigate("/event/activities/report", { state: rowData })}>
+                    <Tooltip target=".report" content="Report" position="right" />
+                    <HiDocumentReport className="report w-7 h-7 text-[#364190]" />
+                </button>
+            </div>
+        )
+    }
 
     return (
         <div className="activity-main min-h-screen bg-white w-full flex flex-col  items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">

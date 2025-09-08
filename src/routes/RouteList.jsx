@@ -51,6 +51,7 @@ import { ProjectDataScreen } from '@_src/components/Screen/Forms/Generate/Data/P
 import { ProgramDataScreen } from '@_src/components/Screen/Forms/Generate/Data/ProgramDataScreen'
 
 import { ActivityScreen } from '@_src/components/Screen/Event/ActivityScreen'
+import { ReportScreen } from '@_src/components/Screen/Activity/ReportScreen'
 
 
 import PrivateRoute from './PrivateRoute'
@@ -115,7 +116,6 @@ export const RouteList = () => {
                 
                 {/* PDF GENERATES */}
 
-
                 <Route path="/organization/view" element={<OrgViewScreen />} />
                 <Route path="/organization/create" element={<OrgcreateScreen />} />
                 <Route path="/organization/member/add" element={<AddmemberScreen />} />
@@ -123,7 +123,9 @@ export const RouteList = () => {
 
                 <Route path="/skill/create" element={<SkillCreateScreen />} />    
                 <Route path="/skill/update" element={<SkillUpdateScreen />} />    
-                <Route path="/skill/view" element={<SkillViewScreen />} />    
+                <Route path="/skill/view" element={<SkillViewScreen />} />   
+
+                <Route path='/event/activities/report' element={<ReportScreen />} /> 
 
 
             </Route>
