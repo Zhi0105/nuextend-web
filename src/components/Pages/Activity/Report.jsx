@@ -22,7 +22,7 @@ import dayjs from "dayjs";
 export const Report = () => {
   const queryClient = useQueryClient();
   const location = useLocation();
-  const data = location.state;
+  const { data, user_id } = location.state;
 
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
   const decryptedUser = token && DecryptUser(user);
@@ -228,17 +228,19 @@ export const Report = () => {
     );
   };
 
-  const actionBodyTemplate = (rowData) => (
-    <div className="flex gap-8">
-      <button
-        disabled={removeLoading}
-        onClick={() => handleRemoveUploadedReport({ token: decryptedToken, report_id: rowData?.id })}
-      >
-        <Tooltip target=".delete" content="Delete" position="right" />
-        <BsTrash className="delete w-7 h-7 text-[#364190]" />
-      </button>
-    </div>
-  );
+  const actionBodyTemplate = (rowData) => {
+    return (
+      <div className="flex gap-8">
+        <button
+          disabled={removeLoading}
+          onClick={() => handleRemoveUploadedReport({ token: decryptedToken, report_id: rowData?.id })}
+        >
+          <Tooltip target=".delete" content="Delete" position="right" />
+          <BsTrash className="delete w-7 h-7 text-[#364190]" />
+        </button>
+      </div>
+    )
+  };
 
   // Reject dialog
   const RejectDialog = ({ rowData }) => {
@@ -343,7 +345,9 @@ export const Report = () => {
           {isApproverUser && (
             <Column headerClassName="bg-[#364190] text-white" className="font-bold" header="Approve / Decline" body={approveDeclineBody} />
           )}
-          <Column headerClassName="bg-[#FCA712] text-white" className="font-bold" header="Action" body={actionBodyTemplate} />
+          {user_id === decryptedUser?.id && (
+            <Column headerClassName="bg-[#FCA712] text-white" className="font-bold" header="Action" body={actionBodyTemplate} />
+          )}
         </DataTable>
         <div>
           <h1><span className="font-bold text-xl">Total Budget : </span>₱ {totalBudgetFormatted}</h1>

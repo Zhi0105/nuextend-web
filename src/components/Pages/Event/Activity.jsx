@@ -19,7 +19,7 @@ export const Activity = () => {
                     <Tooltip target=".participants" content="Participants" position="right" />
                     <TbUsersGroup className="participants w-7 h-7 text-[#364190]" />
                 </button>
-                <button onClick={() => navigate("/event/activities/report", { state: rowData })}>
+                <button onClick={() => navigate("/event/activities/report", { state: { data: rowData, user_id: data?.user_id } })}>
                     <Tooltip target=".report" content="Report" position="right" />
                     <HiDocumentReport className="report w-7 h-7 text-[#364190]" />
                 </button>
