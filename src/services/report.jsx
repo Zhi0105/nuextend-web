@@ -63,3 +63,41 @@ export const removeReport = (payload ) => {
 
     return result
 }
+export const approveReport = (payload ) => {
+    const { id, role_id, commex_remarks, asd_remarks } = payload
+
+    const headers = {
+        Authorization: `Bearer ${payload?.token}`
+    }
+    const data = {
+        id,
+        role_id,
+        commex_remarks,
+        asd_remarks
+    };
+
+    const result = apiClient.post('api/v1/progress-report/approve', data, {headers}).then(res => {
+        return res.data
+    })
+
+    return result
+}
+export const rejectReport = (payload ) => {
+    const { id, role_id, commex_remarks, asd_remarks } = payload
+
+    const headers = {
+        Authorization: `Bearer ${payload?.token}`
+    }
+    const data = {
+        id,
+        role_id,
+        commex_remarks,
+        asd_remarks
+    };
+
+    const result = apiClient.post('api/v1/progress-report/reject', data, {headers}).then(res => {
+        return res.data
+    })
+
+    return result
+}

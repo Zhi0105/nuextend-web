@@ -217,10 +217,19 @@ export const View = () => {
 
         if ([9, 10, 11].includes(roleId)) {
             return (
-            <button onClick={() => handleFormNavigation(eventRow)}>
-                <Tooltip target=".form" content="Form" position="right" />
-                <FaWpforms className="form w-7 h-7 text-[#364190]" />
-            </button>
+            <div className="flex gap-8">
+                <button onClick={() => handleFormNavigation(eventRow)}>
+                    <Tooltip target=".form" content="Form" position="right" />
+                    <FaWpforms className="form w-7 h-7 text-[#364190]" />
+                </button>
+                <button 
+                    onClick={() => navigate("/event/activities", { state: eventRow })}
+                >
+                <Tooltip target=".activities" content="Activities" position="right" />
+                <VscLayoutActivitybarLeft className="activities w-7 h-7 text-[#364190]" />
+                </button>
+            </div>
+    
             );
         }
 
