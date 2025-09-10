@@ -143,7 +143,7 @@ export const Report = () => {
 
   const displayStatusText = (status, approvalsCount, hasFile, required) => {
     if (!hasFile) return `Pending 0/${required}`;
-    if (status === 'declined') return 'Declined';
+    if (status === 'declined') return 'For Revision';
     if (status === 'approved') return 'Approved';
     const safe = Math.min(approvalsCount || 0, required);
     return safe > 0 ? `Approved ${safe}/${required}` : 'Pending';
@@ -181,6 +181,7 @@ export const Report = () => {
   const totalBudget = useMemo(() => (rows || []).reduce((sum, r) => sum + (Number.isFinite(r.budget) ? r.budget : Number(r.budget ?? 0)), 0), [rows]);
   const totalBudgetFormatted = useMemo(() => totalBudget.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }), [totalBudget]);
 
+
   // Column renderers
   const fileBody = (row) => row.file ? (
     <a href={`${import.meta.env.VITE_API_URL}${_.trimStart(row.file, '/')}`} target="_blank" rel="noreferrer" className="text-blue-600">View</a>
@@ -190,9 +191,34 @@ export const Report = () => {
 
   const statusBody = (row) => {
     const { approvalsCount, required, status } = deriveStatusFromRow(row);
-    const label = displayStatusText(status, approvalsCount, !!row.file, required);
+    const label = displayStatusText(status, approvalsCount, !!row?.file, required);
     const colorClass = statusColor(status);
-    return <span className={`font-medium ${colorClass}`}>{label}</span>;
+
+    const safeString = (val) =>
+      val == null ? null : typeof val === "object" ? JSON.stringify(val) : String(val);
+
+    // Build tooltip lines conditionally
+    const tooltipParts = [];
+    const commex = safeString(row?.commex_remarks);
+    const asd = safeString(row?.asd_remarks);
+
+    if (commex) tooltipParts.push(`commex's remarks: ${commex}`);
+    if (asd) tooltipParts.push(`asd's remarks: ${asd}`);
+
+    const tooltipText = tooltipParts.length > 0 ? tooltipParts.join("\n") : "No remarks";
+
+    return (
+      <span className={`font-medium ${colorClass}`}>
+        <Tooltip target=".has-tooltip" position="right" />
+
+        <label
+          className="label has-tooltip cursor-help whitespace-pre-line"
+          data-pr-tooltip={tooltipText}
+        >
+          {label}
+        </label>
+      </span>
+    );
   };
 
   const approveDeclineBody = (row) => {

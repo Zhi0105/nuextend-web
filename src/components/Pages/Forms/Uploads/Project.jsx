@@ -11,6 +11,7 @@ import { Dialog } from 'primereact/dialog';
 import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
 import { Instruction } from "@_src/components/Partial/Instruction";
+import { Tooltip } from "primereact/tooltip";
 import _ from "lodash";
 
 export const Project = () => {
@@ -162,12 +163,25 @@ export const Project = () => {
 
             // close the dialog agad para snappy
             setVisibleRow(null);
+            const remarksKey =
+                variables?.commex_remarks ? 'commex_remarks' :
+                variables?.dean_remarks   ? 'dean_remarks'   :
+                variables?.asd_remarks    ? 'asd_remarks'    :
+                variables?.ad_remarks     ? 'ad_remarks'     :
+                null;
 
             // apply optimistic decline
             setForms((prev) =>
             prev.map((r) =>
                 r.code === variables.code
-                ? { ...r, status: 'declined', approvalsCount: r.approvalsCount ?? 0 }
+                // ? { ...r, status: 'declined', approvalsCount: r.approvalsCount ?? 0 }
+                ? 
+                    {
+                        ...r,
+                        status: 'declined',
+                        approvalsCount: r.approvalsCount ?? 0,
+                        ...(remarksKey ? { [remarksKey]: variables[remarksKey] } : {}),
+                    }
                 : r
             )
             );
@@ -327,7 +341,7 @@ export const Project = () => {
     };
     const displayStatusText = (status, approvalsCount, hasFile, required) => {
         if (!hasFile) return `Pending 0/${required}`;
-        if (status === "declined") return "Declined";
+        if (status === "declined") return "For Revision";
         const safeCount = Math.min(approvalsCount || 0, required);
         // kapag complete, plain "Approved" lang
         if (status === "approved") return "Approved";
@@ -406,10 +420,35 @@ export const Project = () => {
                 is_dean,
                 is_asd,
                 is_ad,
+                commex_remarks: match?.commex_remarks ?? null,
+                dean_remarks: match?.dean_remarks ?? null,
+                asd_remarks: match?.asd_remarks ?? null,
+                ad_remarks: match?.ad_remarks ?? null
             };
             })
         );
     }, [formData]);
+
+    // stringify safely; return null if empty
+    const toSafeString = (val) => {
+        if (val == null) return null;
+        const s = typeof val === "object" ? JSON.stringify(val) : String(val);
+        return s.trim() ? s : null;
+    };
+
+    const buildRemarksTooltip = (row) => {
+        console.log(row)
+        const parts = [];
+        const add = (key, label) => {
+            const v = toSafeString(row?.[key]);
+            if (v) parts.push(`${label}: ${v}`);
+        };
+        add("commex_remarks", "COMMEX");
+        add("dean_remarks", "Dean");
+        add("asd_remarks", "ASD");
+        add("ad_remarks", "AD");
+        return parts.length ? parts.join("\n") : "No remarks";
+    };
 
     if (formLoading) {
         return (                                   // <-- add return
@@ -433,6 +472,7 @@ export const Project = () => {
 
                  {/* table */}
                 <div className="overflow-x-auto">
+                    <Tooltip target=".status-has-tooltip" position="right" />
                     <table className="min-w-full text-sm">
                         <thead>
                             <tr className="bg-[#153e6f] text-white">
@@ -472,7 +512,10 @@ export const Project = () => {
                                             <div className="flex flex-col gap-2">
                                                 <div className="font-semibold">
                                                     {form.fileName}{" "}
-                                                    <span className={colorClass}>
+                                                    <span
+                                                        className={`status-has-tooltip cursor-help ${colorClass}`}
+                                                        data-pr-tooltip={buildRemarksTooltip(form)}  // <-- fixed attribute
+                                                    >
                                                         {label}
                                                     </span>
                                                 </div>
