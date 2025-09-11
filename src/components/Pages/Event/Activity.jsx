@@ -6,6 +6,9 @@ import { useState } from "react";
 import { InputText } from "primereact/inputtext";
 import { TbUsersGroup } from "react-icons/tb";
 import { HiDocumentReport } from "react-icons/hi";
+import { Tag } from 'primereact/tag';
+import _ from "lodash";
+
 export const Activity = () => {
     const navigate = useNavigate()
     const location = useLocation()
@@ -26,6 +29,35 @@ export const Activity = () => {
             </div>
         )
     }
+
+    // returns true ONLY if may reports AND lahat ay approved
+    const isAllApproved = (activity) => {
+        const reports = _.get(activity, 'progress_report', []);
+        return !_.isEmpty(reports) &&
+                _.every(reports, (r) => Number(r.is_commex) === 1 && Number(r.is_asd) === 1);
+    };
+
+    // (optional) progress summary
+    const approvedCount = (activity) => {
+        const reports = _.get(activity, 'progress_report', []);
+        return _.sumBy(reports, (r) => (Number(r.is_commex) === 1 && Number(r.is_asd) === 1 ? 1 : 0));
+    };
+
+    const StatusBody = (rowData) => {
+    const reports = _.get(rowData, 'progress_report', []);
+    console.log(reports)
+    const allApproved = isAllApproved(rowData);
+
+    // walang report yet
+    if (_.isEmpty(reports)) {
+        return <Tag value="No reports" severity="secondary" rounded />;
+    }
+
+    // may reports
+    return allApproved
+        ? <Tag value="Done" severity="success" rounded />
+        : <Tag value={`${approvedCount(rowData)}/${reports.length} approved`} severity="warn" rounded />;
+    };
 
     return (
         <div className="activity-main min-h-screen bg-white w-full flex flex-col  items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
@@ -58,6 +90,7 @@ export const Activity = () => {
                 <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="address" header="Location" />
                 <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="start_date" header="StartDate" />
                 <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="end_date" header="EndDate" />
+                <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" body={StatusBody} header="Status" />
                 <Column headerClassName="bg-[#FCA712] text-white" body={actionBodyTemplate} header="Action"></Column>
 
             </DataTable>
