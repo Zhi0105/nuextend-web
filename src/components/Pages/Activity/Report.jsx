@@ -255,18 +255,30 @@ export const Report = () => {
   };
 
   const actionBodyTemplate = (rowData) => {
+    const { status } = deriveStatusFromRow(rowData); // <-- check status here
+    const isApproved = status === "approved";
+
     return (
       <div className="flex gap-8">
         <button
-          disabled={removeLoading}
-          onClick={() => handleRemoveUploadedReport({ token: decryptedToken, report_id: rowData?.id })}
+          disabled={removeLoading || isApproved} // <-- disable if approved
+          onClick={() =>
+            handleRemoveUploadedReport({
+              token: decryptedToken,
+              report_id: rowData?.id,
+            })
+          }
         >
           <Tooltip target=".delete" content="Delete" position="right" />
-          <BsTrash className="delete w-7 h-7 text-[#364190]" />
+          <BsTrash
+            className={`delete w-7 h-7 ${
+              isApproved ? "text-gray-400 cursor-not-allowed" : "text-[#364190]"
+            }`}
+          />
         </button>
       </div>
-    )
-  };
+    );
+};
 
   // Reject dialog
   const RejectDialog = ({ rowData }) => {
