@@ -58,6 +58,29 @@ export const Activity = () => {
         ? <Tag value="Done" severity="success" rounded />
         : <Tag value={`${approvedCount(rowData)}/${reports.length} approved`} severity="warn" rounded />;
     };
+        // total budget per activity with money format
+    const totalBudget = (activity) => {
+        const reports = _.get(activity, 'progress_report', []);
+        const total = _.sumBy(reports, (r) => Number(r.budget) || 0);
+
+        // Format as PHP Peso (₱) — change currency if needed
+        return new Intl.NumberFormat('en-PH', { 
+            style: 'currency', 
+            currency: 'PHP' 
+        }).format(total);
+    };
+        // overall budget for ALL activities
+    const overallBudget = (activities) => {
+        return new Intl.NumberFormat('en-PH', { 
+            style: 'currency', 
+            currency: 'PHP' 
+        }).format(
+            _.sumBy(activities, (activity) => 
+                _.sumBy(activity.progress_report, (r) => Number(r.budget) || 0)
+            )
+        );
+    };
+
 
     return (
         <div className="activity-main min-h-screen bg-white w-full flex flex-col  items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
@@ -90,10 +113,21 @@ export const Activity = () => {
                 <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="address" header="Location" />
                 <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="start_date" header="StartDate" />
                 <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="end_date" header="EndDate" />
+                <Column 
+                    headerClassName="bg-[#364190] text-white" 
+                    className="capitalize font-bold" 
+                    body={(rowData) => totalBudget(rowData)} 
+                    header="Budget" 
+                />
                 <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" body={StatusBody} header="Status" />
                 <Column headerClassName="bg-[#FCA712] text-white" body={actionBodyTemplate} header="Action"></Column>
 
             </DataTable>
+            <div className="w-full flex justify-start mt-4 px-4">
+                <span className="font-bold text-lg">
+                    Overall Budget: {overallBudget(data?.activity || [])}
+                </span>
+            </div>
         </div>
     )
 }
