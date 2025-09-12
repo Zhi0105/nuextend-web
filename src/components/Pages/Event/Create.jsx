@@ -40,6 +40,7 @@ export const Create = () => {
             target_group: "",
             budget_proposal: 0,
             organization: "",
+            name: "",
             model: "",
             event_type: null,
             unsdgs: [],
@@ -66,7 +67,7 @@ export const Create = () => {
     };
 
     const onSubmit = (data) => {
-        const { target_group, organization, model, event_type, term, activities, budget_proposal, skills, unsdgs } = data
+        const { target_group, organization, model, event_type, name, term, activities, budget_proposal, skills, unsdgs } = data
         const updatedActivities = _.map(activities, (activity) => ({
             name: activity.name,
             description: activity.description,
@@ -83,6 +84,7 @@ export const Create = () => {
             event_type_id: event_type,   
             event_status_id: decryptedUser?.role_id === 1 ? 2 : 1,
             target_group,
+            name,
             term,
             budget_proposal,
             skills: _.map(skills, 'id'),
@@ -101,6 +103,7 @@ export const Create = () => {
                         event_type: "",
                         term: getValues("term"),
                         target_group: "",
+                        name: "",
                         budget_proposal: 0,
                         skills: [],
                         unsdgs: [],
@@ -319,6 +322,32 @@ export const Create = () => {
                                 />
                                 {errors.skills && (
                                     <p className="text-sm text-red-400 indent-2">Please select skills needed for your event*</p>
+                                )}
+                            </div>
+                            <div className="name">
+                                <Controller
+                                    control={control}
+                                    rules={{
+                                    required: true,
+                                    pattern: /[\S\s]+[\S]+/,
+                                    }}
+                                    render={({ field: { onChange, value } }) => (
+                                    <InputText
+                                        value={value}
+                                        onChange={onChange}
+                                        name="name"
+                                        type="text"
+                                        id="name"
+                                        placeholder="Enter your event name"
+                                        className={`${errors.name && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                                    />
+                                    )}
+                                    name="name"
+                                />
+                                {errors.name && (
+                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
+                                        event name is required.*
+                                    </p>
                                 )}
                             </div>
                             <div className="target_group">

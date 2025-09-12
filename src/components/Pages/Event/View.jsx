@@ -272,28 +272,10 @@ export const View = () => {
     //     return events;
     // };
 
-    const extractActivities = (events = []) =>
-        _.flatMap(events, (evt) => {
-            const activities = _.get(evt, 'activity', []);
-            return _.map(activities, (act) => ({
-            // what you display & search against
-            activity_id: act?.id,
-            activityName: act?.name ?? '',   // keep original if needed elsewhere
-            activity_address: act?.address ?? '',
-            activity_description: act?.description ?? '',
-            activity_start_date: act?.start_date ?? '',
-            activity_end_date: act?.end_date ?? '',
-            // make a unique key per activity
-            _rowId: `${evt?.id ?? 'e'}-${act?.id ?? act?.code ?? _.uniqueId('a-')}`,
-            __event: evt,
-            ...evt
-        }));
-    });
+   
     const rawEvents = needsUserEvents ? myEvents : deanFilteredEvents;
     const activeEvents = _.filter(rawEvents, (event) => event.event_status_id === 1);
     const completedEvents = _.filter(rawEvents, (event) => event.event_status_id === 2);
-    const activeActivities = extractActivities(activeEvents);
-    const completedActivities = extractActivities(completedEvents);
 
     if (eventLoading || userEventLoading || eventRefetchLoading || userEventRefetchLoading) {
         return (
@@ -326,7 +308,7 @@ export const View = () => {
         </div>
 
         <DataTable
-            value={activeActivities}
+            value={activeEvents}
             size="normal"
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
             dataKey="_rowId"
@@ -338,9 +320,14 @@ export const View = () => {
             removableSort
             filters={filters}
             filterDisplay="row"
-            globalFilterFields={["activityName"]}
+            globalFilterFields={["name"]} // adjust to your actual event fields
         >
-            <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="activityName" header="Event" />
+            <Column 
+                headerClassName="bg-[#364190] text-white"
+                className="capitalize font-bold"
+                field="name"   // use the actual field for event name
+                header="Event"
+            />
             <Column headerClassName="bg-[#FCA712] text-white" body={actionBodyTemplateForActivity} header="Action" />
         </DataTable>
 
@@ -365,7 +352,7 @@ export const View = () => {
         </div>
 
         <DataTable
-            value={completedActivities}
+            value={completedEvents}
             size="normal"
             paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
             dataKey="_rowId"
@@ -377,10 +364,15 @@ export const View = () => {
             removableSort
             filters={completedFilters}
             filterDisplay="row"
-            globalFilterFields={["activityName"]}
+            globalFilterFields={["name"]} // adjust to your actual event fields
 
         >
-            <Column headerClassName="bg-[#364190] text-white" className="capitalize font-bold" field="activityName" header="Event" />
+            <Column 
+                headerClassName="bg-[#364190] text-white"
+                className="capitalize font-bold"
+                field="name"   // use the actual field for event name
+                header="Event"
+            />
             <Column headerClassName="bg-[#FCA712] text-white" body={actionBodyTemplateForActivity} header="Action" />
         </DataTable>
         </div>

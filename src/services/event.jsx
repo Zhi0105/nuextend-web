@@ -133,6 +133,7 @@ export const createEvent = (payload) => {
         event_status_id,
         target_group,
         term,
+        name,
         budget_proposal,
         skills,
         unsdgs,
@@ -149,6 +150,7 @@ export const createEvent = (payload) => {
         event_type_id,
         event_status_id,
         target_group,
+        name,
         term,
         budget_proposal,
         skills: [...skills],
@@ -164,53 +166,87 @@ export const createEvent = (payload) => {
 }
 export const updateEvent = (payload) => {
     const {
+        token,
         id,
+
+        // event core fields (all optional except id)
         user_id,
-        activity_id,
         organization_id,
         model_id,
         event_type_id,
         event_status_id,
-        target_group,
         name,
-        address,
+        target_group,
         term,
-        start_date,
-        end_date,
-        description,
         budget_proposal,
+
+        // relations (optional)
         skills,
-        unsdgs } = payload
+        unsdgs,
+
+        // nested activities (optional) - full upsert set
+        activities,
+    } = payload;
+
+    if (!id) {
+        return Promise.reject(new Error("Event id is required"));
+    }
 
     const headers = {
-        Authorization: `Bearer ${payload?.token}`
-    }
-    const data = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+    };
+
+    // Helper: keep only keys that are not undefined
+    const pickDefined = (obj) =>
+        Object.fromEntries(
+        Object.entries(obj).filter(([, v]) => v !== undefined)
+        );
+
+    // Build base event data — only include fields that exist in payload
+    const core = pickDefined({
         id,
         user_id,
-        activity_id,
         organization_id,
         model_id,
         event_type_id,
         event_status_id,
-        target_group,
         name,
-        address,
+        target_group,
         term,
-        start_date,
-        end_date,
-        description,
         budget_proposal,
-        skills: [...skills],
-        unsdgs: [...unsdgs]
-    };
+    });
 
-    const result = apiClient.post('api/v1/event/update', data, {headers}).then(res => {
-        return res.data
-    })
+    // Relations: send only if provided (validator: sometimes|array)
+    if (Array.isArray(skills)) {
+        core.skills = [...skills];
+    }
+    if (Array.isArray(unsdgs)) {
+        core.unsdgs = [...unsdgs];
+    }
 
-    return result
-}
+    // Activities upsert set: send only if provided
+    if (Array.isArray(activities)) {
+        // Each activity: { id? (for update), name, description, address, start_date, end_date }
+        core.activities = activities.map((a) =>
+        pickDefined({
+            id: a.id,
+            name: a.name,
+            description: a.description,
+            address: a.address,
+            start_date: a.start_date,
+            end_date: a.end_date,
+        })
+        );
+    }
+
+    // NOTE: Do NOT send event-level start_date/end_date/address/description here;
+    // those belong to activities per your Laravel validator.
+
+    return apiClient
+        .post("api/v1/event/update", core, { headers })
+        .then((res) => res.data);
+};
 export const removeEvent = (payload) => {
     const { id } = payload
 
