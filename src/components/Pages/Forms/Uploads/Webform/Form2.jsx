@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { Card } from "primereact/card";
 import { InputText } from "primereact/inputtext";
@@ -13,7 +13,7 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { useUserStore } from '@_src/store/auth';
 import { DecryptString } from "@_src/utils/helpers";
-import { createForm2 } from "@_src/services/formservice";
+import { createForm2, updateForm2 } from "@_src/services/formservice";
 import { useLocation } from "react-router-dom";
 
 const Err = ({ message }) =>
@@ -55,7 +55,20 @@ export const Form2 = () => {
 
             console.log("@CPPE:", error)
         },
-    });
+  });
+  const { mutate: handleUpdateForm2, isLoading: updateForm2Loading } = useMutation({
+      mutationFn: updateForm2,
+      onSuccess: (data) => {
+          queryClient.invalidateQueries({ queryKey: ['outreach'] });
+          toast(data.message, { type: "success" })
+          }, 
+      onError: (error) => {
+          toast(error?.response.data.message, { type: "warning" })
+
+          console.log("@UPPE:", error)
+      },
+  });
+      
 
   const {
     control,
@@ -102,6 +115,56 @@ export const Form2 = () => {
     mode: "onSubmit",
   });
 
+
+  useEffect(() => {
+    if (formdata && formdata.length > 0) {
+      reset({
+        event_type_id: formdata[0]?.event_type_id || "",
+        proponents: formdata[0]?.proponents || "",
+        collaborators: formdata[0]?.collaborators || "",
+        participants: formdata[0]?.participants || undefined,
+        partners: formdata[0]?.partners || "",
+        implementationDate: formdata[0]?.implementationDate
+          ? new Date(formdata[0].implementationDate)
+          : null,
+        area: formdata[0]?.area || "",
+        budgetRequirement: formdata[0]?.budgetRequirement || undefined,
+        budgetRequested: formdata[0]?.budgetRequested || undefined,
+        background: formdata[0]?.background || "",
+        otherInfo: formdata[0]?.otherInfo || "",
+        project_objectives: formdata[0]?.objectives?.length
+          ? formdata[0].objectives
+          : [{ objectives: "", strategies: "" }],
+        project_impact_outcomes: formdata[0]?.impact_outcomes?.length
+          ? formdata[0].impact_outcomes
+          : [{ impact: "", outcome: "", linkage: "" }],
+        project_risks: formdata[0]?.risks?.length
+          ? formdata[0].risks
+          : [{ risk_identification: "", risk_mitigation: "" }],
+        project_staffings: formdata[0]?.staffings?.length
+          ? formdata[0].staffings
+          : [{ staff: "", responsibilities: "", contact: "" }],
+        project_work_plans: formdata[0]?.work_plans?.length
+          ? formdata[0].work_plans
+          : [
+              {
+                phaseDate: "",
+                activities: "",
+                targets: "",
+                indicators: "",
+                personnel: "",
+                resources: "",
+                cost: undefined,
+              },
+            ],
+        project_detailed_budgets: formdata[0]?.detailed_budgets?.length
+          ? formdata[0].detailed_budgets
+          : [{ item: "", description: "", quantity: undefined, amount: undefined, source: "" }],
+      });
+    }
+  }, [formdata, reset]);
+
+
   // ---------- event types (from API) ----------
   const {
     data: eventTypeData,
@@ -130,7 +193,7 @@ export const Form2 = () => {
 
   const onSubmit = (data) => {
     const payload = {
-    // ...(formdata?.[0]?.id && { id: formdata[0].id }),
+    ...(formdata?.[0]?.id && { id: formdata[0].id }),
     event_id: event?.id,
     event_type_id: data.event_type_id,
     proponents: data.proponents,
@@ -168,21 +231,28 @@ export const Form2 = () => {
       indicators: r.indicators,
       personnel: r.personnel,
       resources: r.resources,
-      cost: num(r.cost),
+      cost: r.cost,
     })),
     project_detailed_budgets: (data.project_detailed_budgets ?? []).map((r) => ({
       item: r.item,
       description: r.description,
-      quantity: num(r.quantity),
-      amount: num(r.amount),
+      quantity: r.quantity,
+      amount: r.amount,
       source: r.source,
     })),
   };
 
-  handleCreateForm2({
-    token: decryptedToken,
-    ...payload
-  })
+    if(formdata) {
+        handleUpdateForm2({
+            token: decryptedToken,
+            ...payload
+        })
+    } else {
+        handleCreateForm2({
+        token: decryptedToken,
+        ...payload
+    })
+    }
   };
 
   return (
@@ -793,7 +863,7 @@ export const Form2 = () => {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
-          <Button disabled={createForm2Loading} type="submit" label={`${createForm2Loading ? 'Submitting...' : 'Submit'}`}  className="text-green-600" icon="pi pi-check" />
+          <Button disabled={createForm2Loading || updateForm2Loading} type="submit" label={`${createForm2Loading || updateForm2Loading ? 'Submitting...' : 'Submit'}`}  className="text-green-600" icon="pi pi-check" />
           <Button
             type="reset"
             className="text-red-400"
