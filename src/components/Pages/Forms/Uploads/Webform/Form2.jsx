@@ -46,7 +46,7 @@ export const Form2 = () => {
   const { mutate: handleCreateForm2, isLoading: createForm2Loading } = useMutation({
         mutationFn: createForm2,
         onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ['outreach'] });
+            queryClient.invalidateQueries({ queryKey: ['project'] });
             toast(data.message, { type: "success" })
             reset()
             }, 
@@ -59,7 +59,7 @@ export const Form2 = () => {
   const { mutate: handleUpdateForm2, isLoading: updateForm2Loading } = useMutation({
       mutationFn: updateForm2,
       onSuccess: (data) => {
-          queryClient.invalidateQueries({ queryKey: ['outreach'] });
+          queryClient.invalidateQueries({ queryKey: ['project'] });
           toast(data.message, { type: "success" })
           }, 
       onError: (error) => {

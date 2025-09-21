@@ -3,6 +3,99 @@ import { apiClient } from "@_src/http-commons"
 import { useQuery } from "@tanstack/react-query"
 
 
+export const getForm1 = (payload) => {
+    const headers = payload?.token ? { Authorization: `Bearer ${payload?.token}` } : undefined;
+
+    return useQuery({
+        queryKey: ['proposal'],                // per-event cache
+        queryFn: async () => {
+        const res = await apiClient.get(`api/v1/form1/proposal`, { headers });
+        return res.data;                        // return the data directly
+        },
+        enabled: !!payload?.token ,              // gate the query
+        staleTime: 0,                            // stale agad
+        refetchOnMount: 'always',                // 👈 laging refetch on revisit
+        refetchOnWindowFocus: false,             // iwas extra hits
+        retry: 1,
+    });
+}
+export const createForm1 = (payload) => {
+    const { 
+        event_id,
+        duration,
+        background,
+        overall_goal,
+        scholarly_connection,
+
+        programTeamMembers,
+        cooperatingAgencies,
+        componentProjects,
+        projects,
+        budgetSummaries
+    } = payload
+
+    const headers = {
+        Authorization: `Bearer ${payload?.token}`
+    }
+    const data = { 
+        event_id,
+        duration,
+        background,
+        overall_goal,
+        scholarly_connection,
+
+        programTeamMembers: [ ...programTeamMembers ],
+        cooperatingAgencies: [ ...cooperatingAgencies ],
+        componentProjects: [ ...componentProjects ],
+        projects: [ ...projects ],
+        budgetSummaries: [ ...budgetSummaries ]
+    };
+
+    const result = apiClient.post('api/v1/form1/proposal/create', data, {headers}).then(res => {
+        return res.data
+    })
+
+    return result
+}
+export const updateForm1 = (payload) => {
+    const { 
+        id,
+        duration,
+        background,
+        overall_goal,
+        scholarly_connection,
+
+        programTeamMembers,
+        cooperatingAgencies,
+        componentProjects,
+        projects,
+        budgetSummaries
+
+    } = payload
+
+    const headers = {
+        Authorization: `Bearer ${payload?.token}`
+    }
+    const data = { 
+        duration,
+        background,
+        overall_goal,
+        scholarly_connection,
+
+        programTeamMembers: [ ...programTeamMembers ],
+        cooperatingAgencies: [ ...cooperatingAgencies ],
+        componentProjects: [ ...componentProjects ],
+        projects: [ ...projects ],
+        budgetSummaries: [ ...budgetSummaries ]
+    };
+
+    const result = apiClient.post(`api/v1/form1/proposal/${id}`, data, {headers}).then(res => {
+        return res.data
+    })
+
+    return result
+}
+
 export const getForm2 = (payload) => {
     const headers = payload?.token ? { Authorization: `Bearer ${payload?.token}` } : undefined;
 
@@ -127,7 +220,6 @@ export const updateForm2 = (payload) => {
 
     return result
 }
-
 
 export const getForm3 = (payload) => {
 

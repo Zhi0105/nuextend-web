@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { Card } from "primereact/card";
 import { Fieldset } from "primereact/fieldset";
@@ -9,23 +9,62 @@ import { Calendar } from "primereact/calendar";
 import { Chips } from "primereact/chips";
 import { Button } from "primereact/button";
 import { Divider } from "primereact/divider";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { toast } from "react-toastify";
+import { useUserStore } from '@_src/store/auth';
+import { DecryptString } from "@_src/utils/helpers";
+import { createForm1, updateForm1 } from "@_src/services/formservice";
+import { useLocation } from "react-router-dom";
 
-/**
- * Payload shape (followed exactly):
- * {
- *   duration: "",
- *   background: "",
- *   overallGoal: "",
- *   scholarlyConnection: "",
- *   programTeamMembers: [],
- *   cooperatingAgencies: [],
- *   componentProjects: [ { title: "", outcomes: "", budget: null } ],
- *   projects: [ { title: "", teamLeader: "", teamMembers: [], objectives: "" } ],
- *   activityPlans: [ { activities: "", outputs: "", timeline: null, personnel: "" } ],
- * }
- */
+
+const toYMD = (d) => {
+    if (!d) return undefined;
+    const dt = d instanceof Date ? d : new Date(d);
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, "0");
+    const day = String(dt.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+};
+const num = (v) => (v === null || v === undefined || v === "" ? null : Number(v));
+
+const toStringList = (arr, key = "name") =>
+  (arr ?? [])
+    .map(v => (typeof v === "string" ? v : v?.[key] ?? ""))
+    .filter(Boolean);
 
 export const Form1 = () => {
+  const queryClient = useQueryClient()
+  const location = useLocation()
+  const { event, formdata } = location.state
+  const { token } = useUserStore((state) => ({ token: state.token }));
+  const decryptedToken = token && DecryptString(token)
+  
+  const { mutate: handleCreateForm1, isLoading: createForm1Loading } = useMutation({
+        mutationFn: createForm1,
+        onSuccess: (data) => {
+            queryClient.invalidateQueries({ queryKey: ['program'] });
+            toast(data.message, { type: "success" })
+            reset()
+            }, 
+        onError: (error) => {
+            toast(error?.response.data.message, { type: "warning" })
+
+            console.log("@CPPE:", error)
+        },
+  });
+  const { mutate: handleUpdateForm1, isLoading: updateForm1Loading } = useMutation({
+    mutationFn: updateForm1,
+    onSuccess: (data) => {
+        queryClient.invalidateQueries({ queryKey: ['program'] });
+        toast(data.message, { type: "success" })
+        }, 
+    onError: (error) => {
+        toast(error?.response.data.message, { type: "warning" })
+
+        console.log("@UPPE:", error)
+    },
+  });
+
   const {
     control,
     register,
@@ -48,21 +87,100 @@ export const Form1 = () => {
       projects: [
         { title: "", teamLeader: "", teamMembers: [], objectives: "" },
       ],
-      activityPlans: [
+      budgetSummaries: [
         { activities: "", outputs: "", timeline: null, personnel: "" },
       ],
     },
   });
 
+
+useEffect(() => {
+  if (!formdata) return;
+    reset({
+      // primitives
+      duration: formdata[0].duration ?? "",
+      background: formdata[0].background ?? "",
+      overallGoal: formdata[0].overall_goal ?? "",
+      scholarlyConnection: formdata[0].scholarly_connection ?? "",
+
+      // chips: must be array of strings
+      programTeamMembers: toStringList(formdata[0].program_team_members ?? formdata[0].team_members, "name"),
+      cooperatingAgencies: toStringList(formdata[0].cooperating_agencies, "name"),
+
+      // arrays of objects
+      componentProjects:
+        formdata[0].component_projects?.map(p => ({
+          title: p.title ?? "",
+          outcomes: p.outcomes ?? "",
+          budget: num(p.budget),
+        })) ?? [{ title: "", outcomes: "", budget: null }],
+
+      projects:
+        formdata[0].projects?.map(p => ({
+          title: p.title ?? "",
+          teamLeader: p.teamLeader,
+          teamMembers: toStringList(p.team_members, "name"),
+          objectives: p.objectives ?? "",
+        })) ?? [{ title: "", teamLeader: "", teamMembers: [], objectives: "" }],
+
+      budgetSummaries:
+        formdata[0].budget_summaries?.map(b => ({
+          activities: b.activities ?? "",
+          outputs: b.outputs ?? "",
+          timeline: b.timeline ? new Date(b.timeline) : null, // Calendar needs Date
+          personnel: typeof b.personnel === "string" ? b.personnel : (b.personnel?.name ?? ""),
+        })) ?? [{ activities: "", outputs: "", timeline: null, personnel: "" }],
+    });
+  }, [formdata, reset]);
+
+
   // Repeatable groups
   const componentProjectsFA = useFieldArray({ control, name: "componentProjects" });
   const projectsFA = useFieldArray({ control, name: "projects" });
-  const activityPlansFA = useFieldArray({ control, name: "activityPlans" });
+  const budgetSummariesFA  = useFieldArray({ control, name: "budgetSummaries" });
 
   const onSubmit = (data) => {
-    // Replace with your integration
-    console.log("Submitted payload:", data);
-    alert("Form submitted! Check console for payload.");
+    const payload = {
+        event_id: event?.id,
+        ...(formdata?.[0]?.id && { id: formdata[0].id }),
+        duration: data.duration,
+        background: data.background,
+        overall_goal: data.overallGoal,
+        scholarly_connection: data.scholarlyConnection,
+        programTeamMembers: [ ...data.programTeamMembers ],
+        cooperatingAgencies: [ ...data.cooperatingAgencies ],
+
+        componentProjects: (data.componentProjects ?? []).map((r) => ({
+          title: r.title,
+          outcomes: r.outcomes,
+          budget: num(r.budget)
+        })),
+        projects: (data.projects ?? []).map((r) => ({
+          title: r.title,
+          teamLeader: r.teamLeader,
+          teamMembers: [ ...r.teamMembers ],
+          objectives: r.objectives
+        })),
+        budgetSummaries: (data.budgetSummaries ?? []).map((r) => ({
+          activities: r.activities,
+          outputs: r.outputs,
+          timeline: toYMD(r.timeline),
+          personnel: r.personnel
+        }))
+    }
+
+
+    if(formdata) {
+        handleUpdateForm1({
+            token: decryptedToken,
+            ...payload
+        })
+    } else {
+      handleCreateForm1({
+        token: decryptedToken,
+        ...payload
+      })
+    }
   };
 
   // Small helper for error text
@@ -70,10 +188,11 @@ export const Form1 = () => {
     <small className="p-error block mt-1">{msg || errors?.[name]?.message || "Required"}</small>
   );
 
+  
   return (
     
     <div className="form1-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
-        <form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-5xl space-y-20 px-4">
+        <form className="w-full max-w-5xl space-y-20 px-4">
         {/* Header */}
         <Card title={<span className="text-2xl font-bold">Program Proposal Form</span>} className="rounded-2xl shadow-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -308,61 +427,73 @@ export const Form1 = () => {
           </div>
         </Fieldset>
 
-        {/* Activity Plans */}
-        <Fieldset legend="Activity Plans" className="rounded-2xl">
+        {/* Budgetsummaries */}
+        <Fieldset legend="Budget Summary" className="rounded-2xl">
           <div className="space-y-8">
-            {activityPlansFA.fields.map((field, idx) => (
+            {budgetSummariesFA.fields.map((field, idx) => (
               <Card key={field.id} className="rounded-xl shadow-1">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   <div>
                     <label className="block mb-2">Activities</label>
                     <InputText
-                      {...register(`activityPlans.${idx}.activities`, { required: "Required" })}
-                      className={`w-full py-1 px-4 border border-gray-300 ${errors?.activityPlans?.[idx]?.activities ? "p-invalid" : ""}`}
-                      placeholder="Activity"
+                      {...register(`budgetSummaries.${idx}.activities`, { required: "Required" })}
+                      className={`w-full py-1 px-4 border border-gray-300 ${errors?.budgetSummaries?.[idx]?.activities ? "p-invalid" : ""}`}
+                      placeholder="Budget summary"
                     />
-                    {errors?.activityPlans?.[idx]?.activities && <Err name={`activityPlans.${idx}.activities`} />}
+                    {errors?.budgetSummaries?.[idx]?.activities && <Err name={`budgetSummaries.${idx}.activities`} />}
                   </div>
                   <div>
                     <label className="block mb-2">Outputs</label>
                     <InputText
-                      {...register(`activityPlans.${idx}.outputs`, { required: "Required" })}
-                      className={`w-full py-1 px-4 border border-gray-300 ${errors?.activityPlans?.[idx]?.outputs ? "p-invalid" : ""}`}
+                      {...register(`budgetSummaries.${idx}.outputs`, { required: "Required" })}
+                      className={`w-full py-1 px-4 border border-gray-300 ${errors?.budgetSummaries?.[idx]?.outputs ? "p-invalid" : ""}`}
                       placeholder="Expected output"
                     />
-                    {errors?.activityPlans?.[idx]?.outputs && <Err name={`activityPlans.${idx}.outputs`} />}
+                    {errors?.budgetSummaries?.[idx]?.outputs && <Err name={`budgetSummaries.${idx}.outputs`} />}
                   </div>
                   <div>
                     <label className="block mb-2">Timeline (M/D/Y)</label>
                     <Controller
                       control={control}
-                      name={`activityPlans.${idx}.timeline`}
+                      name={`budgetSummaries.${idx}.timeline`}
                       rules={{ required: "Required" }}
                       render={({ field }) => (
                         <Calendar
                           value={field.value}
                           onChange={(e) => field.onChange(e.value)}
                           dateFormat="mm/dd/yy"
-                          className={`w-full ${errors?.activityPlans?.[idx]?.timeline ? "p-invalid" : ""}`}
+                          className={`w-full ${errors?.budgetSummaries?.[idx]?.timeline ? "p-invalid" : ""}`}
                         />
                       )}
                     />
-                    {errors?.activityPlans?.[idx]?.timeline && <Err name={`activityPlans.${idx}.timeline`} />}
+                    {errors?.budgetSummaries?.[idx]?.timeline && <Err name={`budgetSummaries.${idx}.timeline`} />}
                   </div>
                   <div>
                     <label className="block mb-2">Personnel</label>
                     <InputText
-                      {...register(`activityPlans.${idx}.personnel`, { required: "Required" })}
-                      className={`w-full py-1 px-4 border border-gray-300 ${errors?.activityPlans?.[idx]?.personnel ? "p-invalid" : ""}`}
+                      {...register(`budgetSummaries.${idx}.personnel`, { required: "Required" })}
+                      className={`w-full py-1 px-4 border border-gray-300 ${errors?.budgetSummaries?.[idx]?.personnel ? "p-invalid" : ""}`}
                       placeholder="Person in charge"
                     />
-                    {errors?.activityPlans?.[idx]?.personnel && <Err name={`activityPlans.${idx}.personnel`} />}
+                    {errors?.budgetSummaries?.[idx]?.personnel && <Err name={`budgetSummaries.${idx}.personnel`} />}
                   </div>
                 </div>
+
                 <div className="mt-4 flex gap-2">
-                  <Button type="button" icon="pi pi-plus" label="Add" onClick={() => activityPlansFA.append({ activities: "", outputs: "", timeline: null, personnel: "" })} />
-                  {activityPlansFA.fields.length > 1 && (
-                    <Button type="button" icon="pi pi-trash" label="Remove" severity="danger" onClick={() => activityPlansFA.remove(idx)} />
+                  <Button
+                    type="button"
+                    icon="pi pi-plus"
+                    label="Add"
+                    onClick={() => budgetSummariesFA.append({ activities: "", outputs: "", timeline: null, personnel: "" })}
+                  />
+                  {budgetSummariesFA.fields.length > 1 && (
+                    <Button
+                      type="button"
+                      icon="pi pi-trash"
+                      label="Remove"
+                      severity="danger"
+                      onClick={() => budgetSummariesFA.remove(idx)}
+                    />
                   )}
                 </div>
               </Card>
@@ -372,7 +503,7 @@ export const Form1 = () => {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
-          <Button type="submit" icon="pi pi-check" label="Submit" className="p-button-success" />
+          <Button disabled={createForm1Loading || updateForm1Loading} onClick={handleSubmit(onSubmit)} type="submit" icon="pi pi-check"  label={`${createForm1Loading || updateForm1Loading? 'Submitting...' : 'Submit'}`} className="p-button-success" />
           <Button type="button" icon="pi pi-refresh" label="Reset" severity="secondary" onClick={() => reset()} />
         </div>
 
