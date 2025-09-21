@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import React, { useContext } from 'react'
 import { useUserStore } from '@_src/store/auth';
 import { AuthContext } from "@_src/contexts/AuthContext"
 import { FaSignOutAlt } from "react-icons/fa";
@@ -17,11 +17,11 @@ export const Sidenav = () => {
     const { logout } = useContext(AuthContext)
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedUser = token && DecryptUser(user)
-    const [generateVisible, setGenerateVisible] = useState(false);
+    // const [generateVisible, setGenerateVisible] = useState(false);
     
-    const toggleGenerate = () => {
-        setGenerateVisible(!generateVisible)
-    };
+    // const toggleGenerate = () => {
+    //     setGenerateVisible(!generateVisible)
+    // };
 
     const validateUserRole = (role) => {
         if(role === 3) {
@@ -109,7 +109,7 @@ export const Sidenav = () => {
                     </div>
                 </li>
 
-                <li>
+                {/* <li>
                     <div
                         className="flex items-center justify-between rounded cursor-pointer"
                         onClick={() => toggleGenerate()}
@@ -167,7 +167,7 @@ export const Sidenav = () => {
                             </li>
                         </ul>
                     )}
-                </li>
+                </li> */}
 
                 <li
                     onClick={logout}

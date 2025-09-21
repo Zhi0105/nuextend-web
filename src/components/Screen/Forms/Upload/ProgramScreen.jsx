@@ -5,7 +5,8 @@ import { useUserStore } from '@_src/store/auth';
 import { DecryptUser } from "@_src/utils/helpers";
 import { AdminSidenav } from "@_src/routes/AdminSidenav"
 import { Sidenav } from "@_src/routes/Sidenav"
-import { Program } from "@_src/components/Pages/Forms/Uploads/Program";
+// import { Program } from "@_src/components/Pages/Forms/Uploads/Program";
+import { UpdatedProgram } from "@_src/components/Pages/Forms/Uploads/UpdatedProgram";
 
 export const ProgramScreen = () => {
     const { user } = useUserStore((state) => ({
@@ -19,7 +20,7 @@ export const ProgramScreen = () => {
             sidenav={isAdminRole ? <AdminSidenav /> : <Sidenav />}
             header={<Header />}
         >
-            <Program />
+            <UpdatedProgram />
         </DashboardTemplate>
     )
 }

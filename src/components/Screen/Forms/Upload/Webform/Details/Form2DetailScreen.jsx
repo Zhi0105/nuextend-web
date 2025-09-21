@@ -4,10 +4,9 @@ import { useUserStore } from '@_src/store/auth';
 import { DecryptUser } from "@_src/utils/helpers";
 import { AdminSidenav } from "@_src/routes/AdminSidenav"
 import { Sidenav } from "@_src/routes/Sidenav"
-// import { Outreach } from "@_src/components/Pages/Forms/Uploads/Outreach";
-import { UpdatedOutreach } from "@_src/components/Pages/Forms/Uploads/UpdatedOutreach";
+import { Form2Detail } from "@_src/components/Pages/Forms/Uploads/Webform/Detail/Form2Detail";
 
-export const OutreachScreen = () => {
+export const Form2DetailScreen = () => {
     const { user } = useUserStore((state) => ({
         user: state.user
     }));
@@ -19,7 +18,7 @@ export const OutreachScreen = () => {
             sidenav={isAdminRole ? <AdminSidenav /> : <Sidenav />}
             header={<Header />}
         >
-            <UpdatedOutreach />
+            <Form2Detail />
         </DashboardTemplate>
     )
 }

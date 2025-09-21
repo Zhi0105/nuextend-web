@@ -16,13 +16,13 @@ export const AdminSidenav = () => {
     const { logout } = useContext(AuthContext)
     const [eventVisible, setEventVisible] = useState(false);
     const [skillVisible, setSkillVisible] = useState(false)
-    const [generateVisible, setGenerateVisible] = useState(false);
+    // const [generateVisible, setGenerateVisible] = useState(false);
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedUser = token && DecryptUser(user)
     
-    const toggleGenerate = () => {
-        setGenerateVisible(!generateVisible)
-    };
+    // const toggleGenerate = () => {
+    //     setGenerateVisible(!generateVisible)
+    // };
 
     const toggleEvents = () => {
         setEventVisible(!eventVisible)
@@ -184,7 +184,7 @@ export const AdminSidenav = () => {
                         </div>
                     </li>
                 )}
-                <li>
+                {/* <li>
                     <div
                         className="flex items-center justify-between rounded cursor-pointer"
                         onClick={() => toggleGenerate()}
@@ -242,7 +242,7 @@ export const AdminSidenav = () => {
                             </li>
                         </ul>
                     )}
-                </li>
+                </li> */}
                 {decryptedUser?.role_id === 1 && (
                     <li>
                         <div className="flex gap-6">

@@ -2,6 +2,7 @@
 import { AES, enc } from "crypto-js";
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
+import _ from "lodash";
 
 
 export const EncryptUser = (user) => {
@@ -202,5 +203,8 @@ export const toStringArrayFromObjects = (arr, key = "name") =>
 .filter(Boolean);
 
 export const toMemberObjects = (arr) =>
-  Array.isArray(arr) ? arr.filter(Boolean).map((name) => ({ name })) : [];
+    Array.isArray(arr) ? arr.filter(Boolean).map((name) => ({ name })) : [];
 
+export const SetFormCodeNavigate = (formCode) => {
+    return `${_.last(formCode.split('-'))}`
+}

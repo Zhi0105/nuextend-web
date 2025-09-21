@@ -53,9 +53,17 @@ import { ProgramDataScreen } from '@_src/components/Screen/Forms/Generate/Data/P
 import { ActivityScreen } from '@_src/components/Screen/Event/ActivityScreen'
 import { ReportScreen } from '@_src/components/Screen/Activity/ReportScreen'
 
+import { Form1Screen } from '@_src/components/Screen/Forms/Upload/Webform/From1Screen'
+import { Form2Screen } from '@_src/components/Screen/Forms/Upload/Webform/Form2Screen'
+import { Form3Screen } from '@_src/components/Screen/Forms/Upload/Webform/Form3Screen'
+
+import { Form1DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form1DetailScreen'
+import { Form2DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form2DetailScreen'
+import { Form3DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form3DetailScreen'
 
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
+
 
 
 export const RouteList = () => {
@@ -102,6 +110,16 @@ export const RouteList = () => {
                 <Route path="/event/form/project" element={<ProjectScreen />} />
                 <Route path="/event/form/outreach" element={<OutreachScreen />} />
                 <Route path="/event/form/program" element={<ProgramScreen />} />
+
+
+                <Route path="/event/form/001" element={<Form1Screen />} />
+                <Route path="/event/form/002" element={<Form2Screen />} />
+                <Route path="/event/form/003" element={<Form3Screen />} />
+
+                <Route path="/event/form/detail/001" element={<Form1DetailScreen />} />
+                <Route path="/event/form/detail/002" element={<Form2DetailScreen />} />
+                <Route path="/event/form/detail/003" element={<Form3DetailScreen />} />
+                
                 {/* NEW FORM ROUTE */}
 
                 {/* PDF GENERATES */}

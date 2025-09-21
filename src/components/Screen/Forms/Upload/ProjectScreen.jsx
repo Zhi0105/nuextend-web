@@ -4,7 +4,8 @@ import { useUserStore } from '@_src/store/auth';
 import { DecryptUser } from "@_src/utils/helpers";
 import { AdminSidenav } from "@_src/routes/AdminSidenav"
 import { Sidenav } from "@_src/routes/Sidenav"
-import { Project } from "@_src/components/Pages/Forms/Uploads/Project";
+// import { Project } from "@_src/components/Pages/Forms/Uploads/Project";
+import { UpdatedProject } from "@_src/components/Pages/Forms/Uploads/UpdatedProject";
 
 export const ProjectScreen = () => {
     const { user } = useUserStore((state) => ({
@@ -18,7 +19,7 @@ export const ProjectScreen = () => {
             sidenav={isAdminRole ? <AdminSidenav /> : <Sidenav />}
             header={<Header />}
         >
-            <Project />
+            <UpdatedProject />
         </DashboardTemplate>
     )
 }
