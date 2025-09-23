@@ -98,6 +98,7 @@ export const UpdatedProject = () => {
                                                                             onClick={() => navigate(`/event/form/detail/${SetFormCodeNavigate(form.id)}`, 
                                                                                 {
                                                                                     state: {
+                                                                                        owner: event?.user,
                                                                                         data: event?.[form.formKey] ?? [], // ← dito papasok ang event.form3, form5, etc.
                                                                                     }
                                                                                 }            
@@ -121,7 +122,8 @@ export const UpdatedProject = () => {
                                                             onClick={() => navigate(`/event/form/detail/${SetFormCodeNavigate(form.id)}`, 
                                                                 {
                                                                     state: {
-                                                                            data: event?.[form.formKey] ?? [], // ← dito papasok ang event.form3, form5, etc.
+                                                                        owner: event?.user,
+                                                                        data: event?.[form.formKey] ?? [], // ← dito papasok ang event.form3, form5, etc.
                                                                     }
                                                                 }
                                                             )}
