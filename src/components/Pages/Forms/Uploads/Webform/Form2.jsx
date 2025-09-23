@@ -83,7 +83,7 @@ export const Form2 = () => {
       event_type_id: "",
       proponents: "",
       collaborators: "",
-      participants: undefined,
+      participants: null,
       partners: "",
       implementationDate: null ,
       area: "",
@@ -314,8 +314,8 @@ export const Form2 = () => {
                 rules={numberRules}
                 render={({ field }) => (
                   <InputNumber
-                    value={field.value}
-                    onValueChange={(e) => field.onChange(e.value)}
+                    value={field.value ?? null}                 // never undefined
+                    onValueChange={(e) => field.onChange(e.value ?? null)}
                     inputClassName="px-4 py-1 border border-gray-300"
                     className={`w-full ${errors.participants ? "p-invalid" : ""}`}
                   />

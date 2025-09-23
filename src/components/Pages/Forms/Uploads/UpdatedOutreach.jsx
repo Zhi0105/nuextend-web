@@ -30,8 +30,6 @@ export const UpdatedOutreach = () => {
 
     const isEventOwner = !!decryptedUser?.id && decryptedUser.id === eventOwnerId;
 
-
-
     // fixed rows (you can tweak names/codes)
     const forms = [
         { id: "NUB-ACD-CMX-F-003", name: "Outreach Project Proposal Format", code: "NUB-ACD-CMX-F-003", formKey: 'form3' },
@@ -97,6 +95,7 @@ export const UpdatedOutreach = () => {
                                                                                 onClick={() => navigate(`/event/form/detail/${SetFormCodeNavigate(form.id)}`, 
                                                                                     {
                                                                                         state: {
+                                                                                            owner: event?.user,
                                                                                             data: event?.[form.formKey] ?? [], // ← dito papasok ang event.form3, form5, etc.
                                                                                         }
                                                                                     }            
@@ -120,6 +119,7 @@ export const UpdatedOutreach = () => {
                                                                 onClick={() => navigate(`/event/form/detail/${SetFormCodeNavigate(form.id)}`, 
                                                                     {
                                                                         state: {
+                                                                             owner: event?.user,
                                                                              data: event?.[form.formKey] ?? [], // ← dito papasok ang event.form3, form5, etc.
                                                                         }
                                                                     }
