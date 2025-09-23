@@ -60,7 +60,8 @@ import { Form3Screen } from '@_src/components/Screen/Forms/Upload/Webform/Form3S
 import { Form1DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form1DetailScreen'
 import { Form2DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form2DetailScreen'
 import { Form3DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form3DetailScreen'
-
+import { CreateReportProgress } from "@_src/components/Pages/Activity/CreateReportProgress";
+import { ViewReportScreen } from "@_src/components/Screen/Activity/ViewReportScreen";
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
 
@@ -75,7 +76,8 @@ export const RouteList = () => {
             <Route path="/dashboard" element={<DashboardScreen />} />
 
                 <Route path="/certificate-print" element={<Certificate />} />
-            
+                <Route path="/create-report-progress" element={<CreateReportProgress />} />
+                <Route path="/view-report" element={<ViewReportScreen />} />
 
                 <Route path="/email-verified-sendlink" element={<EmailSendLinkScreen />} />
                 <Route path="/email-verified" element={<EmailVerifiedScreen />} />
@@ -143,7 +145,7 @@ export const RouteList = () => {
                 <Route path="/skill/update" element={<SkillUpdateScreen />} />    
                 <Route path="/skill/view" element={<SkillViewScreen />} />   
 
-                <Route path='/event/activities/report' element={<ReportScreen />} /> 
+                <Route path='/event/activities/report' element={<ReportScreen />} />
 
 
             </Route>

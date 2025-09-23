@@ -250,7 +250,7 @@ export const View = () => {
             <Tooltip target=".form" content="Form" position="right" />
             <FaWpforms className="form w-7 h-7 text-[#364190]" />
           </button>
-          <button onClick={() => navigate("/event/activities", { state: eventRow })}>
+          <button onClick={() => navigate("/event/activities", { state: eventRow, creatorUserId: eventRow.user?.id })}>
             <Tooltip target=".activities" content="Activities" position="right" />
             <VscLayoutActivitybarLeft className="activities w-7 h-7 text-[#364190]" />
           </button>
