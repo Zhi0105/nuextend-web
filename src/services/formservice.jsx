@@ -48,17 +48,17 @@ export const createForm1 = (payload) => {
     background,
     overall_goal,
     scholarly_connection,
-
     programTeamMembers,
     cooperatingAgencies,
     componentProjects,
     projects,
-    budgetSummaries
   } = payload;
 
   const headers = {
-    Authorization: `Bearer ${payload?.token}`
+    Authorization: `Bearer ${payload?.token}`,
   };
+
+  // Shape must mirror backend validator
   const data = {
     event_id,
     duration,
@@ -66,18 +66,29 @@ export const createForm1 = (payload) => {
     overall_goal,
     scholarly_connection,
 
-    programTeamMembers: [ ...programTeamMembers ],
-    cooperatingAgencies: [ ...cooperatingAgencies ],
-    componentProjects: [ ...componentProjects ],
-    projects: [ ...projects ],
-    budgetSummaries: [ ...budgetSummaries ]
+    programTeamMembers: [...programTeamMembers],
+    cooperatingAgencies: [...cooperatingAgencies],
+    componentProjects: [...componentProjects],
+
+    // projects with nested budgetSummaries
+    projects: (projects ?? []).map((proj) => ({
+      title: proj.title,
+      teamLeader: proj.teamLeader,
+      teamMembers: [...(proj.teamMembers ?? [])],
+      objectives: proj.objectives,
+      budgetSummaries: (proj.budgetSummaries ?? []).map((b) => ({
+        activities: b.activities,
+        outputs: b.outputs,
+        timeline: b.timeline, // already transformed to YYYY-MM-DD in form submit
+        personnel: b.personnel,
+        budget: b.budget,     // keep number or null (backend accepts nullable / decimal)
+      })),
+    })),
   };
 
-  const result = apiClient.post('api/v1/form1/proposal/create', data, {headers}).then(res => {
-    return res.data;
-  });
-
-  return result;
+  return apiClient
+    .post("api/v1/form1/proposal/create", data, { headers })
+    .then((res) => res.data);
 };
 
 export const updateForm1 = (payload) => {
@@ -87,35 +98,44 @@ export const updateForm1 = (payload) => {
     background,
     overall_goal,
     scholarly_connection,
-
     programTeamMembers,
     cooperatingAgencies,
     componentProjects,
     projects,
-    budgetSummaries
   } = payload;
 
   const headers = {
-    Authorization: `Bearer ${payload?.token}`
+    Authorization: `Bearer ${payload?.token}`,
   };
+
   const data = {
     duration,
     background,
     overall_goal,
     scholarly_connection,
 
-    programTeamMembers: [ ...programTeamMembers ],
-    cooperatingAgencies: [ ...cooperatingAgencies ],
-    componentProjects: [ ...componentProjects ],
-    projects: [ ...projects ],
-    budgetSummaries: [ ...budgetSummaries ]
+    programTeamMembers: [...programTeamMembers],
+    cooperatingAgencies: [...cooperatingAgencies],
+    componentProjects: [...componentProjects],
+
+    projects: (projects ?? []).map((proj) => ({
+      title: proj.title,
+      teamLeader: proj.teamLeader,
+      teamMembers: [...(proj.teamMembers ?? [])],
+      objectives: proj.objectives,
+      budgetSummaries: (proj.budgetSummaries ?? []).map((b) => ({
+        activities: b.activities,
+        outputs: b.outputs,
+        timeline: b.timeline,
+        personnel: b.personnel,
+        budget: b.budget,
+      })),
+    })),
   };
 
-  const result = apiClient.post(`api/v1/form1/proposal/${id}`, data, {headers}).then(res => {
-    return res.data;
-  });
-
-  return result;
+  return apiClient
+    .post(`api/v1/form1/proposal/${id}`, data, { headers })
+    .then((res) => res.data);
 };
 
 /* ✅ refactored approve/reject (FORM 1) */
