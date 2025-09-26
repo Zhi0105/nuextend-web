@@ -45,26 +45,21 @@ export const Report = () => {
 
   // Generate status text based on partial/full approval or revision
   const getStatusName = (report) => {
-    const eventStatusId = report.event_status_id;
+    const { event_status_id, is_commex, is_asd } = report;
 
-    // Fully approved
-    if (report.is_commex && report.is_asd) {
-      return "✅ Approved";
-    }
+    // ✅ Fully approved
+    if (is_commex && is_asd) return "✅ Approved";
 
-    if (report.event_status_id === 6) {
-      return "✏️ Sent for Revision";
-    }
+    // 🔹 Status mapping
+    const statusMap = {
+      6: "✏️ Sent for Revision",
+      4: "Submitted",
+      8: "✏️ Resubmitted",
+      5: "Returned",
+      3: "Not Yet Submitted",
+    };
 
-    if (eventStatusId === 4) {
-      return "Submitted";
-    }
-    if (eventStatusId === 8) {
-      return "✏️ Resubmitted";
-    }
-    if (eventStatusId === 5) {
-      return "Returned";
-    }
+    return statusMap[event_status_id] || "⏳ Pending";
   };
 
   const reportNameTemplate = (rowData, options) => `Report ${options.rowIndex + 1}`;

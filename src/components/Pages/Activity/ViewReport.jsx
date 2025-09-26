@@ -268,7 +268,7 @@ const submitRevision = async () => {
           <Button label="Update" severity="warning" onClick={() => navigate("/create-report-progress", { state: { activities_id: currentReport.activities_id, report: currentReport } })}/>
         )}
 
- {[4, 6, 8].includes(eventStatusId) && (
+ {[4, 8].includes(eventStatusId) && (
   <>
     {/* Commex Approve/Revise (role_id = 1) */}
     {currentRoleId === 1 && !currentReport.is_commex && (
