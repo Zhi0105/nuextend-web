@@ -58,12 +58,14 @@ import { Form2Screen } from '@_src/components/Screen/Forms/Upload/Webform/Form2S
 import { Form3Screen } from '@_src/components/Screen/Forms/Upload/Webform/Form3Screen'
 import { Form4Screen } from '@_src/components/Screen/Forms/Upload/Webform/Form4Screen'
 import { Form5Screen } from '@_src/components/Screen/Forms/Upload/Webform/Form5Screen'
+import { Form6Screen } from '@_src/components/Screen/Forms/Upload/Webform/Form6Screen'
 
 import { Form1DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form1DetailScreen'
 import { Form2DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form2DetailScreen'
 import { Form3DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form3DetailScreen'
 import { Form4DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form4DetailScreen'
 import { Form5DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form5DetailScreen'
+import { Form6DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form6DetailScreen'
 
 import { CreateReportProgress } from "@_src/components/Pages/Activity/CreateReportProgress";
 import { ViewReportScreen } from "@_src/components/Screen/Activity/ViewReportScreen";
@@ -123,12 +125,14 @@ export const RouteList = () => {
                 <Route path="/event/form/003" element={<Form3Screen />} />
                 <Route path="/event/form/004" element={<Form4Screen />} />
                 <Route path="/event/form/005" element={<Form5Screen />} />
+                <Route path="/event/form/006" element={<Form6Screen />} />
 
                 <Route path="/event/form/detail/001" element={<Form1DetailScreen />} />
                 <Route path="/event/form/detail/002" element={<Form2DetailScreen />} />
                 <Route path="/event/form/detail/003" element={<Form3DetailScreen />} />
                 <Route path="/event/form/detail/004" element={<Form4DetailScreen />} />
                 <Route path="/event/form/detail/005" element={<Form5DetailScreen />} />
+                <Route path="/event/form/detail/006" element={<Form6DetailScreen />} />
                 
                 {/* NEW FORM ROUTE */}
 
