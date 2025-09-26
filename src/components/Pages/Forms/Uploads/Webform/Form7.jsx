@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { useUserStore } from "@_src/store/auth";
 import { DecryptString } from "@_src/utils/helpers";
-import { createForm6, updateForm6 } from "@_src/services/formservice";
+import { createForm7, updateForm7 } from "@_src/services/formservice";
 import { useLocation } from "react-router-dom";
 
 const defaultValues = {
@@ -28,7 +28,7 @@ const TW_CARD = "shadow-sm rounded-2xl border border-gray-200";
 const TW_BTN =
   "px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition";
 
-export const Form6 = ({ onSubmit }) => {
+export const Form7 = ({ onSubmit }) => {
   const queryClient = useQueryClient();
   const location = useLocation();
   const { event, formdata } = location.state || {};
@@ -54,27 +54,27 @@ export const Form6 = ({ onSubmit }) => {
   }, [formdata, reset]);
 
   const { mutate: createMut, isLoading: creating } = useMutation({
-    mutationFn: createForm6,
+    mutationFn: createForm7,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["form6"] });
-      toast(data?.message || "Form6 created", { type: "success" });
+      queryClient.invalidateQueries({ queryKey: ["form7"] });
+      toast(data?.message || "Form7 created", { type: "success" });
       reset(defaultValues);
     },
     onError: (err) => {
-      toast(err?.response?.data?.message || "Error creating Form6", {
+      toast(err?.response?.data?.message || "Error creating Form7", {
         type: "error",
       });
     },
   });
 
   const { mutate: updateMut, isLoading: updating } = useMutation({
-    mutationFn: updateForm6,
+    mutationFn: updateForm7,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["form6"] });
-      toast(data?.message || "Form6 updated", { type: "success" });
+      queryClient.invalidateQueries({ queryKey: ["form7"] });
+      toast(data?.message || "Form7 updated", { type: "success" });
     },
     onError: (err) => {
-      toast(err?.response?.data?.message || "Error updating Form6", {
+      toast(err?.response?.data?.message || "Error updating Form7", {
         type: "error",
       });
     },
@@ -101,7 +101,7 @@ export const Form6 = ({ onSubmit }) => {
   return (
     <div className="min-h-screen bg-white w-full flex flex-col items-center sm:pl-[200px] py-20">
       <form onSubmit={handleSubmit(submit)} className="max-w-4xl w-full px-4 space-y-8">
-        <Card title="Manifestation of Consent & Cooperation for the Extension Program" className={TW_CARD}>
+        <Card title="Manifestation of Consent and Cooperation for the Outreach Project" className={TW_CARD}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* Designation */}
             <div className="flex flex-col">
