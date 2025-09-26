@@ -371,7 +371,7 @@ export const getForm4 = (payload) => {
   return useQuery({
     queryKey: ['form4'],
     queryFn: async () => {
-      const res = await apiClient.get(`api/v1/form4/`, { headers });
+      const res = await apiClient.get(`api/v1/form4`, { headers });
       return res.data;
     },
     enabled: !!payload?.token,
@@ -423,3 +423,61 @@ export const updateForm4 = (payload) => {
 /* ✅ refactored approve/reject (FORM 3) */
 export const approveForm4 = (payload) => approveForm("form4", payload);
 export const rejectForm4  = (payload) => rejectForm("form4", payload);
+
+export const getForm5 = (payload) => {
+    const headers = payload?.token ? { Authorization: `Bearer ${payload?.token}` } : undefined;
+
+  return useQuery({
+    queryKey: ['form5'],
+    queryFn: async () => {
+      const res = await apiClient.get(`api/v1/form5`, { headers });
+      return res.data;
+    },
+    enabled: !!payload?.token,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+  
+}
+export const createForm5 = (payload) => {
+  const {
+    event_id,
+    a, b, c, d, e, f, g, h, i, j, k, l, m, n
+  } = payload;
+
+  const headers = {
+    Authorization: `Bearer ${payload?.token}`
+  };
+  const data = {
+    event_id, a, b, c, d, e, f, g, h, i, j, k, l, m, n
+  };
+
+  const result = apiClient.post('api/v1/form5/create', data, {headers}).then(res => {
+    return res.data;
+  });
+
+  return result;
+};
+export const updateForm5 = (payload) => {
+  const {
+    id, a, b, c, d, e, f, g, h, i, j, k, l, m, n
+  } = payload;
+
+  const headers = {
+    Authorization: `Bearer ${payload?.token}`
+  };
+  const data = {
+    a, b, c, d, e, f, g, h, i, j, k, l, m, n
+  };
+
+  const result = apiClient.post(`api/v1/form5/${id}`, data, {headers}).then(res => {
+    return res.data;
+  });
+
+  return result;
+};
+
+export const approveForm5 = (payload) => approveForm("form5", payload);
+export const rejectForm5  = (payload) => rejectForm("form5", payload);

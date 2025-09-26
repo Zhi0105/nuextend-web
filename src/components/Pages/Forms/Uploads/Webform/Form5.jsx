@@ -8,15 +8,15 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { useUserStore } from "@_src/store/auth";
 import { DecryptString } from "@_src/utils/helpers";
-import { createForm4, updateForm4 } from "@_src/services/formservice";
+import { createForm5, updateForm5 } from "@_src/services/formservice";
 import { useLocation } from "react-router-dom";
 
 const defaultValues = {
-  a: false, b: false, c: false,
-  d: false, e: false, f: false, g: false,
+  a: false, b: false, c: false, d: false,
+  e: false, f: false, g: false,
   h: false,
-  i: false, j: false, k: false, l: false, m: false,
-  n: false, o: false, p: false,
+  i: false, j: false, k: false, l: false,
+  m: false, n: false,
 };
 
 const InputLabel = ({ children }) => (
@@ -26,17 +26,17 @@ const InputLabel = ({ children }) => (
 const TW_CARD = "shadow-sm rounded-2xl border border-gray-200";
 const TW_BTN = "px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition";
 
-export const Form4 = ({ onSubmit }) => {
+export const Form5 = ({ onSubmit }) => {
   const queryClient = useQueryClient();
   const location = useLocation();
   const { event, formdata } = location.state;
   const { token } = useUserStore((state) => ({ token: state.token }));
   const decryptedToken = token && DecryptString(token);
 
-  const { mutate: handleCreateForm4, isLoading: createLoading } = useMutation({
-    mutationFn: createForm4,
+  const { mutate: handleCreateForm5, isLoading: createLoading } = useMutation({
+    mutationFn: createForm5,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["form4"] });
+      queryClient.invalidateQueries({ queryKey: ["form5"] });
       toast(data.message, { type: "success" });
       reset();
     },
@@ -45,10 +45,10 @@ export const Form4 = ({ onSubmit }) => {
     },
   });
 
-  const { mutate: handleUpdateForm4, isLoading: updateLoading } = useMutation({
-    mutationFn: updateForm4,
+  const { mutate: handleUpdateForm5, isLoading: updateLoading } = useMutation({
+    mutationFn: updateForm5,
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["form4"] });
+      queryClient.invalidateQueries({ queryKey: ["form5"] });
       toast(data.message, { type: "success" });
     },
     onError: (error) => {
@@ -74,58 +74,58 @@ export const Form4 = ({ onSubmit }) => {
     onSubmit?.(payload);
 
     if (formdata) {
-      handleUpdateForm4({ token: decryptedToken, ...payload });
+      handleUpdateForm5({ token: decryptedToken, ...payload });
     } else {
-      handleCreateForm4({ token: decryptedToken, ...payload });
+      handleCreateForm5({ token: decryptedToken, ...payload });
     }
   };
 
   const sections = [
     {
-      title: "I. Relevance to Academic and Research Programs",
+      title: "I. Relevance to Academic Extension Programs",
       fields: [
-        { key: "a", label: "Is the program strongly linked to teaching and research?" },
-        { key: "b", label: "Is it based on existing academic or research programs?" },
-        { key: "c", label: "Is it relevant to the core competencies of the School/Department?" },
+        { key: "a", label: "Is the project related to disaster response, rehabilitation, and recovery?" },
+        { key: "b", label: "If it is a regular outreach project, is it going to be built and maintained on the basis of existing academic research programs of the school?" },
+        { key: "c", label: "Can it be easily repackaged into an extension program for future purposes?" },
+        { key: "d", label: "Is the project relevant to the core competencies of the School or Department?" },
       ],
     },
     {
       title: "II. Collaborative and Participatory",
       fields: [
-        { key: "d", label: "Does it involve collaboration with the target group?" },
-        { key: "e", label: "Is the target group willing to monitor and evaluate?" },
-        { key: "f", label: "Are there assurances of cooperation?" },
-        { key: "g", label: "Is it done within a community with MOA?" },
+        { key: "e", label: "Does it involve the input and collaboration of the target group?" },
+        { key: "f", label: "Is the target group willing to take part in the implementation, monitoring, and evaluation of the project?" },
+        { key: "g", label: "Is it to be done within a community that we have MOA with?" },
       ],
     },
     {
       title: "III. Value(s) Oriented",
-      fields: [{ key: "h", label: "Does the program promote social transformation in line with NU values?" }],
+      fields: [
+        { key: "h", label: "Is the project in line with the ComEx’s value proposition?" },
+      ],
     },
     {
       title: "IV. Financing and Sustainability",
       fields: [
-        { key: "i", label: "Not financially draining?" },
-        { key: "j", label: "Enough personnel available?" },
-        { key: "k", label: "Is there external funding agency support?" },
-        { key: "l", label: "Capable of managing sustainably?" },
-        { key: "m", label: "Will it contribute to holistic growth?" },
+        { key: "i", label: "Is the project not financially demanding so it cannot drain the financial resources?" },
+        { key: "j", label: "Is the target group willing to share counterpart resources?" },
+        { key: "k", label: "Is there any external funding agency that shall support the project?" },
+        { key: "l", label: "Is there any related activity to support and finance the proposed project?" },
       ],
     },
     {
-      title: "V. Evidence-Based Need and Significance",
+      title: "V. Significance",
       fields: [
-        { key: "n", label: "Clearly stated background, outcomes, and projects?" },
-        { key: "o", label: "Are there formal studies/assessments?" },
-        { key: "p", label: "Specific and measurable results?" },
+        { key: "m", label: "Is it going to cater to pressing and legitimate community needs?" },
+        { key: "n", label: "Are there formal studies, community assessments, and problem analyses conducted?" },
       ],
     },
   ];
 
   return (
-    <div className="form4 min-h-screen bg-white w-full flex flex-col justify-center items-center sm:pl-[200px] py-20">
+    <div className="form5 min-h-screen bg-white w-full flex flex-col justify-center items-center sm:pl-[200px] py-20">
       <form onSubmit={handleSubmit(submit)} className="max-w-4xl mx-auto p-6 space-y-8">
-        <Card title="Form 4 - Checklist of Criteria for Extension Program Proposal" className={TW_CARD}>
+        <Card title="Form 5 - Checklist of Criteria for Project Proposal" className={TW_CARD}>
           <div className="space-y-8">
             {sections.map((section, idx) => (
               <Fieldset key={idx} legend={section.title} className={TW_CARD}>
