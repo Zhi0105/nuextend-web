@@ -675,3 +675,84 @@ export const updateForm7 = (payload) => {
 
 export const approveForm7 = (payload) => approveForm("form7", payload);
 export const rejectForm7  = (payload) => rejectForm("form7", payload);
+
+export const getForm8 = (payload) => {
+    const headers = payload?.token ? { Authorization: `Bearer ${payload?.token}` } : undefined;
+
+  return useQuery({
+    queryKey: ['form8'],
+    queryFn: async () => {
+      const res = await apiClient.get(`api/v1/form8`, { headers });
+      return res.data;
+    },
+    enabled: !!payload?.token,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+  
+}
+export const createForm8 = (payload) => {
+  const {
+    event_id,
+    proposed_title, 
+    introduction,
+    method,
+    findings_discussion,
+    implication_intervention,
+    references
+  } = payload;
+
+  const headers = {
+    Authorization: `Bearer ${payload?.token}`
+  };
+  const data = {
+    event_id,
+    proposed_title, 
+    introduction,
+    method,
+    findings_discussion,
+    implication_intervention,
+    references: [ ...references ]
+  };
+
+  const result = apiClient.post('api/v1/form8/create', data, {headers}).then(res => {
+    return res.data;
+  });
+
+  return result;
+};
+export const updateForm8 = (payload) => {
+  const {
+    id,
+    event_id,
+    proposed_title, 
+    introduction,
+    method,
+    findings_discussion,
+    implication_intervention,
+    references
+  } = payload;
+
+  const headers = {
+    Authorization: `Bearer ${payload?.token}`
+  };
+  const data = {
+    event_id,
+    proposed_title, 
+    introduction,
+    method,
+    findings_discussion,
+    implication_intervention,
+    references: [ ...references ]
+  };
+  const result = apiClient.post(`api/v1/form8/${id}`, data, {headers}).then(res => {
+    return res.data;
+  });
+
+  return result;
+};
+
+export const approveForm8 = (payload) => approveForm("form8", payload);
+export const rejectForm8  = (payload) => rejectForm("form8", payload);
