@@ -835,3 +835,83 @@ export const updateForm9 = (payload) => {
 
 export const approveForm9 = (payload) => approveForm("form9", payload);
 export const rejectForm9  = (payload) => rejectForm("form9", payload);
+
+
+
+export const getForm10 = (payload) => {
+    const headers = payload?.token ? { Authorization: `Bearer ${payload?.token}` } : undefined;
+
+  return useQuery({
+    queryKey: ['form10'],
+    queryFn: async () => {
+      const res = await apiClient.get(`api/v1/form10`, { headers });
+      return res.data;
+    },
+    enabled: !!payload?.token,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+  
+}
+export const createForm10 = (payload) => {
+  const {
+    event_id,
+    discussion,
+    oaopb,
+    token
+  } = payload;
+
+  const headers = {
+    Authorization: `Bearer ${token}`
+  };
+
+  const data = {
+    event_id,
+    discussion,
+    oaopb: oaopb?.map(item => ({
+      objectives: item.objectives || null,
+      activities: item.activities || null,
+      outputs: item.outputs || null,
+      personnel: item.personnel || null,
+      budget: item.budget || null
+    }))
+  };
+
+  return apiClient
+    .post("api/v1/form10/create", data, { headers })
+    .then(res => res.data);
+};
+export const updateForm10 = (payload) => {
+  const {
+    id,
+    discussion,
+    oaopb,
+    token
+  } = payload;
+
+  const headers = {
+    Authorization: `Bearer ${token}`
+  };
+
+  const data = {
+    discussion,
+    oaopb: oaopb?.map(item => ({
+      objectives: item.objectives || null,
+      activities: item.activities || null,
+      outputs: item.outputs || null,
+      personnel: item.personnel || null,
+      budget: item.budget || null
+    }))
+  };
+
+  return apiClient
+    .post(`api/v1/form10/${id}`, data, { headers })
+    .then(res => res.data);
+};
+
+export const approveForm10 = (payload) => approveForm("form10", payload);
+export const rejectForm10  = (payload) => rejectForm("form10", payload);
+
+
