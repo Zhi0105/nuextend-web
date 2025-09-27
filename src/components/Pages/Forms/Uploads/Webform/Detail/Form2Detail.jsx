@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 export const Form2Detail = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const { owner, data: initialData } = state || {};
+  const { event, owner, data: initialData } = state || {};
 
   const queryClient = useQueryClient();
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
@@ -81,6 +81,9 @@ export const Form2Detail = () => {
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;
 
   if (!form2) return null;
+
+  console.log(initialData)
+  console.log("@event", event)
 
   return (
     <div className="project-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">

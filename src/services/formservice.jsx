@@ -481,3 +481,197 @@ export const updateForm5 = (payload) => {
 
 export const approveForm5 = (payload) => approveForm("form5", payload);
 export const rejectForm5  = (payload) => rejectForm("form5", payload);
+
+export const getForm6 = (payload) => {
+    const headers = payload?.token ? { Authorization: `Bearer ${payload?.token}` } : undefined;
+
+  return useQuery({
+    queryKey: ['form6'],
+    queryFn: async () => {
+      const res = await apiClient.get(`api/v1/form6`, { headers });
+      return res.data;
+    },
+    enabled: !!payload?.token,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+  
+}
+export const createForm6 = (payload) => {
+  const {
+    event_id,
+    designation, 
+    representing, 
+    partnership, 
+    entitled, 
+    conducted_on, 
+    behalf_of, 
+    organization, 
+    address, 
+    mobile_number, 
+    email
+  } = payload;
+
+  const headers = {
+    Authorization: `Bearer ${payload?.token}`
+  };
+  const data = {
+    event_id,
+    designation, 
+    representing, 
+    partnership, 
+    entitled, 
+    conducted_on, 
+    behalf_of, 
+    organization, 
+    address, 
+    mobile_number, 
+    email
+  };
+
+  const result = apiClient.post('api/v1/form6/create', data, {headers}).then(res => {
+    return res.data;
+  });
+
+  return result;
+};
+export const updateForm6 = (payload) => {
+  const {
+    id,
+    designation, 
+    representing, 
+    partnership, 
+    entitled, 
+    conducted_on, 
+    behalf_of, 
+    organization, 
+    address, 
+    mobile_number, 
+    email
+  } = payload;
+
+  const headers = {
+    Authorization: `Bearer ${payload?.token}`
+  };
+  const data = {
+    designation, 
+    representing, 
+    partnership, 
+    entitled, 
+    conducted_on, 
+    behalf_of, 
+    organization, 
+    address, 
+    mobile_number, 
+    email
+  };
+
+  const result = apiClient.post(`api/v1/form6/${id}`, data, {headers}).then(res => {
+    return res.data;
+  });
+
+  return result;
+};
+
+export const approveForm6 = (payload) => approveForm("form6", payload);
+export const rejectForm6  = (payload) => rejectForm("form6", payload);
+
+
+
+export const getForm7 = (payload) => {
+    const headers = payload?.token ? { Authorization: `Bearer ${payload?.token}` } : undefined;
+
+  return useQuery({
+    queryKey: ['form7'],
+    queryFn: async () => {
+      const res = await apiClient.get(`api/v1/form7`, { headers });
+      return res.data;
+    },
+    enabled: !!payload?.token,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+  
+}
+export const createForm7 = (payload) => {
+  const {
+    event_id,
+    designation, 
+    representing, 
+    partnership, 
+    entitled, 
+    conducted_on, 
+    behalf_of, 
+    organization, 
+    address, 
+    mobile_number, 
+    email
+  } = payload;
+
+  const headers = {
+    Authorization: `Bearer ${payload?.token}`
+  };
+  const data = {
+    event_id,
+    designation, 
+    representing, 
+    partnership, 
+    entitled, 
+    conducted_on, 
+    behalf_of, 
+    organization, 
+    address, 
+    mobile_number, 
+    email
+  };
+
+  const result = apiClient.post('api/v1/form7/create', data, {headers}).then(res => {
+    return res.data;
+  });
+
+  return result;
+};
+export const updateForm7 = (payload) => {
+  const {
+    id,
+    designation, 
+    representing, 
+    partnership, 
+    entitled, 
+    conducted_on, 
+    behalf_of, 
+    organization, 
+    address, 
+    mobile_number, 
+    email
+  } = payload;
+
+  const headers = {
+    Authorization: `Bearer ${payload?.token}`
+  };
+  const data = {
+    designation, 
+    representing, 
+    partnership, 
+    entitled, 
+    conducted_on, 
+    behalf_of, 
+    organization, 
+    address, 
+    mobile_number, 
+    email
+  };
+
+  const result = apiClient.post(`api/v1/form7/${id}`, data, {headers}).then(res => {
+    return res.data;
+  });
+
+  return result;
+};
+
+export const approveForm7 = (payload) => approveForm("form7", payload);
+export const rejectForm7  = (payload) => rejectForm("form7", payload);
