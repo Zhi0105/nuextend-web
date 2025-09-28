@@ -268,149 +268,105 @@ export const Form1 = () => {
   const componentProjectsFA = useFieldArray({ control, name: "componentProjects" });
   const projectsFA = useFieldArray({ control, name: "projects" });
 
- useEffect(() => {
-  if (!formdata) return;
+  useEffect(() => {
+    if (!formdata) return;
 
-  // handle both array and object forms of formdata
-  const fd = Array.isArray(formdata) ? (formdata[0] ?? {}) : formdata;
+    const fd = formdata?.[0] ?? {};
 
-  // Map projects safely
-  const mappedProjects = Array.isArray(fd.projects)
-    ? fd.projects.map((p) => ({
-        title: p?.title ?? "",
-        teamLeader: p?.teamLeader ?? "",
-        teamMembers: toStringList(p?.team_members ?? p?.teamMembers, "name"),
-        objectives: p?.objectives ?? "",
-        budgetSummaries: Array.isArray(p?.budgetSummaries)
-        ? p.budgetSummaries.map((b) => ({
-            activities: b?.activities ?? "",
-            outputs: b?.outputs ?? "",
-            timeline: b?.timeline ? new Date(b.timeline) : null,
-            personnel:
-              typeof b?.personnel === "string"
-                ? b.personnel
-                : (b?.personnel?.name ?? ""),
-            budget: numOrNull(b?.budget),
-          }))
-        : [
-            {
-              activities: "",
-              outputs: "",
-              timeline: null,
-              personnel: "",
-              budget: null,
-            },
-          ],
+    // Try to read nested per-project budget_summaries if already present in backend response
+    const mappedProjects = (fd.projects ?? []).map((p) => ({
+      title: p.title ?? "",
+      teamLeader: p.teamLeader ?? "",
+      teamMembers: toStringList(p.team_members ?? p.teamMembers, "name"),
+      objectives: p.objectives ?? "",
+      budgetSummaries: (p.budget_summaries ?? p.budgetSummaries ?? []).map((b) => ({
+        activities: b.activities ?? "",
+        outputs: b.outputs ?? "",
+        timeline: b.timeline ? new Date(b.timeline) : null,
+        personnel: typeof b.personnel === "string" ? b.personnel : (b.personnel?.name ?? ""),
+        budget: numOrNull(b.budget)
       }))
-    : [];
+    }));
 
-  // If legacy budget_summaries exist and only 1 project
-  if (Array.isArray(fd.budget_summaries) && fd.budget_summaries.length > 0) {
-    if (mappedProjects.length === 1) {
-      mappedProjects[0].budgetSummaries = fd.budget_summaries.map((b) => ({
-        activities: b?.activities ?? "",
-        outputs: b?.outputs ?? "",
-        timeline: b?.timeline ? new Date(b.timeline) : null,
-        personnel:
-          typeof b?.personnel === "string"
-            ? b.personnel
-            : (b?.personnel?.name ?? ""),
-        budget: numOrNull(b?.budget),
-      }));
+    // If legacy top-level budget_summaries exist and there's exactly 1 project, attach them to that project
+    if ((fd.budget_summaries?.length ?? 0) > 0) {
+      if (mappedProjects.length === 1) {
+        mappedProjects[0].budgetSummaries = fd.budget_summaries.map((b) => ({
+          activities: b.activities ?? "",
+          outputs: b.outputs ?? "",
+          timeline: b.timeline ? new Date(b.timeline) : null,
+          personnel: typeof b.personnel === "string" ? b.personnel : (b.personnel?.name ?? ""),
+          budget: numOrNull(b.budget)
+        }));
+      }
     }
-  }
 
-  reset({
-    duration: fd?.duration ?? "",
-    background: fd?.background ?? "",
-    overallGoal: fd?.overall_goal ?? "",
-    scholarlyConnection: fd?.scholarly_connection ?? "",
-    programTeamMembers: toStringList(
-      fd?.program_team_members ?? fd?.team_members,
-      "name"
-    ),
-    cooperatingAgencies: toStringList(fd?.cooperating_agencies, "name"),
-    componentProjects: Array.isArray(fd?.componentProjects)
-    ? fd.componentProjects.map((p) => ({
-        title: p?.title ?? "",
-        outcomes: p?.outcomes ?? "",
-        budget: numOrNull(p?.budget),
-      }))
-    : [{ title: "", outcomes: "", budget: null }],
-    projects:
-      mappedProjects.length > 0
-        ? mappedProjects
-        : [
-            {
-              title: "",
-              teamLeader: "",
-              teamMembers: [],
-              objectives: "",
-              budgetSummaries: [
-                {
-                  activities: "",
-                  outputs: "",
-                  timeline: null,
-                  personnel: "",
-                  budget: null,
-                },
-              ],
-            },
-          ],
-  });
-}, [formdata, reset]);
+    reset({
+      duration: fd.duration ?? "",
+      background: fd.background ?? "",
+      overallGoal: fd.overall_goal ?? "",
+      scholarlyConnection: fd.scholarly_connection ?? "",
+      programTeamMembers: toStringList(fd.program_team_members ?? fd.team_members, "name"),
+      cooperatingAgencies: toStringList(fd.cooperating_agencies, "name"),
+      componentProjects: (fd.component_projects ?? fd.componentProjects ?? []).map((p) => ({
+        title: p.title ?? "",
+        outcomes: p.outcomes ?? "",
+        budget: numOrNull(p.budget),
+      })) ?? [ { title: "", outcomes: "", budget: null } ],
+      projects: mappedProjects.length > 0 ? mappedProjects : [ {
+        title: "",
+        teamLeader: "",
+        teamMembers: [],
+        objectives: "",
+        budgetSummaries: [ { activities: "", outputs: "", timeline: null, personnel: "", budget: null } ]
+      } ]
+    });
+  }, [formdata, reset]);
 
   const onSubmit = (data) => {
-  const payload = {
-    event_id: location?.state?.event?.id,
-    ...(formdata && (Array.isArray(formdata) ? formdata[0]?.id : formdata?.id) && { 
-      id: Array.isArray(formdata) ? formdata[0].id : formdata.id 
-    }),
+   
+    const payload = {
+      event_id: location?.state?.event?.id,
+      ...(formdata?.[0]?.id && { id: formdata[0].id }),
+      duration: data.duration,
+      background: data.background,
+      overall_goal: data.overallGoal,
+      scholarly_connection: data.scholarlyConnection,
 
-    duration: data?.duration ?? "",
-    background: data?.background ?? "",
-    overall_goal: data?.overallGoal ?? "",
-    scholarly_connection: data?.scholarlyConnection ?? "",
+      // arrays of strings
+      programTeamMembers: [...(data.programTeamMembers ?? [])],
+      cooperatingAgencies: [...(data.cooperatingAgencies ?? [])],
 
-    // arrays of strings (always ensure array)
-    programTeamMembers: Array.isArray(data?.programTeamMembers) ? [...data.programTeamMembers] : [],
-    cooperatingAgencies: Array.isArray(data?.cooperatingAgencies) ? [...data.cooperatingAgencies] : [],
+      // component projects (proposal-level)
+      componentProjects: (data.componentProjects ?? []).map((r) => ({
+        title: r.title,
+        outcomes: r.outcomes,
+        // keep as number or null; backend accepts nullable + string/decimal
+        budget: numOrNull(r.budget)
+      })),
 
-    // component projects (proposal-level)
-    componentProjects: Array.isArray(data?.componentProjects)
-      ? data.componentProjects.map((r) => ({
-          title: r?.title ?? "",
-          outcomes: r?.outcomes ?? "",
-          budget: numOrNull(r?.budget),
+      // projects (proposal-level) + nested budgetSummaries
+      projects: (data.projects ?? []).map((r) => ({
+        title: r.title,
+        teamLeader: r.teamLeader,
+        teamMembers: [...(r.teamMembers ?? [])],
+        objectives: r.objectives,
+        budgetSummaries: (r.budgetSummaries ?? []).map((b) => ({
+          activities: b.activities,
+          outputs: b.outputs,
+          timeline: toYMD(b.timeline),
+          personnel: b.personnel,
+          budget: numOrNull(b.budget)
         }))
-      : [],
+      }))
+    };
 
-    // projects (proposal-level) + nested budgetSummaries
-    projects: Array.isArray(data?.projects)
-      ? data.projects.map((r) => ({
-          title: r?.title ?? "",
-          teamLeader: r?.teamLeader ?? "",
-          teamMembers: Array.isArray(r?.teamMembers) ? [...r.teamMembers] : [],
-          objectives: r?.objectives ?? "",
-          budgetSummaries: Array.isArray(r?.budgetSummaries)
-            ? r.budgetSummaries.map((b) => ({
-                activities: b?.activities ?? "",
-                outputs: b?.outputs ?? "",
-                timeline: b?.timeline ? toYMD(b.timeline) : null,
-                personnel: b?.personnel ?? "",
-                budget: numOrNull(b?.budget),
-              }))
-            : [],
-        }))
-      : [],
+    if (formdata) {
+      handleUpdateForm1({ token: decryptedToken, ...payload });
+    } else {
+      handleCreateForm1({ token: decryptedToken, ...payload });
+    }
   };
-
-  if (formdata) {
-    handleUpdateForm1({ token: decryptedToken, ...payload });
-  } else {
-    handleCreateForm1({ token: decryptedToken, ...payload });
-  }
-};
 
   return (
     <div className="form1-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">

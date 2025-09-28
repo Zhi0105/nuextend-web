@@ -55,7 +55,7 @@ const TW_BTN = "px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 act
 export const Form3 = ({ onSubmit }) => {
     const queryClient = useQueryClient()
     const location = useLocation()
-    const { event, formdata } = location.state
+    const { event, formdata } = location.state || {}
     const { token } = useUserStore((state) => ({ token: state.token }));
     const decryptedToken = token && DecryptString(token)
 
@@ -64,11 +64,10 @@ export const Form3 = ({ onSubmit }) => {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['outreach'] });
             toast(data.message, { type: "success" })
-            reset()
+            reset(defaultValues)
             }, 
         onError: (error) => {
-            toast(error?.response.data.message, { type: "warning" })
-
+            toast(error?.response?.data?.message, { type: "warning" })
             console.log("@COPE:", error)
         },
     });
@@ -79,8 +78,7 @@ export const Form3 = ({ onSubmit }) => {
             toast(data.message, { type: "success" })
             }, 
         onError: (error) => {
-            toast(error?.response.data.message, { type: "warning" })
-
+            toast(error?.response?.data?.message, { type: "warning" })
             console.log("@UOPE:", error)
         },
     });
@@ -97,16 +95,17 @@ export const Form3 = ({ onSubmit }) => {
 
 
     useEffect(() => {
-        if (formdata && Array.isArray(formdata) && formdata.length > 0) {
-        reset({
-            description: formdata[0].description || "",
-            targetGroup: formdata[0].targetGroup || "",
-            startDate: formdata[0].startDate ? new Date(formdata[0].startDate) : null,
-            endDate: formdata[0].endDate ? new Date(formdata[0].endDate) : null,
-            activity_plan_budget: formdata[0].activity_plans_budgets || defaultValues.activity_plan_budget,
-            detailed_budget: formdata[0].detailed_budgets || defaultValues.detailed_budget,
-            budget_sourcing: formdata[0].budget_sourcings || defaultValues.budget_sourcing,
-        });
+        if (Array.isArray(formdata) && formdata.length > 0) {
+            const f = formdata[0] || {}
+            reset({
+                description: f.description || "",
+                targetGroup: f.targetGroup || "",
+                startDate: f.startDate ? new Date(f.startDate) : null,
+                endDate: f.endDate ? new Date(f.endDate) : null,
+                activity_plan_budget: f.activity_plans_budgets || defaultValues.activity_plan_budget,
+                detailed_budget: f.detailed_budgets || defaultValues.detailed_budget,
+                budget_sourcing: f.budget_sourcings || defaultValues.budget_sourcing,
+            });
         }
     }, [formdata, reset]);
 
@@ -116,7 +115,7 @@ export const Form3 = ({ onSubmit }) => {
 
     const submit = (data) => {
         const payload = {
-            ...(formdata[0]?.id && { id: formdata[0].id }),
+            ...(Array.isArray(formdata) && formdata[0]?.id && { id: formdata[0].id }),
             event_id: event?.id,
             description: data.description,
             targetGroup: data.targetGroup,
@@ -146,16 +145,16 @@ export const Form3 = ({ onSubmit }) => {
         };
         onSubmit?.(payload);
         
-        if(formdata) {
+        if (Array.isArray(formdata) && formdata.length > 0) {
             handleUpdateForm3({
                 token: decryptedToken,
                 ...payload
             })
         } else {
             handleCreateForm3({
-            token: decryptedToken,
-            ...payload
-        })
+                token: decryptedToken,
+                ...payload
+            })
         }
     };
 
@@ -446,7 +445,7 @@ export const Form3 = ({ onSubmit }) => {
 
                 {/* Budget Sourcing */}
                 <Fieldset legend="Budget Sourcing" className={TW_CARD}>
-                    <div className="space-y-6">
+                    <div className="space-y-6"> 
                         {bsFA.fields.map((field, idx) => (
                             <Card key={field.id} className={TW_CARD}>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
