@@ -2,6 +2,13 @@
 import { apiClient } from "@_src/http-commons";
 import { useQuery } from "@tanstack/react-query";
 
+
+const compact = (obj) =>
+  Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== undefined && v !== null && v !== "")
+  );
+
+
 /* -------------------------------
  * Shared helpers for approve/reject
  * ------------------------------- */
@@ -914,4 +921,95 @@ export const updateForm10 = (payload) => {
 export const approveForm10 = (payload) => approveForm("form10", payload);
 export const rejectForm10  = (payload) => rejectForm("form10", payload);
 
+export const getForm11 = (payload) => {
+    const headers = payload?.token ? { Authorization: `Bearer ${payload?.token}` } : undefined;
 
+  return useQuery({
+    queryKey: ['form11'],
+    queryFn: async () => {
+      const res = await apiClient.get(`api/v1/form11`, { headers });
+      return res.data;
+    },
+    enabled: !!payload?.token,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+  
+}
+export const createForm11 = (payload) => {
+  const {
+    event_id,
+    transportation_medium,
+    driver,
+    travelDetails,
+    token,
+  } = payload;
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+  };
+
+  const data = compact({
+    event_id, // integer
+    transportation_medium, // string (omit if empty)
+    driver, // string (omit if empty)
+    travelDetails:
+      Array.isArray(travelDetails) && travelDetails.length
+        ? travelDetails.map((t) =>
+            compact({
+              date: t.date,              // validator: date
+              from: t.from,                     // string
+              to: t.to,                         // string
+              departure: t.departure,    // validator: date
+              arrival: t.arrival,        // validator: date
+              purpose: t.purpose,               // string
+            })
+          )
+        : undefined,
+  });
+
+  return apiClient
+    .post("api/v1/form11/create", data, { headers })
+    .then((res) => res.data);
+};
+export const updateForm11 = (payload) => {
+  const {
+    id,
+    transportation_medium,
+    driver,
+    travelDetails,
+    token,
+  } = payload;
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+  };
+
+  const data = compact({
+    transportation_medium, // string (omit if empty)
+    driver, // string (omit if empty)
+    travelDetails:
+      Array.isArray(travelDetails) && travelDetails.length
+        ? travelDetails.map((t) =>
+            compact({
+              date: t.date,              // validator: date
+              from: t.from,                     // string
+              to: t.to,                         // string
+              departure: t.departure,    // validator: date
+              arrival: t.arrival,        // validator: date
+              purpose: t.purpose,               // string
+            })
+          )
+        : undefined,
+  });
+
+
+  return apiClient
+    .post(`api/v1/form11/${id}`, data, { headers })
+    .then(res => res.data);
+};
+
+export const approveForm11 = (payload) => approveForm("form11", payload);
+export const rejectForm11  = (payload) => rejectForm("form11", payload);
