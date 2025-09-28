@@ -1,9 +1,9 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUserStore } from "@_src/store/auth";
 import { DecryptString, DecryptUser } from "@_src/utils/helpers";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { approveForm6, rejectForm6 } from "@_src/services/formservice"; // 🔄 form6 services
+import { approveForm6, rejectForm6 } from "@_src/services/formservice"; // form6 services
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
@@ -11,16 +11,29 @@ import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 
 export const Form6Detail = () => {
-  const { state } = useLocation();
+  const location = useLocation();
   const navigate = useNavigate();
-  const { owner, data: initialData } = state || {};
+  const routeState = location?.state ?? null;
+
+  // handle multiple possible shapes: state.data, state.formdata, direct state (object or array)
+  const incoming = (() => {
+    if (!routeState) return null;
+    if (Array.isArray(routeState)) return routeState;
+    if (routeState.data || routeState.formdata) return routeState.data ?? routeState.formdata;
+    // otherwise maybe the state itself is the object
+    return routeState;
+  })();
+
+  const [form6, setForm6] = useState(incoming ?? null);
+  useEffect(() => setForm6(incoming ?? null), [incoming]);
+
+  // normalize to object in `details`
+  const details = Array.isArray(form6) ? form6[0] : form6;
 
   const queryClient = useQueryClient();
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
   const decryptedUser = token && DecryptUser(user);
   const decryptedToken = token && DecryptString(token);
-
-  const [form6] = useState(initialData || null);
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
@@ -37,13 +50,12 @@ export const Form6Detail = () => {
   };
 
   const canAction = useMemo(() => {
-    if (!form6) return false;
+    if (!details) return false;
     if (!isApprover) return false;
-    if (hasUserRoleApproved(form6)) return false;
-    if (form6.status === "approved") return false;
+    if (hasUserRoleApproved(details)) return false;
+    if (details.status === "approved") return false;
     return true;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form6, isApprover]);
+  }, [details, isApprover]);
 
   // Approve
   const { mutate: doApprove, isLoading: approveLoading } = useMutation({
@@ -54,8 +66,8 @@ export const Form6Detail = () => {
   });
 
   const onApprove = () => {
-    if (!form6 || !canAction) return;
-    doApprove({ token: decryptedToken, id: form6[0]?.id ?? form6.id, role_id: roleId });
+    if (!details || !canAction) return;
+    doApprove({ token: decryptedToken, id: details.id, role_id: roleId });
   };
 
   // Revise
@@ -85,35 +97,88 @@ export const Form6Detail = () => {
   });
 
   const onSubmitRevise = ({ remarks }) => {
-    if (!form6 || !canAction) return;
+    if (!details || !canAction) return;
     const key = remarksKeyByRole[roleId];
     if (!key) return;
     doReject({
       token: decryptedToken,
-      id: form6[0]?.id ?? form6.id,
+      id: details.id,
       role_id: roleId,
       [key]: remarks,
     });
     setShowRevise(false);
   };
 
-  const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;
-
-  if (!form6) return null;
-
+  const isEventOwner = !!decryptedUser?.id && decryptedUser.id === (routeState?.owner?.id ?? routeState?.owner);
   return (
     <div className="form6-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
-      <div className="flex gap-2">
-        {/* Update button */}
+
+
+      <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-4xl">
+        
+        <p className="text-right mb-6">
+          Date:{" "}
+          {details?.created_at
+            ? new Date(details.created_at).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })
+            : "_____________"}
+        </p>
+
+        <p className="mb-1">To:<br />
+          <span className="ml-6 font-semibold">Academic Services Director</span>
+        </p>
+
+        <p className="mb-1">Through:<br />
+          <span className="ml-6 font-semibold">ComEx Coordinator</span>
+        </p>
+
+        <p className="mt-6">Dear Mr. Venturina,</p>
+
+        <p className="mt-4 leading-relaxed text-justify">
+          Greetings! I, as the designated <span className="font-semibold">{details.designation ?? "_____________"}</span>, 
+          representing the <span className="font-semibold">{details.organization ?? "_____________"}</span>, 
+          would like to formally inform your good office of our willingness to enter into a partnership with the 
+          <span className="font-semibold"> {details.partnership ?? "_____________"}</span> of National University in their extension program entitled: 
+          <span className="font-semibold"> {details.entitled ?? "_____________"}</span>, which will run from 
+          <span className="font-semibold"> {details.conducted_on ?? "_____________"}</span> up until the program’s termination.
+        </p>
+
+        <p className="mt-4 leading-relaxed text-justify">
+          With this manifestation of consent, I also would like to establish our full cooperation on the activities and plans for this said program from the start until it ends as it may be mutually beneficial to both parties involved.
+        </p>
+
+        <p className="mt-4 leading-relaxed">
+          I hereby affix my signature on this date to manifest my concurrence on behalf of the 
+          <span className="font-semibold"> {details.behalf_of ?? "_____________"}</span>.
+        </p>
+
+        <p className="mt-6">Sincerely,</p>
+
+        <div className="mt-12">
+          <p className="font-semibold">__________________________</p>
+          <p>Signature Over Printed Name</p>
+          <p>Designation: {details.designation ?? "_____________"}</p>
+          <p>Organization/Institution: {details.organization ?? "_____________"}</p>
+          <p>Address: {details.address ?? "_____________"}</p>
+          <p>Mobile Number: {details.mobile_number ?? "_____________"}</p>
+          <p>Email Address: {details.email ?? "_____________"}</p>
+        </div>
+      </div>
+
+      <div className="flex gap-2 mt-6">
+        {/* Update button (unchanged behavior) */}
         {isEventOwner && (
           <Button
-            onClick={() => navigate("/event/form/006", { state: { formdata: form6 } })}
+            onClick={() => navigate("/event/form/006", { state: { formdata: details } })}
             className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
             label="Update"
           />
         )}
 
-        {/* Approve + Revise */}
+        {/* Approve + Revise (unchanged behavior) */}
         {canAction && (
           <>
             <Button
@@ -146,9 +211,7 @@ export const Form6Detail = () => {
             rules={{ required: true }}
             render={({ field: { onChange, value } }) => (
               <InputTextarea
-                className={`${
-                  errors.remarks ? "border border-red-500" : ""
-                } bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                className={`${errors.remarks ? "border border-red-500" : ""} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
                 rows={4}
                 placeholder="Enter your remarks here"
                 value={value}
@@ -156,9 +219,7 @@ export const Form6Detail = () => {
               />
             )}
           />
-          {errors.remarks && (
-            <p className="text-sm italic mt-1 text-red-400">remarks is required.*</p>
-          )}
+          {errors.remarks && <p className="text-sm italic mt-1 text-red-400">remarks is required.*</p>}
           <Button
             type="submit"
             disabled={rejectLoading}

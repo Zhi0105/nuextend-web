@@ -10,7 +10,7 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 
-// ✅ Buttons: UPDATE + APPROVE + REVISE only
+// ✅ Buttons: UPDATE + APPROVE + REVISE + CHECKLIST
 export const Form4Detail = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -21,7 +21,12 @@ export const Form4Detail = () => {
   const decryptedUser = token && DecryptUser(user);
   const decryptedToken = token && DecryptString(token);
 
-  const [form4] = useState(initialData || null);
+  // Normalize initialData to an object (if API returns an array, take first element)
+  const [form4] = useState(() => {
+    if (!initialData) return null;
+    if (Array.isArray(initialData)) return initialData[0] ?? null;
+    return initialData;
+  });
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
@@ -43,8 +48,13 @@ export const Form4Detail = () => {
     if (hasUserRoleApproved(form4)) return false;
     if (form4.status === "approved") return false;
     return true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form4, isApprover]);
+  }, [form4, isApprover]); // keep deps simple
+
+  // Helper: robust truth check (handles true/"true"/1/"1")
+  const isChecked = (key) => {
+    const v = form4?.[key];
+    return v === true || v === "true" || v === 1 || v === "1";
+  };
 
   // Approve
   const { mutate: doApprove, isLoading: approveLoading } = useMutation({
@@ -56,8 +66,7 @@ export const Form4Detail = () => {
 
   const onApprove = () => {
     if (!form4 || !canAction) return;
-    // Note: keeping array access pattern same as Form3 for consistency
-    doApprove({ token: decryptedToken, id: form4[0]?.id ?? form4.id, role_id: roleId });
+    doApprove({ token: decryptedToken, id: form4.id, role_id: roleId });
   };
 
   // Revise
@@ -92,7 +101,7 @@ export const Form4Detail = () => {
     if (!key) return;
     doReject({
       token: decryptedToken,
-      id: form4[0]?.id ?? form4.id,
+      id: form4.id,
       role_id: roleId,
       [key]: remarks,
     });
@@ -103,9 +112,114 @@ export const Form4Detail = () => {
 
   if (!form4) return null;
 
+  // Checklist mapping (A–P)
+  const checklist = [
+    { key: "a", label: "A. Is the program strongly linked to teaching and research that is appropriate to the identity of National University as a higher educational institution?" },
+    { key: "b", label: "B. Is it going to be built and maintained on the basis of the existing academic or research programs that the University have?" },
+    { key: "c", label: "C. Is the program relevant to the core competencies of the School or Department?" },
+    { key: "d", label: "D. Does it involve the input and collaboration of the target group?" },
+    { key: "e", label: "E. Is the target group willing to take part in the implementation, monitoring, and evaluation of the program?" },
+    { key: "f", label: "F. Are there assurances that the cooperating department or agency will support the program?" },
+    { key: "g", label: "G. Is it to be done within a community that we have MOA with?" },
+    { key: "h", label: "H. Does the program promote social transformation that is in line with the University’s core values?" },
+    { key: "i", label: "I. Is the program not financially demanding so as not draining to financial resources allotted..." },
+    { key: "j", label: "J. Is there a good number of appropriate personnel who will implement the program both on the side of University and the target group?" },
+    { key: "k", label: "K. Is there any external funding agency that shall support the program?" },
+    { key: "l", label: "L. Is the proponent capable of managing the program sustainably?" },
+    { key: "m", label: "M. Will the program contribute to the holistic growth of the community?" },
+    { key: "n", label: "N. Does the program have a clearly stated background, significance, intended outcomes, and projects to support and realize the objectives?" },
+    { key: "o", label: "O. Are there formal studies, community assessments, and problem analyses that were conducted?" },
+    { key: "p", label: "P. Does the program have specific and measurable results?" },
+  ];
+
   return (
     <div className="form4-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
-      <div className="flex gap-2">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">CHECKLIST OF CRITERIA FOR EXTENSION PROGRAM PROPOSAL</h2>
+      {/* Checklist Table */}
+      <div className="w-full max-w-4xl border rounded-lg shadow">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-gray-200">
+              <th className="border p-2 text-left">Criteria</th>
+              <th className="border p-2 text-center w-20">Yes</th>
+              <th className="border p-2 text-center w-20">No</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* I. Relevance to Academic and Research Programs */}
+            <tr>
+              <td colSpan="3" className="border p-2 font-bold bg-gray-100">
+                I. Relevance to Academic and Research Programs
+              </td>
+            </tr>
+            {["a", "b", "c"].map((key, idx) => (
+              <tr key={key} className="odd:bg-gray-50 even:bg-white">
+                <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
+                <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
+                <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
+              </tr>
+            ))}
+
+            {/* II. Collaborative and Participatory */}
+            <tr>
+              <td colSpan="3" className="border p-2 font-bold bg-gray-100">
+                II. Collaborative and Participatory
+              </td>
+            </tr>
+            {["d", "e", "f", "g"].map((key) => (
+              <tr key={key} className="odd:bg-gray-50 even:bg-white">
+                <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
+                <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
+                <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
+              </tr>
+            ))}
+
+            {/* III. Values Oriented */}
+            <tr>
+              <td colSpan="3" className="border p-2 font-bold bg-gray-100">
+                III. Value(s) Oriented
+              </td>
+            </tr>
+            {["h"].map((key) => (
+              <tr key={key} className="odd:bg-gray-50 even:bg-white">
+                <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
+                <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
+                <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
+              </tr>
+            ))}
+
+            {/* IV. Financing and Sustainability */}
+            <tr>
+              <td colSpan="3" className="border p-2 font-bold bg-gray-100">
+                IV. Financing and Sustainability
+              </td>
+            </tr>
+            {["i", "j", "k", "l", "m"].map((key) => (
+              <tr key={key} className="odd:bg-gray-50 even:bg-white">
+                <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
+                <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
+                <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
+              </tr>
+            ))}
+
+            {/* V. Evidence-Based Need and Significance */}
+            <tr>
+              <td colSpan="3" className="border p-2 font-bold bg-gray-100">
+                V. Evidence-Based Need and Significance
+              </td>
+            </tr>
+            {["n", "o", "p"].map((key) => (
+              <tr key={key} className="odd:bg-gray-50 even:bg-white">
+                <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
+                <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
+                <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex gap-2 mb-6">
         {/* Update button */}
         {isEventOwner && (
           <Button
@@ -134,6 +248,8 @@ export const Form4Detail = () => {
         )}
       </div>
 
+
+      {/* Revise Dialog */}
       <Dialog
         header="Remarks"
         visible={showRevise}
