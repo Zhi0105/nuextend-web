@@ -64,6 +64,7 @@ import { Form8Screen } from '@_src/components/Screen/Forms/Upload/Webform/Form8S
 import { Form9Screen } from '@_src/components/Screen/Forms/Upload/Webform/Form9Screen'
 import { Form10Screen } from '@_src/components/Screen/Forms/Upload/Webform/Form10Screen'
 import { Form11Screen } from '@_src/components/Screen/Forms/Upload/Webform/Form11Screen'
+import { Form12Screen } from '@_src/components/Screen/Forms/Upload/Webform/Form12Screen'
 
 import { Form1DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form1DetailScreen'
 import { Form2DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form2DetailScreen'
@@ -76,6 +77,7 @@ import { Form8DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/
 import { Form9DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form9DetailScreen'
 import { Form10DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form10DetailScreen'
 import { Form11DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form11DetailScreen'
+import { Form12DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form12DetailScreen'
 
 import { CreateReportProgress } from "@_src/components/Pages/Activity/CreateReportProgress";
 import { ViewReportScreen } from "@_src/components/Screen/Activity/ViewReportScreen";
@@ -141,6 +143,7 @@ export const RouteList = () => {
                 <Route path="/event/form/009" element={<Form9Screen />} />
                 <Route path="/event/form/010" element={<Form10Screen />} />
                 <Route path="/event/form/011" element={<Form11Screen />} />
+                <Route path="/event/form/012" element={<Form12Screen />} />
 
                 <Route path="/event/form/detail/001" element={<Form1DetailScreen />} />
                 <Route path="/event/form/detail/002" element={<Form2DetailScreen />} />
@@ -153,6 +156,7 @@ export const RouteList = () => {
                 <Route path="/event/form/detail/009" element={<Form9DetailScreen />} />
                 <Route path="/event/form/detail/010" element={<Form10DetailScreen />} />
                 <Route path="/event/form/detail/011" element={<Form11DetailScreen />} />
+                <Route path="/event/form/detail/012" element={<Form12DetailScreen />} />
                 
                 {/* NEW FORM ROUTE */}
 

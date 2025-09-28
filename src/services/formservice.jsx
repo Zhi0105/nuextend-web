@@ -1013,3 +1013,134 @@ export const updateForm11 = (payload) => {
 
 export const approveForm11 = (payload) => approveForm("form11", payload);
 export const rejectForm11  = (payload) => rejectForm("form11", payload);
+
+export const getForm12 = (payload) => {
+    const headers = payload?.token ? { Authorization: `Bearer ${payload?.token}` } : undefined;
+
+  return useQuery({
+    queryKey: ['form11'],
+    queryFn: async () => {
+      const res = await apiClient.get(`api/v1/form12`, { headers });
+      return res.data;
+    },
+    enabled: !!payload?.token,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+  
+}
+export const createForm12 = (payload) => {
+  const {
+    event_id,
+    meeting_date,
+    call_to_order,
+    aomftlm,
+    other_matters,
+    adjournment,
+    documentation,
+    attendees,
+    new_items,
+    token,
+  } = payload;
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+  };
+
+  const data = compact({
+    event_id, // required (integer)
+    meeting_date, // date (nullable)
+    call_to_order, // string
+    aomftlm, // string (Approval of minutes from the last meeting)
+    other_matters, // string
+    adjournment, // date
+    documentation, // string
+
+    attendees:
+      Array.isArray(attendees) && attendees.length
+        ? attendees.map((a) =>
+            compact({
+              full_name: a.full_name, // string
+              designation: a.designation, // string
+              department_id: a.department_id, // must exist in departments table
+              programs_id: a.programs_id, // must exist in programs table
+            })
+          )
+        : undefined,
+
+    new_items:
+      Array.isArray(new_items) && new_items.length
+        ? new_items.map((n) =>
+            compact({
+              topic: n.topic, // string
+              discussion: n.discussion, // string
+              resolution: n.resolution, // string
+            })
+          )
+        : undefined,
+  });
+
+  return apiClient
+    .post("api/v1/form12/create", data, { headers })
+    .then((res) => res.data);
+};
+
+// UPDATE Minutes of Meeting
+export const updateForm12 = (payload) => {
+  const {
+    id,
+    meeting_date,
+    call_to_order,
+    aomftlm,
+    other_matters,
+    adjournment,
+    documentation,
+    attendees,
+    new_items,
+    token,
+  } = payload;
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+  };
+
+  const data = compact({
+    meeting_date, // date
+    call_to_order, // string
+    aomftlm, // string
+    other_matters, // string
+    adjournment, // date
+    documentation, // string
+
+    attendees:
+      Array.isArray(attendees) && attendees.length
+        ? attendees.map((a) =>
+            compact({
+              full_name: a.full_name,
+              designation: a.designation,
+              department_id: a.department_id,
+              programs_id: a.programs_id,
+            })
+          )
+        : undefined,
+
+    new_items:
+      Array.isArray(new_items) && new_items.length
+        ? new_items.map((n) =>
+            compact({
+              topic: n.topic,
+              discussion: n.discussion,
+              resolution: n.resolution,
+            })
+          )
+        : undefined,
+  });
+
+  return apiClient
+    .post(`api/v1/form12/${id}`, data, { headers })
+    .then((res) => res.data);
+};
+export const approveForm12 = (payload) => approveForm("form12", payload);
+export const rejectForm12  = (payload) => rejectForm("form12", payload);
