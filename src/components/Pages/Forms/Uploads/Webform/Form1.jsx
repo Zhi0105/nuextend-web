@@ -269,7 +269,6 @@ export const Form1 = () => {
   const projectsFA = useFieldArray({ control, name: "projects" });
 
   useEffect(() => {
-    if (!formdata) return;
 
     const fd = formdata?.[0] ?? {};
 
@@ -327,7 +326,7 @@ export const Form1 = () => {
    
     const payload = {
       event_id: location?.state?.event?.id,
-      ...(formdata?.[0]?.id && { id: formdata[0].id }),
+      ...(Array.isArray(formdata) && formdata[0]?.id ? { id: formdata[0].id } : {}),
       duration: data.duration,
       background: data.background,
       overall_goal: data.overallGoal,
