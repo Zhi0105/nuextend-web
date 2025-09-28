@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useUserStore } from "@_src/store/auth";
 import { DecryptString, DecryptUser } from "@_src/utils/helpers";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { approveForm11, rejectForm11 } from "@_src/services/formservice"; // 🔄 form11 services
+import { approveForm11, rejectForm11 } from "@_src/services/formservice";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
@@ -13,7 +13,8 @@ import { toast } from "react-toastify";
 export const Form11Detail = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const { owner, data: initialData } = state || {};
+  const { event, owner, data: initialData } = state || {};
+  console.log(event);
 
   const queryClient = useQueryClient();
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
@@ -21,6 +22,14 @@ export const Form11Detail = () => {
   const decryptedToken = token && DecryptString(token);
 
   const [form11] = useState(initialData || null);
+
+  // Extract data from form11 and form1
+  const form11Data = form11?.[0] || form11;
+  const form1Data = event?.form1?.[0];
+  const programCoordinator = form1Data?.team_members?.[0]?.name;
+  const transportationMedium = form11Data?.transportation_medium;
+  const driver = form11Data?.driver;
+  const travelDetails = form11Data?.travel_details || [];
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
@@ -114,34 +123,115 @@ export const Form11Detail = () => {
 
   return (
     <div className="form11-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
-      <div className="flex gap-2">
-        {/* Update button */}
-        {isEventOwner && (
-          <Button
-            onClick={() => navigate("/event/form/011", { state: { formdata: form11 } })}
-            className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
-            label="Update"
-          />
-        )}
+      <div className="w-full max-w-6xl px-4">
 
-        {/* Approve + Revise */}
-        {canAction && (
-          <>
-            <Button
-              onClick={onApprove}
-              disabled={approveLoading}
-              className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-              label={approveLoading ? "Approving…" : "Approve"}
-            />
-            <Button
-              onClick={() => setShowRevise(true)}
-              disabled={rejectLoading}
-              className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-              label="Revise"
-            />
-          </>
-        )}
+        {/* Travel Itinerary Table */}
+        <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
+          <h1 className="text-2xl font-bold text-center mb-8 text-gray-800">
+            EXTENSION PROGRAM AND PROJECT ITINERARY OF TRAVEL
+          </h1>
+
+          {/* Header Info */}
+          <div className="grid grid-cols-3 gap-4 mb-6 border-b pb-4">
+            <div>
+              <label className="font-semibold text-gray-700">Program Coordinator / Project Leader</label>
+              <div className="border border-gray-300 p-2 rounded bg-gray-50 min-h-[40px] mt-1">
+                {programCoordinator || "Not specified"}
+              </div>
+            </div>
+            <div>
+              <label className="font-semibold text-gray-700">Transportation Medium</label>
+              <div className="border border-gray-300 p-2 rounded bg-gray-50 min-h-[40px] mt-1">
+                {transportationMedium || "Not specified"}
+              </div>
+            </div>
+            <div>
+              <label className="font-semibold text-gray-700">Driver</label>
+              <div className="border border-gray-300 p-2 rounded bg-gray-50 min-h-[40px] mt-1">
+                {driver || "Not specified"}
+              </div>
+            </div>
+          </div>
+
+          {/* Travel Details Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-gray-300">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-300 p-2 font-semibold">Date and Phase</th>
+                  <th className="border border-gray-300 p-2 font-semibold" colSpan="2">Destination</th>
+                  <th className="border border-gray-300 p-2 font-semibold" colSpan="2">Time</th>
+                  <th className="border border-gray-300 p-2 font-semibold">Trip Duration</th>
+                  <th className="border border-gray-300 p-2 font-semibold">Purpose</th>
+                </tr>
+                <tr className="bg-gray-50">
+                  <th className="border border-gray-300 p-2"></th>
+                  <th className="border border-gray-300 p-2 font-medium">From</th>
+                  <th className="border border-gray-300 p-2 font-medium">To</th>
+                  <th className="border border-gray-300 p-2 font-medium">Departure</th>
+                  <th className="border border-gray-300 p-2 font-medium">Arrival</th>
+                  <th className="border border-gray-300 p-2 font-medium"></th>
+                  <th className="border border-gray-300 p-2 font-medium"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {travelDetails.map((detail, index) => (
+                  <tr key={detail.id || index}>
+                    <td className="border border-gray-300 p-2">
+                      {detail.date ? new Date(detail.date).toLocaleDateString() : ""}
+                    </td>
+                    <td className="border border-gray-300 p-2">{detail.from || ""}</td>
+                    <td className="border border-gray-300 p-2">{detail.to || ""}</td>
+                    <td className="border border-gray-300 p-2">
+        {detail.departure ? new Date(detail.departure).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
+      </td>
+                     <td className="border border-gray-300 p-2">
+        {detail.arrival ? new Date(detail.arrival).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
+      </td>
+                    <td className="border border-gray-300 p-2">{detail.trip_duration || ""}</td>
+                    <td className="border border-gray-300 p-2">{detail.purpose || ""}</td>
+                  </tr>
+                ))}
+                {/* Empty rows if needed */}
+                {travelDetails.length === 0 && (
+                  <tr>
+                    <td className="border border-gray-300 p-2 text-center text-gray-500" colSpan="7">
+                      No travel details provided
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
+
+      {/* Action Buttons */}
+        <div className="flex gap-2 mb-6">
+          {isEventOwner && (
+            <Button
+              onClick={() => navigate("/event/form/011", { state: { formdata: form11 } })}
+              className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label="Update"
+            />
+          )}
+          {canAction && (
+            <>
+              <Button
+                onClick={onApprove}
+                disabled={approveLoading}
+                className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+                label={approveLoading ? "Approving…" : "Approve"}
+              />
+              <Button
+                onClick={() => setShowRevise(true)}
+                disabled={rejectLoading}
+                className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+                label="Revise"
+              />
+            </>
+          )}
+        </div>
 
       <Dialog
         header="Remarks"
