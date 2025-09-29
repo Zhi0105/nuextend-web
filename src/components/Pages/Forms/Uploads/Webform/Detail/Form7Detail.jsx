@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useUserStore } from "@_src/store/auth";
 import { DecryptString, DecryptUser } from "@_src/utils/helpers";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { approveForm7, rejectForm7 } from "@_src/services/formservice"; // 🔄 form7 services
+import { approveForm7, rejectForm7 } from "@_src/services/formservice"; 
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
@@ -69,8 +69,8 @@ export const Form7Detail = () => {
   });
 
   const onApprove = () => {
-    if (!form7 || !canAction) return;
-    doApprove({ token: decryptedToken, id: form7[0]?.id ?? form7.id, role_id: roleId });
+    if (!formData || !canAction) return;
+    doApprove({ token: decryptedToken, id: formData.id, role_id: roleId });
   };
 
   // ✅ Revise
@@ -100,12 +100,12 @@ export const Form7Detail = () => {
   });
 
   const onSubmitRevise = ({ remarks }) => {
-    if (!form7 || !canAction) return;
+    if (!formData || !canAction) return;
     const key = remarksKeyByRole[roleId];
     if (!key) return;
     doReject({
       token: decryptedToken,
-      id: form7[0]?.id ?? form7.id,
+      id: formData.id,
       role_id: roleId,
       [key]: remarks,
     });
@@ -114,21 +114,85 @@ export const Form7Detail = () => {
 
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;
 
-  if (!form7) return null;
+  if (!formData) return null;
+
+  const formatDate = (iso) => {
+    if (!iso) return "_____________";
+    const d = new Date(iso);
+    return d.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
   return (
-    <div className="form7-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
-      <div className="flex gap-2">
-        {/* Update button */}
+    <div className="form7-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20 px-6">
+      <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-4xl">
+          {/* Date */}
+          <p className="text-right mb-6">
+            Date: {formData?.created_at ? formatDate(formData.created_at) : "_____________"}
+          </p>
+
+          {/* To */}
+          <p className="mb-1">
+            To:<br />
+            <span className="ml-6 font-semibold">Academic Services Director</span>
+          </p>
+
+          {/* Through */}
+          <p className="mb-1">
+            Through:<br />
+            <span className="ml-6 font-semibold">ComEx Coordinator</span>
+          </p>
+
+          {/* Greeting */}
+          <p className="mt-6">Dear Mr. Venturina,</p>
+
+          {/* Body */}
+          <p className="mt-4 leading-relaxed text-justify">
+            Greetings! I, as the designated <span className="font-semibold">{formData?.designation ?? "_____________"}</span>, 
+            representing the <span className="font-semibold">{formData?.organization ?? "_____________"}</span>, would like to formally inform 
+            your good office of our willingness to enter into a partnership with the <span className="font-semibold">{formData?.partnership  ?? "_____________"}</span> 
+             of National University in their outreach project entitled: <span className="font-semibold">{formData?.entitled ?? "_____________"}</span>, 
+            which will be conducted on <span className="font-semibold">{formData?.conducted_on ?? "_____________"}</span>.
+          </p>
+
+          <p className="mt-4 leading-relaxed text-justify">
+            With this manifestation of consent, I also would like to establish our full cooperation on the activities 
+            and plans for this said outreach project from the start until the date of the implementation as it may 
+            be mutually beneficial to both parties involved.
+          </p>
+
+          <p className="mt-4 leading-relaxed">
+            I hereby affix my signature on this date to manifest my concurrence on behalf of the 
+            <span className="font-semibold"> {formData?.organization ?? "_____________"}</span>.
+          </p>
+
+          {/* Closing */}
+          <p className="mt-6">Sincerely,</p>
+
+          {/* Signature Block */}
+          <div className="mt-12">
+            <p className="font-semibold">__________________________</p>
+            <p>Signature Over Printed Name</p>
+            <p>Designation: {formData?.designation ?? "_____________"}</p>
+            <p>Organization/Institution: {formData?.organization ?? "_____________"}</p>
+            <p>Address: {formData?.address ?? "_____________"}</p>
+            <p>Mobile Number: {formData?.mobile_number ?? "_____________"}</p>
+            <p>Email Address: {formData?.email ?? "_____________"}</p>
+          </div>
+        </div>
+
+      
+      <div className="flex gap-2 mb-6">
         {isEventOwner && (
           <Button
-            onClick={() => navigate("/event/form/007", { state: { formdata: form7 } })}
+            onClick={() => navigate("/event/form/007", { state: { formdata: formData } })}
             className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
             label="Update"
           />
         )}
-
-        {/* Approve + Revise */}
         {canAction && (
           <>
             <Button

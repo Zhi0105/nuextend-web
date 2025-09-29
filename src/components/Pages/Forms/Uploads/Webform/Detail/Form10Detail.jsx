@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useUserStore } from "@_src/store/auth";
 import { DecryptString, DecryptUser } from "@_src/utils/helpers";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { approveForm10, rejectForm10 } from "@_src/services/formservice"; // 🔄 form10 services
+import { approveForm10, rejectForm10 } from "@_src/services/formservice";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
@@ -13,7 +13,8 @@ import { toast } from "react-toastify";
 export const Form10Detail = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
-  const { owner, data: initialData } = state || {};
+  const { event, owner, data: initialData } = state || {};
+  console.log(event);
 
   const queryClient = useQueryClient();
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
@@ -21,6 +22,17 @@ export const Form10Detail = () => {
   const decryptedToken = token && DecryptString(token);
 
   const [form10, setForm10] = useState(initialData || null);
+
+  // Extract data from form10 and event
+  const form10Data = form10?.[0] || form10;
+  const form7Data = event?.form7?.[0]; 
+ const aoopData = form10Data?.oaopb || []; // Objectives, Activities, Outputs, Personnel data
+  const discussion = form10Data?.discussion;
+  
+  // Project data from event
+  const projectTitle = event?.eventName;
+  const targetGroup = event?.target_group;
+  const implementationDate = form7Data?.conducted_on; /// Using created_at as implementation date
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
@@ -85,7 +97,6 @@ export const Form10Detail = () => {
   // ✅ Revise
   const [showRevise, setShowRevise] = useState(false);
 
-  // NOTE: If Form10 uses different remark field names, palitan mo lang dito.
   const remarksKeyByRole = {
     1: "commex_remarks",
     9: "dean_remarks",
@@ -130,34 +141,132 @@ export const Form10Detail = () => {
 
   return (
     <div className="form10-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
-      <div className="flex gap-2">
-        {/* Update button */}
-        {isEventOwner && (
-          <Button
-            onClick={() => navigate("/event/form/010", { state: { formdata: form10 } })}
-            className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
-            label="Update"
-          />
-        )}
+      <div className="w-full max-w-6xl px-4">
 
-        {/* Approve + Revise */}
-        {canAction && (
-          <>
-            <Button
-              onClick={onApprove}
-              disabled={approveLoading}
-              className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-              label={approveLoading ? "Approving…" : "Approve"}
-            />
-            <Button
-              onClick={() => setShowRevise(true)}
-              disabled={rejectLoading}
-              className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-              label="Revise"
-            />
-          </>
-        )}
+        {/* Outreach Project Evaluation Content */}
+        <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
+          <h1 className="text-2xl font-bold text-center mb-8 text-gray-800">
+            OUTREACH PROJECT EVALUATION AND DOCUMENTATION REPORT
+          </h1>
+
+          {/* I. PROJECT TITLE */}
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-2 text-gray-700">I. PROJECT TITLE:</h2>
+            <div className="border border-gray-300 p-4 rounded bg-gray-50 min-h-[50px]">
+              {projectTitle || "No project title provided"}
+            </div>
+          </div>
+
+          {/* II. TARGET GROUP */}
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-2 text-gray-700">II. TARGET GROUP:</h2>
+            <div className="border border-gray-300 p-4 rounded bg-gray-50 min-h-[50px] mb-2">
+              {targetGroup || "No target group specified"}
+            </div>
+            <p className="text-sm text-gray-600 italic">
+              Important Note: Please attach the attendance or registration sheet.
+            </p>
+          </div>
+
+          {/* III. DATE OF IMPLEMENTATION */}
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold mb-2 text-gray-700">III. DATE OF IMPLEMENTATION:</h2>
+            <div className="border border-gray-300 p-4 rounded bg-gray-50 min-h-[50px]">
+              {implementationDate || "No date specified"}
+            </div>
+          </div>
+
+          {/* IV. REPORT PROPER */}
+          <div>
+            <h2 className="text-lg font-semibold mb-4 text-gray-700">IV. REPORT PROPER:</h2>
+            
+            {/* A. Objectives, Activities, Outputs, Personnels and Budgeting */}
+            <div className="mb-6">
+              <h3 className="font-medium mb-3 text-gray-600">A. Objectives, Activities, Outputs, Personnels and Budgeting</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse border border-gray-300">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border border-gray-300 p-2 font-semibold">Objectives</th>
+                      <th className="border border-gray-300 p-2 font-semibold">Activities</th>
+                      <th className="border border-gray-300 p-2 font-semibold">Outputs</th>
+                      <th className="border border-gray-300 p-2 font-semibold">Personnel</th>
+                      <th className="border border-gray-300 p-2 font-semibold">Budget</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {aoopData.map((item, index) => (
+                      <tr key={item.id || index}>
+                        <td className="border border-gray-300 p-2 align-top">
+                          {item.objectives || ""}
+                        </td>
+                        <td className="border border-gray-300 p-2 align-top">
+                          {item.activities || ""}
+                        </td>
+                        <td className="border border-gray-300 p-2 align-top">
+                          {item.outputs || ""}
+                        </td>
+                        <td className="border border-gray-300 p-2 align-top">
+                          {item.personnel || ""}
+                        </td>
+                        <td className="border border-gray-300 p-2 align-top">
+                          {item.budget || ""}
+                        </td>
+                      </tr>
+                    ))}
+                    {/* Empty rows if no data */}
+                    {aoopData.length === 0 && (
+                      <tr>
+                        <td className="border border-gray-300 p-2 text-center text-gray-500" colSpan="5">
+                          No data provided
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-sm text-gray-600 italic mt-2">
+                Important Note: Filling out this matrix with accurate data will be helpful.
+              </p>
+            </div>
+
+            {/* B. Discussion */}
+            <div className="mb-6">
+              <h3 className="font-medium mb-2 text-gray-600">B. Discussion:</h3>
+              <div className="border border-gray-300 p-4 rounded bg-gray-50 min-h-[100px]">
+                {discussion || "No discussion provided"}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Action Buttons */}
+        <div className="flex gap-2 mb-6">
+          {isEventOwner && (
+            <Button
+              onClick={() => navigate("/event/form/010", { state: { formdata: form10 } })}
+              className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label="Update"
+            />
+          )}
+          {canAction && (
+            <>
+              <Button
+                onClick={onApprove}
+                disabled={approveLoading}
+                className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+                label={approveLoading ? "Approving…" : "Approve"}
+              />
+              <Button
+                onClick={() => setShowRevise(true)}
+                disabled={rejectLoading}
+                className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+                label="Revise"
+              />
+            </>
+          )}
+        </div>
 
       <Dialog
         header="Remarks"
