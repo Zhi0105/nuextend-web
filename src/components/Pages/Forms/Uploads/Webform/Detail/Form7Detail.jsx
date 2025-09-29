@@ -21,6 +21,7 @@ export const Form7Detail = () => {
   const decryptedToken = token && DecryptString(token);
 
   const [form7, setForm7] = useState(initialData || null);
+  const formData = Array.isArray(form7) ? form7[0] : form7;
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
@@ -40,10 +41,10 @@ export const Form7Detail = () => {
     if (!form7) return false;
     if (!isApprover) return false;
     if (hasUserRoleApproved(form7[0])) return false;
-    if (form7.status === "approved") return false;
+    if (formData?.status === "approved") return false;
     return true;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form7, isApprover]);
+  }, [form7, formData, isApprover]);
 
   // ✅ Approve
   const { mutate: doApprove, isLoading: approveLoading } = useMutation({

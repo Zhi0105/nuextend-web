@@ -168,7 +168,7 @@ export const Form4Detail = () => {
                 I. Relevance to Academic and Research Programs
               </td>
             </tr>
-            {["a", "b", "c"].map((key, idx) => (
+            {["a", "b", "c"].map((key) => (
               <tr key={key} className="odd:bg-gray-50 even:bg-white">
                 <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
                 <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>

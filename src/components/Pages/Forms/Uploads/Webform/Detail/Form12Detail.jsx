@@ -32,7 +32,7 @@ export const Form12Detail = () => {
   const otherMatters = form12Data?.other_matters;
   const adjournment = form12Data?.adjournment;
   const documentation = form12Data?.documentation;
-  const meetingDate = form12Data?.meeting_date;
+  // const meetingDate = form12Data?.meeting_date;
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
