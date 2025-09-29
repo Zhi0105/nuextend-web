@@ -21,7 +21,7 @@ export const Form2Detail = () => {
   const decryptedUser = token && DecryptUser(user);
   const decryptedToken = token && DecryptString(token);
 
-  const [ form2 ] = useState(initialData || null);
+  const [ form2, setForm2 ] = useState(initialData || null);
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
@@ -39,7 +39,7 @@ export const Form2Detail = () => {
   const canAction = useMemo(() => {
     if (!form2) return false;
     if (!isApprover) return false;
-    if (hasUserRoleApproved(form2)) return false;
+    if (hasUserRoleApproved(form2[0])) return false;
     if (form2.status === "approved") return false;
     return true;
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -48,7 +48,22 @@ export const Form2Detail = () => {
   // Approve
   const { mutate: doApprove, isLoading: approveLoading } = useMutation({
     mutationFn: (vars) => approveForm2(vars),
-    onSuccess: (res) => toast(res?.message || "Approved", { type: "success" }),
+    onSuccess: (res) => {
+      toast(res?.message || "Approved", { type: "success" })
+      // Update local form1 state para mawala agad yung button
+      setForm2((prev) => {
+        if (!prev) return prev;
+        return [
+          {
+            ...prev[0],
+            is_commex: roleId === 1 ? true : prev[0].is_commex,
+            is_dean: roleId === 9 ? true : prev[0].is_dean,
+            is_asd: roleId === 10 ? true : prev[0].is_asd,
+            is_ad: roleId === 11 ? true : prev[0].is_ad,
+          },
+        ];
+      });
+    },
     onError: () => toast("Failed to approve. Please try again.", { type: "error" }),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["outreach"] }),
   });

@@ -21,7 +21,7 @@ export const Form1Detail = () => {
   const decryptedUser = token && DecryptUser(user);
   const decryptedToken = token && DecryptString(token);
 
-  const [form1] = useState(initialData || null);
+  const [form1 , setForm1] = useState(initialData || null);
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
@@ -44,7 +44,7 @@ export const Form1Detail = () => {
   const canAction = useMemo(() => {
     if (!form1) return false;
     if (!isApprover) return false;
-    if (hasUserRoleApproved(form1)) return false;
+    if (hasUserRoleApproved(form1[0])) return false;
     if (form1.status === "approved") return false;
     return true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -53,7 +53,22 @@ export const Form1Detail = () => {
   // Approve
   const { mutate: doApprove, isLoading: approveLoading } = useMutation({
     mutationFn: (vars) => approveForm1(vars),
-    onSuccess: (res) => toast(res?.message || "Approved", { type: "success" }),
+    onSuccess: (res) => {
+        toast(res?.message || "Approved", { type: "success" })
+        // Update local form1 state para mawala agad yung button
+        setForm1((prev) => {
+          if (!prev) return prev;
+          return [
+            {
+              ...prev[0],
+              is_commex: roleId === 1 ? true : prev[0].is_commex,
+              is_dean: roleId === 9 ? true : prev[0].is_dean,
+              is_asd: roleId === 10 ? true : prev[0].is_asd,
+              is_ad: roleId === 11 ? true : prev[0].is_ad,
+            },
+          ];
+        });
+    },
     onError: () => toast("Failed to approve. Please try again.", { type: "error" }),
     onSettled: () => queryClient.invalidateQueries({ queryKey: ["outreach"] }),
   });
@@ -94,6 +109,7 @@ export const Form1Detail = () => {
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;
 
   if (!form1) return null;
+
 
   return (
     <div className="project-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
