@@ -27,6 +27,7 @@ export const Form3Detail = () => {
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const hasUserRoleApproved = (row) => {
     if (!row) return false;
     switch (roleId) {
@@ -133,6 +134,7 @@ export const Form3Detail = () => {
         day: 'numeric'
       });
     } catch (error) {
+      console.log(error)
       return dateString; // Return original string if parsing fails
     }
   };

@@ -9,14 +9,15 @@ import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
-import { useDownloadPdf } from "@_src/hooks/useDownloadPdf";
+// import { useDownloadPdf } from "@_src/hooks/useDownloadPdf";
+import { downloadForm1Pdf } from "@_src/utils/pdf/form1Pdf";
 
 // ✅ Buttons: UPDATE + APPROVE + REVISE + DOWNLOAD PDF
 export const Form1Detail = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { event, owner, data: initialData } = state || {};
-  const { printRef, handleDownloadPdf, loading  } = useDownloadPdf("form1-proposal.pdf");
+  // const { printRef, handleDownloadPdf, loading  } = useDownloadPdf("form1-proposal.pdf");
   
   const queryClient = useQueryClient();
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
@@ -114,7 +115,7 @@ export const Form1Detail = () => {
 
   return (
     <div className="project-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
-      <div ref={printRef} className="w-full max-w-5xl bg-white shadow rounded-lg p-6 my-6">
+      <div  className="w-full max-w-5xl bg-white shadow rounded-lg p-6 my-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Program Proposal</h2>
 
         {/* A. Title */}
@@ -312,13 +313,18 @@ export const Form1Detail = () => {
         )}
         {/* ✅ PDF Download Button */}
         <Button
+          onClick={() => downloadForm1Pdf(form1, event)}
+          className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+          label="Download PDF"
+        />
+        {/* <Button
           onClick={handleDownloadPdf}
           disabled={loading}
           className={`px-3 py-2 rounded-md text-xs font-semibold ${
             loading ? "bg-gray-400 cursor-not-allowed" : "bg-indigo-600 text-white"
           }`}
           label={loading ? "Generating PDF…" : "Download PDF"}
-        />
+        /> */}
       </div>
 
       {/* Revise Dialog */}

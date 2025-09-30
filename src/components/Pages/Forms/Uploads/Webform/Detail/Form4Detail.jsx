@@ -9,14 +9,12 @@ import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
-import { useDownloadPdf } from "@_src/hooks/useDownloadPdf";
 
 // ✅ Buttons: UPDATE + APPROVE + REVISE + CHECKLIST + DOWNLOAD PDF
 export const Form4Detail = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { owner, data: initialData } = state || {};
-  const { printRef, handleDownloadPdf, loading } = useDownloadPdf("form4-checklist.pdf");
 
   const queryClient = useQueryClient();
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
@@ -138,7 +136,7 @@ export const Form4Detail = () => {
     <div className="form4-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
       
       {/* Printable section */}
-      <div ref={printRef} className="w-full max-w-4xl">
+      <div className="w-full max-w-4xl">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">
           CHECKLIST OF CRITERIA FOR EXTENSION PROGRAM PROPOSAL
         </h2>
@@ -229,14 +227,7 @@ export const Form4Detail = () => {
           </>
         )}
         {/* ✅ PDF Button */}
-        <Button
-          onClick={handleDownloadPdf}
-          disabled={loading}
-          className={`px-3 py-2 rounded-md text-xs font-semibold ${
-            loading ? "bg-gray-400 cursor-not-allowed" : "bg-indigo-600 text-white"
-          }`}
-          label={loading ? "Generating PDF…" : "Download PDF"}
-        />
+       
       </div>
 
       {/* Revise Dialog */}
