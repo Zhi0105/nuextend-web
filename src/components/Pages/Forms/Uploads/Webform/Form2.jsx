@@ -87,8 +87,8 @@ export const Form2 = () => {
       partners: "",
       implementationDate: null ,
       area: "",
-      budgetRequirement: undefined,
-      budgetRequested: undefined,
+      budgetRequirement: null,
+      budgetRequested: null,
       background: "",
       otherInfo: "",
 
@@ -105,64 +105,63 @@ export const Form2 = () => {
           indicators: "",
           personnel: "",
           resources: "",
-          cost: undefined ,
+          cost: null ,
         },
       ],
       project_detailed_budgets: [
-        { item: "", description: "", quantity: undefined, amount: undefined , source: "" },
+        { item: "", description: "", quantity: null, amount: null , source: "" },
       ],
     },
     mode: "onSubmit",
   });
 
 
-  useEffect(() => {
-    if (formdata && formdata.length > 0) {
-      reset({
-        event_type_id: formdata[0]?.event_type_id || "",
-        proponents: formdata[0]?.proponents || "",
-        collaborators: formdata[0]?.collaborators || "",
-        participants: formdata[0]?.participants || undefined,
-        partners: formdata[0]?.partners || "",
-        implementationDate: formdata[0]?.implementationDate
-          ? new Date(formdata[0].implementationDate)
-          : null,
-        area: formdata[0]?.area || "",
-        budgetRequirement: formdata[0]?.budgetRequirement || undefined,
-        budgetRequested: formdata[0]?.budgetRequested || undefined,
-        background: formdata[0]?.background || "",
-        otherInfo: formdata[0]?.otherInfo || "",
-        project_objectives: formdata[0]?.objectives?.length
-          ? formdata[0].objectives
-          : [{ objectives: "", strategies: "" }],
-        project_impact_outcomes: formdata[0]?.impact_outcomes?.length
-          ? formdata[0].impact_outcomes
-          : [{ impact: "", outcome: "", linkage: "" }],
-        project_risks: formdata[0]?.risks?.length
-          ? formdata[0].risks
-          : [{ risk_identification: "", risk_mitigation: "" }],
-        project_staffings: formdata[0]?.staffings?.length
-          ? formdata[0].staffings
-          : [{ staff: "", responsibilities: "", contact: "" }],
-        project_work_plans: formdata[0]?.work_plans?.length
-          ? formdata[0].work_plans
-          : [
-              {
-                phaseDate: "",
-                activities: "",
-                targets: "",
-                indicators: "",
-                personnel: "",
-                resources: "",
-                cost: undefined,
-              },
-            ],
-        project_detailed_budgets: formdata[0]?.detailed_budgets?.length
-          ? formdata[0].detailed_budgets
-          : [{ item: "", description: "", quantity: undefined, amount: undefined, source: "" }],
-      });
-    }
-  }, [formdata, reset]);
+useEffect(() => {
+  if (formdata && formdata.length > 0) {
+    const fd = formdata[0];
+    console.log(fd)
+
+    reset({
+      event_type_id: fd.event_type_id || "",
+      proponents: fd.proponents || "",
+      collaborators: fd.collaborators || "",
+      participants: fd.participants ?? null,
+      partners: fd.partners || "",
+      implementationDate: fd.implementationDate ? new Date(fd.implementationDate) : null,
+      area: fd.area || "",
+      budgetRequirement: fd.budgetRequirement ?? null,
+      budgetRequested: fd.budgetRequested ?? null,
+      background: fd.background || "",
+      otherInfo: fd.otherInfo || "",
+      project_objectives: fd.objectives?.length
+        ? fd.objectives
+        : [{ objectives: "", strategies: "" }],
+      project_impact_outcomes: fd.impact_outcomes?.length
+        ? fd.impact_outcomes
+        : [{ impact: "", outcome: "", linkage: "" }],
+      project_risks: fd.risks?.length
+        ? fd.risks
+        : [{ risk_identification: "", risk_mitigation: "" }],
+      project_staffings: fd.staffings?.length
+        ? fd.staffings
+        : [{ staff: "", responsibilities: "", contact: "" }],
+      project_work_plans: fd.work_plans?.length
+        ? fd.work_plans
+        : [{
+            phaseDate: "",
+            activities: "",
+            targets: "",
+            indicators: "",
+            personnel: "",
+            resources: "",
+            cost: null,
+          }],
+      project_detailed_budgets: fd.detailed_budgets?.length
+        ? fd.detailed_budgets
+        : [{ item: "", description: "", quantity: null, amount: null, source: "" }],
+    });
+  }
+}, [formdata, reset]);
 
 
   // ---------- event types (from API) ----------
@@ -231,13 +230,13 @@ export const Form2 = () => {
       indicators: r.indicators,
       personnel: r.personnel,
       resources: r.resources,
-      cost: r.cost,
+      cost: num(r.cost),   // 👈 normalize
     })),
     project_detailed_budgets: (data.project_detailed_budgets ?? []).map((r) => ({
       item: r.item,
       description: r.description,
       quantity: r.quantity,
-      amount: r.amount,
+      amount: num(r.amount),
       source: r.source,
     })),
   };
