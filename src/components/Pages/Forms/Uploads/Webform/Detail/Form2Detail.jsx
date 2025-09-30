@@ -14,6 +14,7 @@ export const Form2Detail = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { event, owner, data: initialData } = state || {};
+  console.log(event);
 
   const queryClient = useQueryClient();
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
@@ -250,7 +251,7 @@ export const Form2Detail = () => {
                 {formData.risks?.map((risk, index) => (
                   <tr key={index}>
                     <td className="border border-gray-300 p-2">{risk.risk_identification}</td>
-                    <td className="border border-gray-300 p-2">{risk.risk_nitigation}</td>
+                    <td className="border border-gray-300 p-2">{risk.risk_mitigation}</td>
                   </tr>
                 ))}
               </tbody>
