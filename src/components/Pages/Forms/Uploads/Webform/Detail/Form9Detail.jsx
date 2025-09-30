@@ -39,7 +39,7 @@ export const Form9Detail = () => {
   const conclusionRecommendations = form9Data?.conclusion_recommendations;
 
   // Get team leader from user data
-  const teamLeader = decryptedUser ? `${decryptedUser.firstname} ${decryptedUser.lastname}` : "";
+  const teamLeader = event?.user ? `${event.user.firstname} ${event.user.middlename} ${event.user.lastname}` : "";
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
@@ -176,7 +176,8 @@ export const Form9Detail = () => {
               <div className="border border-gray-300 p-3 rounded bg-gray-50">
                 {managementTeam.length > 0 ? (
                   <div>
-                    <p className="font-semibold mb-2">Team Leader: {teamLeader}</p>
+                    <p className="font-semibold text-gray-600">1. Program Coordinator</p>
+                    <p>{teamLeader || "No program coordinator specified"}</p>
                     <p className="font-semibold mb-2">Team members</p>
                     <ul className="list-disc list-inside space-y-1">
                       {managementTeam.map((member, index) => (
