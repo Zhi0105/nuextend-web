@@ -25,14 +25,14 @@ const numberRules = {
     v === undefined || v === null || v === "" || Number(v) >= 0 || "Dapat hindi negative.",
 };
 
-const toYMD = (d) => {
-    if (!d) return undefined;
-    const dt = d instanceof Date ? d : new Date(d);
-    const y = dt.getFullYear();
-    const m = String(dt.getMonth() + 1).padStart(2, "0");
-    const day = String(dt.getDate()).padStart(2, "0");
-    return `${y}-${m}-${day}`;
-};
+// const toYMD = (d) => {
+//     if (!d) return undefined;
+//     const dt = d instanceof Date ? d : new Date(d);
+//     const y = dt.getFullYear();
+//     const m = String(dt.getMonth() + 1).padStart(2, "0");
+//     const day = String(dt.getDate()).padStart(2, "0");
+//     return `${y}-${m}-${day}`;
+// };
 const num = (v) => (v === null || v === undefined || v === "" ? null : Number(v));
 
 
@@ -125,7 +125,7 @@ useEffect(() => {
       collaborators: fd.collaborators || "",
       participants: fd.participants ?? null,
       partners: fd.partners || "",
-      implementationDate: fd.implementationDate ? new Date(fd.implementationDate) : null,
+      implementationDate: fd.implementationDate ?? null,
       area: fd.area || "",
       budgetRequirement: fd.budgetRequirement ?? null,
       budgetRequested: fd.budgetRequested ?? null,
@@ -205,7 +205,7 @@ useEffect(() => {
     collaborators: data.collaborators,
     participants: data.participants,
     partners: data.partners,
-    implementationDate: toYMD(data.implementationDate),
+    implementationDate: data.implementationDate,
     area: data.area,
     budgetRequested: num(data.budgetRequested),
     budgetRequirement: num(data.budgetRequirement),
@@ -346,12 +346,11 @@ useEffect(() => {
                 name="implementationDate"
                 rules={REQUIRED}
                 render={({ field }) => (
-                  <Calendar
-                    value={field.value}
-                    onChange={(e) => field.onChange(e.value)}
-                    dateFormat="mm/dd/yy"
-                    showIcon
-                    className={`w-full ${errors.implementationDate ? "p-invalid" : ""}`}
+                  <InputText
+                    value={field.value || ""}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    placeholder="implementation date"
+                    className={`w-full py-1 px-4 border ${errors.implementationDate ? "p-invalid border-red-300" : "border-gray-300"}`}
                   />
                 )}
               />

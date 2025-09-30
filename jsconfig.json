@@ -1,38 +1,48 @@
 {
-    "compilerOptions": {
-      "target": "ES2020",
-      "useDefineForClassFields": true,
-      "lib": ["ES2020", "DOM", "DOM.Iterable"],
-      "module": "ESNext",
-      "skipLibCheck": true,
-  
-      /* Bundler mode */
-      "moduleResolution": "bundler",
-      "allowImportingTsExtensions": true,
-      "resolveJsonModule": true,
-      "isolatedModules": true,
-      "noEmit": true,
-      "jsx": "react-jsx",
-      "paths": {
-        "@_src/*": ["./src/*"],
-        "@_components/*": ["./src/components/*"],
-        "@_contexts/*": ["./src/contexts/*"],
-        "@_providers/*": ["./src/providers/*"],
-        "@_routes/*": ["./src/routes/*"],
-        "@_services/*": ["./src/services/*"],
-        "@_store/*": ["./src/store/*"],
-        "@_templates/*": ["./src/templates/*"],
-        "@_utils/*": ["./src/utils/*"],
-        "@_types/*": ["./src/types/*"]
-        // alias path 
-      },
-  
-      /* Linting */
-      "strict": true,
-      "noUnusedLocals": true,
-      "noUnusedParameters": true,
-      "noFallthroughCasesInSwitch": true
+  "compilerOptions": {
+    "target": "ES2020",
+    "useDefineForClassFields": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "paths": {
+      "@_src/*": ["./src/*"],
+      "@_components/*": ["./src/components/*"],
+      "@_contexts/*": ["./src/contexts/*"],
+      "@_providers/*": ["./src/providers/*"],
+      "@_routes/*": ["./src/routes/*"],
+      "@_services/*": ["./src/services/*"],
+      "@_store/*": ["./src/store/*"],
+      "@_templates/*": ["./src/templates/*"],
+      "@_utils/*": ["./src/utils/*"],
+      "@_types/*": ["./src/types/*"]
+      // alias path
     },
-    "include": ["next-env.d.ts", "**/*.js", "**/*.jsx", ".next/types/**/*.js"],
-    "exclude": ["node_modules"]
-  }
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.js",
+    "**/*.jsx",
+    ".next/types/**/*.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/node_modules/*",
+    "**/dist",
+    "**/build"
+  ]
+}

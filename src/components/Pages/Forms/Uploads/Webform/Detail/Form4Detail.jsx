@@ -9,19 +9,20 @@ import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
+import { useDownloadPdf } from "@_src/hooks/useDownloadPdf";
 
-// ✅ Buttons: UPDATE + APPROVE + REVISE + CHECKLIST
+// ✅ Buttons: UPDATE + APPROVE + REVISE + CHECKLIST + DOWNLOAD PDF
 export const Form4Detail = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { owner, data: initialData } = state || {};
+  const { printRef, handleDownloadPdf, loading } = useDownloadPdf("form4-checklist.pdf");
 
   const queryClient = useQueryClient();
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
   const decryptedUser = token && DecryptUser(user);
   const decryptedToken = token && DecryptString(token);
 
-  // Normalize initialData to an object (if API returns an array, take first element)
   const [form4, setForm4] = useState(() => {
     if (!initialData) return null;
     if (Array.isArray(initialData)) return initialData[0] ?? null;
@@ -49,9 +50,8 @@ export const Form4Detail = () => {
     if (form4.status === "approved") return false;
     return true;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form4, isApprover]); // keep deps simple
+  }, [form4, isApprover]);
 
-  // Helper: robust truth check (handles true/"true"/1/"1")
   const isChecked = (key) => {
     const v = form4?.[key];
     return v === true || v === "true" || v === 1 || v === "1";
@@ -61,8 +61,7 @@ export const Form4Detail = () => {
   const { mutate: doApprove, isLoading: approveLoading } = useMutation({
     mutationFn: (vars) => approveForm4(vars),
     onSuccess: (res) => {
-      toast(res?.message || "Approved", { type: "success" })
-      // Update local form1 state para mawala agad yung button
+      toast(res?.message || "Approved", { type: "success" });
       setForm4((prev) => {
         if (!prev) return prev;
         return [
@@ -87,19 +86,9 @@ export const Form4Detail = () => {
 
   // Revise
   const [showRevise, setShowRevise] = useState(false);
-  const remarksKeyByRole = {
-    1: "commex_remarks",
-    9: "dean_remarks",
-    10: "asd_remarks",
-    11: "ad_remarks",
-  };
+  const remarksKeyByRole = { 1: "commex_remarks", 9: "dean_remarks", 10: "asd_remarks", 11: "ad_remarks" };
 
-  const {
-    handleSubmit,
-    control,
-    formState: { errors },
-    reset,
-  } = useForm({ defaultValues: { remarks: "" } });
+  const { handleSubmit, control, formState: { errors }, reset } = useForm({ defaultValues: { remarks: "" } });
 
   const { mutate: doReject, isLoading: rejectLoading } = useMutation({
     mutationFn: (vars) => rejectForm4(vars),
@@ -115,128 +104,107 @@ export const Form4Detail = () => {
     if (!form4 || !canAction) return;
     const key = remarksKeyByRole[roleId];
     if (!key) return;
-    doReject({
-      token: decryptedToken,
-      id: form4.id,
-      role_id: roleId,
-      [key]: remarks,
-    });
+    doReject({ token: decryptedToken, id: form4.id, role_id: roleId, [key]: remarks });
     setShowRevise(false);
   };
 
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;
 
+ 
+
   if (!form4) return null;
 
-  // Checklist mapping (A–P)
+  // Checklist items
   const checklist = [
-    { key: "a", label: "A. Is the program strongly linked to teaching and research that is appropriate to the identity of National University as a higher educational institution?" },
-    { key: "b", label: "B. Is it going to be built and maintained on the basis of the existing academic or research programs that the University have?" },
-    { key: "c", label: "C. Is the program relevant to the core competencies of the School or Department?" },
+    { key: "a", label: "A. Is the program strongly linked to teaching and research ..." },
+    { key: "b", label: "B. Is it going to be built and maintained on the basis ..." },
+    { key: "c", label: "C. Is the program relevant to the core competencies ..." },
     { key: "d", label: "D. Does it involve the input and collaboration of the target group?" },
-    { key: "e", label: "E. Is the target group willing to take part in the implementation, monitoring, and evaluation of the program?" },
-    { key: "f", label: "F. Are there assurances that the cooperating department or agency will support the program?" },
+    { key: "e", label: "E. Is the target group willing to take part in implementation ..." },
+    { key: "f", label: "F. Are there assurances that the cooperating department ..." },
     { key: "g", label: "G. Is it to be done within a community that we have MOA with?" },
-    { key: "h", label: "H. Does the program promote social transformation that is in line with the University’s core values?" },
-    { key: "i", label: "I. Is the program not financially demanding so as not draining to financial resources allotted..." },
-    { key: "j", label: "J. Is there a good number of appropriate personnel who will implement the program both on the side of University and the target group?" },
-    { key: "k", label: "K. Is there any external funding agency that shall support the program?" },
-    { key: "l", label: "L. Is the proponent capable of managing the program sustainably?" },
-    { key: "m", label: "M. Will the program contribute to the holistic growth of the community?" },
-    { key: "n", label: "N. Does the program have a clearly stated background, significance, intended outcomes, and projects to support and realize the objectives?" },
-    { key: "o", label: "O. Are there formal studies, community assessments, and problem analyses that were conducted?" },
+    { key: "h", label: "H. Does the program promote social transformation ..." },
+    { key: "i", label: "I. Is the program not financially demanding ..." },
+    { key: "j", label: "J. Is there a good number of appropriate personnel ..." },
+    { key: "k", label: "K. Is there any external funding agency that shall support ..." },
+    { key: "l", label: "L. Is the proponent capable of managing the program ..." },
+    { key: "m", label: "M. Will the program contribute to the holistic growth ..." },
+    { key: "n", label: "N. Does the program have a clearly stated background ..." },
+    { key: "o", label: "O. Are there formal studies, community assessments ..." },
     { key: "p", label: "P. Does the program have specific and measurable results?" },
   ];
 
   return (
     <div className="form4-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">CHECKLIST OF CRITERIA FOR EXTENSION PROGRAM PROPOSAL</h2>
-      {/* Checklist Table */}
-      <div className="w-full max-w-4xl border rounded-lg shadow mb-4">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="border p-2 text-left">Criteria</th>
-              <th className="border p-2 text-center w-20">Yes</th>
-              <th className="border p-2 text-center w-20">No</th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* I. Relevance to Academic and Research Programs */}
-            <tr>
-              <td colSpan="3" className="border p-2 font-bold bg-gray-100">
-                I. Relevance to Academic and Research Programs
-              </td>
-            </tr>
-            {["a", "b", "c"].map((key) => (
-              <tr key={key} className="odd:bg-gray-50 even:bg-white">
-                <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
-                <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
-                <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
-              </tr>
-            ))}
+      
+      {/* Printable section */}
+      <div ref={printRef} className="w-full max-w-4xl">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">
+          CHECKLIST OF CRITERIA FOR EXTENSION PROGRAM PROPOSAL
+        </h2>
 
-            {/* II. Collaborative and Participatory */}
-            <tr>
-              <td colSpan="3" className="border p-2 font-bold bg-gray-100">
-                II. Collaborative and Participatory
-              </td>
-            </tr>
-            {["d", "e", "f", "g"].map((key) => (
-              <tr key={key} className="odd:bg-gray-50 even:bg-white">
-                <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
-                <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
-                <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
+        <div className="w-full border rounded-lg shadow mb-4">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="border p-2 text-left">Criteria</th>
+                <th className="border p-2 text-center w-20">Yes</th>
+                <th className="border p-2 text-center w-20">No</th>
               </tr>
-            ))}
+            </thead>
+            <tbody>
+              {/* Categories with grouped rows */}
+              <tr><td colSpan="3" className="border p-2 font-bold bg-gray-100">I. Relevance to Academic and Research Programs</td></tr>
+              {["a", "b", "c"].map((key) => (
+                <tr key={key} className="odd:bg-gray-50 even:bg-white">
+                  <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
+                  <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
+                  <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
+                </tr>
+              ))}
 
-            {/* III. Values Oriented */}
-            <tr>
-              <td colSpan="3" className="border p-2 font-bold bg-gray-100">
-                III. Value(s) Oriented
-              </td>
-            </tr>
-            {["h"].map((key) => (
-              <tr key={key} className="odd:bg-gray-50 even:bg-white">
-                <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
-                <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
-                <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
-              </tr>
-            ))}
+              <tr><td colSpan="3" className="border p-2 font-bold bg-gray-100">II. Collaborative and Participatory</td></tr>
+              {["d","e","f","g"].map((key) => (
+                <tr key={key} className="odd:bg-gray-50 even:bg-white">
+                  <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
+                  <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
+                  <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
+                </tr>
+              ))}
 
-            {/* IV. Financing and Sustainability */}
-            <tr>
-              <td colSpan="3" className="border p-2 font-bold bg-gray-100">
-                IV. Financing and Sustainability
-              </td>
-            </tr>
-            {["i", "j", "k", "l", "m"].map((key) => (
-              <tr key={key} className="odd:bg-gray-50 even:bg-white">
-                <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
-                <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
-                <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
-              </tr>
-            ))}
+              <tr><td colSpan="3" className="border p-2 font-bold bg-gray-100">III. Values Oriented</td></tr>
+              {["h"].map((key) => (
+                <tr key={key} className="odd:bg-gray-50 even:bg-white">
+                  <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
+                  <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
+                  <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
+                </tr>
+              ))}
 
-            {/* V. Evidence-Based Need and Significance */}
-            <tr>
-              <td colSpan="3" className="border p-2 font-bold bg-gray-100">
-                V. Evidence-Based Need and Significance
-              </td>
-            </tr>
-            {["n", "o", "p"].map((key) => (
-              <tr key={key} className="odd:bg-gray-50 even:bg-white">
-                <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
-                <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
-                <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+              <tr><td colSpan="3" className="border p-2 font-bold bg-gray-100">IV. Financing and Sustainability</td></tr>
+              {["i","j","k","l","m"].map((key) => (
+                <tr key={key} className="odd:bg-gray-50 even:bg-white">
+                  <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
+                  <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
+                  <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
+                </tr>
+              ))}
+
+              <tr><td colSpan="3" className="border p-2 font-bold bg-gray-100">V. Evidence-Based Need and Significance</td></tr>
+              {["n","o","p"].map((key) => (
+                <tr key={key} className="odd:bg-gray-50 even:bg-white">
+                  <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
+                  <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
+                  <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div className="flex gap-2 mb-6">
-        {/* Update button */}
+      {/* Action buttons */}
+      <div className="flex gap-2 mt-4">
         {isEventOwner && (
           <Button
             onClick={() => navigate("/event/form/004", { state: { formdata: form4 } })}
@@ -244,8 +212,6 @@ export const Form4Detail = () => {
             label="Update"
           />
         )}
-
-        {/* Approve + Revise */}
         {canAction && (
           <>
             <Button
@@ -262,17 +228,19 @@ export const Form4Detail = () => {
             />
           </>
         )}
+        {/* ✅ PDF Button */}
+        <Button
+          onClick={handleDownloadPdf}
+          disabled={loading}
+          className={`px-3 py-2 rounded-md text-xs font-semibold ${
+            loading ? "bg-gray-400 cursor-not-allowed" : "bg-indigo-600 text-white"
+          }`}
+          label={loading ? "Generating PDF…" : "Download PDF"}
+        />
       </div>
 
-
       {/* Revise Dialog */}
-      <Dialog
-        header="Remarks"
-        visible={showRevise}
-        style={{ width: "50vw" }}
-        onHide={() => setShowRevise(false)}
-        modal={false}
-      >
+      <Dialog header="Remarks" visible={showRevise} style={{ width: "50vw" }} onHide={() => setShowRevise(false)} modal={false}>
         <form onSubmit={handleSubmit(onSubmitRevise)} className="flex flex-col gap-4 w-full my-4">
           <Controller
             control={control}
@@ -280,9 +248,7 @@ export const Form4Detail = () => {
             rules={{ required: true }}
             render={({ field: { onChange, value } }) => (
               <InputTextarea
-                className={`${
-                  errors.remarks ? "border border-red-500" : ""
-                } bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                className={`${errors.remarks ? "border border-red-500" : ""} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
                 rows={4}
                 placeholder="Enter your remarks here"
                 value={value}
@@ -290,15 +256,8 @@ export const Form4Detail = () => {
               />
             )}
           />
-          {errors.remarks && (
-            <p className="text-sm italic mt-1 text-red-400">remarks is required.*</p>
-          )}
-          <Button
-            type="submit"
-            disabled={rejectLoading}
-            className="bg-[#2211cc] text-[#c7c430] font-bold rounded-lg p-2"
-            label={rejectLoading ? "Submitting…" : "Submit"}
-          />
+          {errors.remarks && <p className="text-sm italic mt-1 text-red-400">remarks is required.*</p>}
+          <Button type="submit" disabled={rejectLoading} className="bg-[#2211cc] text-[#c7c430] font-bold rounded-lg p-2" label={rejectLoading ? "Submitting…" : "Submit"} />
         </form>
       </Dialog>
     </div>
