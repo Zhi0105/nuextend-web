@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useUserStore } from "@_src/store/auth";
 import { DecryptString, DecryptUser } from "@_src/utils/helpers";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { approveForm5, rejectForm5 } from "@_src/services/formservice"; // 🔄 swapped to form5 services
+import { approveForm5, rejectForm5 } from "@_src/services/formservice";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
@@ -20,7 +20,12 @@ export const Form5Detail = () => {
   const decryptedUser = token && DecryptUser(user);
   const decryptedToken = token && DecryptString(token);
 
-  const [form5, setForm5] = useState(initialData || null);
+  // Normalize initialData to an object (if API returns an array, take first element)
+  const [form5, setForm5] = useState(() => {
+    if (!initialData) return null;
+    if (Array.isArray(initialData)) return initialData[0] ?? null;
+    return initialData;
+  });
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
@@ -39,29 +44,33 @@ export const Form5Detail = () => {
   const canAction = useMemo(() => {
     if (!form5) return false;
     if (!isApprover) return false;
-    if (hasUserRoleApproved(form5[0])) return false;
+    if (hasUserRoleApproved(form5)) return false;
     if (form5.status === "approved") return false;
     return true;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form5, isApprover]);
+
+  // Helper: robust truth check (handles true/"true"/1/"1")
+  const isChecked = (key) => {
+    const v = form5?.[key];
+    return v === true || v === "true" || v === 1 || v === "1";
+  };
 
   // Approve
   const { mutate: doApprove, isLoading: approveLoading } = useMutation({
     mutationFn: (vars) => approveForm5(vars),
     onSuccess: (res) => {
       toast(res?.message || "Approved", { type: "success" })
-       // Update local form1 state para mawala agad yung button
+      // Update local form5 state para mawala agad yung button
       setForm5((prev) => {
         if (!prev) return prev;
-        return [
-          {
-            ...prev[0],
-            is_commex: roleId === 1 ? true : prev[0].is_commex,
-            is_dean: roleId === 9 ? true : prev[0].is_dean,
-            is_asd: roleId === 10 ? true : prev[0].is_asd,
-            is_ad: roleId === 11 ? true : prev[0].is_ad,
-          },
-        ];
+        return {
+          ...prev,
+          is_commex: roleId === 1 ? true : prev.is_commex,
+          is_dean: roleId === 9 ? true : prev.is_dean,
+          is_asd: roleId === 10 ? true : prev.is_asd,
+          is_ad: roleId === 11 ? true : prev.is_ad,
+        };
       });
     },
     onError: () => toast("Failed to approve. Please try again.", { type: "error" }),
@@ -70,7 +79,7 @@ export const Form5Detail = () => {
 
   const onApprove = () => {
     if (!form5 || !canAction) return;
-    doApprove({ token: decryptedToken, id: form5[0]?.id ?? form5.id, role_id: roleId });
+    doApprove({ token: decryptedToken, id: form5.id, role_id: roleId });
   };
 
   // Revise
@@ -105,7 +114,7 @@ export const Form5Detail = () => {
     if (!key) return;
     doReject({
       token: decryptedToken,
-      id: form5[0]?.id ?? form5.id,
+      id: form5.id,
       role_id: roleId,
       [key]: remarks,
     });
@@ -116,9 +125,113 @@ export const Form5Detail = () => {
 
   if (!form5) return null;
 
+  // Checklist mapping (A–N) based on the image
+  const checklist = [
+    { key: "a", label: "A. Is the project related to disaster response, rehabilitation, and recovery?" },
+    { key: "b", label: "B. If it is a regular outreach project, is it going to be built and maintained on the basis of the existing academic research programs of the school?" },
+    { key: "c", label: "C. Can it be easily repackaged into an extension program for future purposes?" },
+    { key: "d", label: "D. Is the project relevant to the core competencies of the School or Department?" },
+    { key: "e", label: "E. Does it involve the input and collaboration of the target group?" },
+    { key: "f", label: "F. Is the target group willing to take part in the implementation, monitoring, and evaluation of the project?" },
+    { key: "g", label: "G. Is it to be done within a community that we have MOA with?" },
+    { key: "h", label: "H. Is the project in line with the ComEx's value proposition?" },
+    { key: "i", label: "I. Is the project not financially demanding so that it cannot drain the financial resources in the implementation of the project?" },
+    { key: "j", label: "J. Is the target group willing to share its counterpart in terms of its physical or financial resources in the implementation of the project?" },
+    { key: "k", label: "K. Is there any external funding agency that shall support the project?" },
+    { key: "l", label: "L. Is there any related activity to support and finance the proposed project?" },
+    { key: "m", label: "M. Is it going to cater to pressing and legitimate community needs?" },
+    { key: "n", label: "N. Are there formal studies, community assessments, and problem analyses that were conducted?" },
+  ];
+
   return (
     <div className="form5-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
-      <div className="flex gap-2">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">CHECKLIST OF CRITERIA FOR PROJECT PROPOSAL</h2>
+      
+      {/* Checklist Table */}
+      <div className="w-full max-w-4xl border rounded-lg shadow mb-4">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-gray-200">
+              <th className="border p-2 text-left">Criteria</th>
+              <th className="border p-2 text-center w-20">Yes</th>
+              <th className="border p-2 text-center w-20">No</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* I. Relevance to Academic Extension Programs */}
+            <tr>
+              <td colSpan="3" className="border p-2 font-bold bg-gray-100">
+                I. Relevance to Academic Extension Programs
+              </td>
+            </tr>
+            {["a", "b", "c", "d"].map((key) => (
+              <tr key={key} className="odd:bg-gray-50 even:bg-white">
+                <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
+                <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
+                <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
+              </tr>
+            ))}
+
+            {/* II. Collaborative and Participatory */}
+            <tr>
+              <td colSpan="3" className="border p-2 font-bold bg-gray-100">
+                II. Collaborative and Participatory
+              </td>
+            </tr>
+            {["e", "f", "g"].map((key) => (
+              <tr key={key} className="odd:bg-gray-50 even:bg-white">
+                <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
+                <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
+                <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
+              </tr>
+            ))}
+
+            {/* III. Values Oriented */}
+            <tr>
+              <td colSpan="3" className="border p-2 font-bold bg-gray-100">
+                III. Value(s) Oriented
+              </td>
+            </tr>
+            {["h"].map((key) => (
+              <tr key={key} className="odd:bg-gray-50 even:bg-white">
+                <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
+                <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
+                <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
+              </tr>
+            ))}
+
+            {/* IV. Financing and Sustainability */}
+            <tr>
+              <td colSpan="3" className="border p-2 font-bold bg-gray-100">
+                IV. Financing and Sustainability
+              </td>
+            </tr>
+            {["i", "j", "k", "l"].map((key) => (
+              <tr key={key} className="odd:bg-gray-50 even:bg-white">
+                <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
+                <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
+                <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
+              </tr>
+            ))}
+
+            {/* V. Significance */}
+            <tr>
+              <td colSpan="3" className="border p-2 font-bold bg-gray-100">
+                V. Significance
+              </td>
+            </tr>
+            {["m", "n"].map((key) => (
+              <tr key={key} className="odd:bg-gray-50 even:bg-white">
+                <td className="border p-2">{checklist.find((i) => i.key === key)?.label}</td>
+                <td className="border p-2 text-center">{isChecked(key) ? "✔" : ""}</td>
+                <td className="border p-2 text-center">{!isChecked(key) ? "✔" : ""}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex gap-2 mb-6">
         {/* Update button */}
         {isEventOwner && (
           <Button
@@ -147,6 +260,7 @@ export const Form5Detail = () => {
         )}
       </div>
 
+      {/* Revise Dialog */}
       <Dialog
         header="Remarks"
         visible={showRevise}
