@@ -114,9 +114,7 @@ export const Form1Detail = () => {
   return (
     <div className="project-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
       <div className="w-full max-w-5xl bg-white shadow rounded-lg p-6 my-6">
-  <h2 className="text-2xl font-bold text-gray-800 mb-6">Program Proposal
-    
-  </h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">Program Proposal</h2>
 
   <h2 className="text-1xl font-bold text-gray-800 mb-6">I. PROGRAM DESCRIPTION:</h2>
   {/* A. Title */}

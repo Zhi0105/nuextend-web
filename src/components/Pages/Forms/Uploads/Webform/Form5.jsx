@@ -60,13 +60,18 @@ export const Form5 = ({ onSubmit }) => {
 
   useEffect(() => {
     if (formdata) {
-      reset(formdata[0] || defaultValues);
+      // ✅ Handle both array and object responses
+      const formDataToUse = Array.isArray(formdata) ? formdata[0] : formdata;
+      reset(formDataToUse || defaultValues);
     }
   }, [formdata, reset]);
 
   const submit = (data) => {
+    // ✅ Handle both array and object formats
+    const formDataId = Array.isArray(formdata) ? formdata[0]?.id : formdata?.id;
+    
     const payload = {
-      ...(formdata?.[0]?.id && { id: formdata[0].id }),
+      ...(formDataId && { id: formDataId }),
       event_id: event?.id,
       ...data,
     };
@@ -79,7 +84,6 @@ export const Form5 = ({ onSubmit }) => {
       handleCreateForm5({ token: decryptedToken, ...payload });
     }
   };
-
   const sections = [
     {
       title: "I. Relevance to Academic Extension Programs",

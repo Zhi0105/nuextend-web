@@ -26,7 +26,7 @@ export const Form11Detail = () => {
   // Extract data from form11 and form1
   const form11Data = form11?.[0] || form11;
   const form1Data = event?.form1?.[0];
-  const programCoordinator = form1Data?.team_members?.[0]?.name;
+  const programCoordinator = event?.user ? `${event.user.firstname} ${event.user.middlename} ${event.user.lastname}` : "";
   const transportationMedium = form11Data?.transportation_medium;
   const driver = form11Data?.driver;
   const travelDetails = form11Data?.travel_details || [];

@@ -30,13 +30,13 @@ export const Form8Detail = () => {
   const form8Data = form8?.[0] || form8;
   
   // Get team leader and members from form1
-  const teamLeader = form1Data?.team_members?.[0]; // Assuming first member is leader
+  const teamLeader = event?.user ? `${event.user.firstname} ${event.user.middlename} ${event.user.lastname}` : ""// Assuming first member is leader
   const teamMembers = form1Data?.team_members || [];
   
   const proposedTitle = event?.eventName;
   const introduction = form8Data?.introduction;
   const method = form8Data?.method;
-  const findingsDiscussion = form8Data?.finding_discussion;
+  const findingsDiscussion = form8Data?.findings_discussion;
   const implicationIntervention = form8Data?.implication_intervention;
   const references = form8Data?.references || [];
 
@@ -155,11 +155,11 @@ export const Form8Detail = () => {
           <div className="mb-6">
             <h2 className="text-lg font-semibold mb-2 text-gray-700">II. TEAM:</h2>
             
-            {/* Team Leader */}
+             {/* Team Leader */}
             <div className="mb-3">
               <h3 className="font-medium mb-1 text-gray-600">A. Leader</h3>
-              <div className=" p-3 rounded bg-gray-50">
-                {teamLeader ? `${teamLeader.name}` : "No team leader specified"}
+              <div className="p-3 rounded bg-gray-50">
+                {teamLeader || "No team leader specified"}
               </div>
             </div>
             
