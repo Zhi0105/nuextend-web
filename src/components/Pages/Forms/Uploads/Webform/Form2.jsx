@@ -119,9 +119,7 @@ export const Form2 = () => {
 useEffect(() => {
   if (formdata && formdata.length > 0) {
     const fd = formdata[0];
-    console.log(fd)
-
-    reset({
+    const values = {
       event_type_id: fd.event_type_id || "",
       proponents: fd.proponents || "",
       collaborators: fd.collaborators || "",
@@ -159,8 +157,16 @@ useEffect(() => {
       project_detailed_budgets: fd.detailed_budgets?.length
         ? fd.detailed_budgets
         : [{ item: "", description: "", quantity: null, amount: null, source: "" }],
-    });
-  }
+    }
+    reset(values);
+    objectivesFA.replace(values.project_objectives);
+    impactFA.replace(values.project_impact_outcomes);
+    risksFA.replace(values.project_risks); 
+    staffingFA.replace(values.project_staffings); 
+    workPlanFA.replace(values.project_work_plans); 
+    budgetsFA.replace(values.project_detailed_budgets);
+  } 
+// eslint-disable-next-line react-hooks/exhaustive-deps
 }, [formdata, reset]);
 
 

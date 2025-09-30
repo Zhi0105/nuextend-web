@@ -96,17 +96,38 @@ export const Form3 = ({ onSubmit }) => {
 
     useEffect(() => {
         if (Array.isArray(formdata) && formdata.length > 0) {
-            const f = formdata[0] || {}
-            reset({
-                description: f.description || "",
-                targetGroup: f.targetGroup || "",
-                startDate: f.startDate ? new Date(f.startDate) : null,
-                endDate: f.endDate ? new Date(f.endDate) : null,
-                activity_plan_budget: f.activity_plans_budgets || defaultValues.activity_plan_budget,
-                detailed_budget: f.detailed_budgets || defaultValues.detailed_budget,
-                budget_sourcing: f.budget_sourcings || defaultValues.budget_sourcing,
-            });
+            const f = formdata[0] || {};
+
+            const values = {
+            description: f.description ?? "",
+            targetGroup: f.targetGroup ?? "",
+            startDate: f.startDate ? new Date(f.startDate) : null,
+            endDate: f.endDate ? new Date(f.endDate) : null,
+            activity_plan_budget: f.activity_plans_budgets?.length
+                ? f.activity_plans_budgets
+                : defaultValues.activity_plan_budget,
+            detailed_budget: f.detailed_budgets?.length
+                ? f.detailed_budgets
+                : defaultValues.detailed_budget,
+            budget_sourcing: f.budget_sourcings?.length
+                ? f.budget_sourcings
+                : defaultValues.budget_sourcing,
+            };
+
+            reset(values);
+
+            // Para sure na aligned yung mga field array
+            apbFA.replace(values.activity_plan_budget);
+            dbFA.replace(values.detailed_budget);
+            bsFA.replace(values.budget_sourcing);
+
+        } else {
+            reset(defaultValues);
+            apbFA.replace(defaultValues.activity_plan_budget);
+            dbFA.replace(defaultValues.detailed_budget);
+            bsFA.replace(defaultValues.budget_sourcing);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formdata, reset]);
 
     const apbFA = useFieldArray({ control, name: "activity_plan_budget" });
@@ -157,6 +178,7 @@ export const Form3 = ({ onSubmit }) => {
             })
         }
     };
+
 
     return (
         <div className="outreach-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
@@ -545,4 +567,4 @@ export const Form3 = ({ onSubmit }) => {
             </form>
         </div>
     );
-    };
+};
