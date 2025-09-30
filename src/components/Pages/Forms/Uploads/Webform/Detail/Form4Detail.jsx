@@ -68,10 +68,10 @@ export const Form4Detail = () => {
         return [
           {
             ...prev[0],
-            is_commex: roleId === 1 ? true : prev[0].is_commex,
-            is_dean: roleId === 9 ? true : prev[0].is_dean,
-            is_asd: roleId === 10 ? true : prev[0].is_asd,
-            is_ad: roleId === 11 ? true : prev[0].is_ad,
+            is_commex: roleId === 1 ? true : prev.is_commex,
+            is_dean: roleId === 9 ? true : prev.is_dean,
+            is_asd: roleId === 10 ? true : prev.is_asd,
+            is_ad: roleId === 11 ? true : prev.is_ad,
           },
         ];
       });
@@ -152,7 +152,7 @@ export const Form4Detail = () => {
     <div className="form4-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">CHECKLIST OF CRITERIA FOR EXTENSION PROGRAM PROPOSAL</h2>
       {/* Checklist Table */}
-      <div className="w-full max-w-4xl border rounded-lg shadow">
+      <div className="w-full max-w-4xl border rounded-lg shadow mb-4">
         <table className="w-full border-collapse">
           <thead>
             <tr className="bg-gray-200">

@@ -186,7 +186,7 @@ export const Form7Detail = () => {
         </div>
 
       
-      <div className="flex gap-2 mb-6">
+      <div className="flex gap-2 my-6">
         {isEventOwner && (
           <Button
             onClick={() => navigate("/event/form/007", { state: { formdata: formData } })}

@@ -46,9 +46,8 @@ export const Form6 = ({ onSubmit }) => {
   } = useForm({ defaultValues, mode: "onBlur" });
 
   useEffect(() => {
-    if (formdata?.[0]) {
-      const rest = { ...formdata[0] };
-      delete rest.event_id;
+    if (formdata) {
+      const rest = { ...formdata};
       reset(rest);
     }
   }, [formdata, reset]);
@@ -89,7 +88,7 @@ export const Form6 = ({ onSubmit }) => {
 
     onSubmit?.(payload);
 
-    if (formdata?.[0]) {
+    if (formdata) {
       updateMut({ token: decryptedToken, ...payload });
     } else {
       createMut({ token: decryptedToken, ...payload });

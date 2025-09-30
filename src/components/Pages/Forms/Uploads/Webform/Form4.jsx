@@ -60,7 +60,7 @@ export const Form4 = ({ onSubmit }) => {
 
   useEffect(() => {
     if (formdata) {
-      reset(formdata[0] || defaultValues);
+      reset(formdata || defaultValues);
     }
   }, [formdata, reset]);
 
