@@ -9,15 +9,13 @@ import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
-// import { useDownloadPdf } from "@_src/hooks/useDownloadPdf";
 import { downloadForm1Pdf } from "@_src/utils/pdf/form1Pdf";
 
-// ✅ Buttons: UPDATE + APPROVE + REVISE + DOWNLOAD PDF
 export const Form1Detail = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const { event, owner, data: initialData } = state || {};
-  // const { printRef, handleDownloadPdf, loading  } = useDownloadPdf("form1-proposal.pdf");
+  console.log(event);
   
   const queryClient = useQueryClient();
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
@@ -52,6 +50,24 @@ export const Form1Detail = () => {
     return true;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form1, isApprover]);
+
+const canDownloadPdf = useMemo(() => {
+  if (!form1) return false;
+  
+  const formData = form1[0];
+  
+  // For ComEx (roleId 1) and role 4 - need 3 approvals (excluding dean)
+  if ([1, 4].includes(roleId)) {
+    return formData?.commex_approved_by && formData?.asd_approved_by && formData?.ad_approved_by;
+  }
+  
+  // For role 3 - need dean approval AND the other 3 approvers
+  if (roleId === 3) {
+    return formData?.dean_approved_by && formData?.commex_approved_by && formData?.asd_approved_by && formData?.ad_approved_by;
+  }
+  
+  return false;
+}, [form1, roleId]);
 
   // Approve
   const { mutate: doApprove, isLoading: approveLoading } = useMutation({
@@ -118,6 +134,7 @@ export const Form1Detail = () => {
       <div  className="w-full max-w-5xl bg-white shadow rounded-lg p-6 my-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Program Proposal</h2>
 
+        <h2 className="text-1xl font-bold text-gray-800 mb-6">I. PROGRAM DESCRIPTION:</h2>
         {/* A. Title */}
         <div className="mb-6">
           <p className="font-semibold text-gray-600">A. Title</p>
@@ -184,44 +201,45 @@ export const Form1Detail = () => {
         <h2 className="text-1xl font-bold text-gray-800 mb-6">II. PROGRAM DETAILS:</h2>
         <div className="mb-6">
           <p className="font-semibold text-gray-600">A. Background:</p>
-          <p>{form1[0]?.background || "—"}</p>
+          <p className="break-words whitespace-normal">{form1[0]?.background || "—"}</p>
         </div>
 
         <div className="mb-6">
           <p className="font-semibold text-gray-600">B. Overall Goal:</p>
-          <p>{form1[0]?.overall_goal || "—"}</p>
+          <p className="break-words whitespace-normal">{form1[0]?.overall_goal || "—"}</p>
         </div>
 
-        {/* C. Component Projects */}
+       {/* C. Component Projects */}
         <div className="mb-6">
           <p className="font-semibold text-gray-600">C. Component Projects, Outcomes, and Budget</p>
         </div>
-        <table className="w-full border mt-2">
+        <table className="w-full border mt-2 table-fixed">
           <thead>
             <tr className="bg-gray-100">
-              <th className="border p-2">Title</th>
-              <th className="border p-2">Outcomes</th>
-              <th className="border p-2">Budget</th>
+              <th className="border p-2 w-1/4 break-words whitespace-normal">Title</th>
+              <th className="border p-2 w-2/4 break-words whitespace-normal">Outcomes</th>
+              <th className="border p-2 w-1/4 break-words whitespace-normal">Budget</th>
             </tr>
           </thead>
           <tbody>
             {form1[0]?.component_projects?.length > 0 ? (
               form1[0].component_projects.map((c) => (
                 <tr key={c.id}>
-                  <td className="border p-2">{c.title}</td>
-                  <td className="border p-2">{c.outcomes}</td>
-                  <td className="border p-2">₱ {c.budget}</td>
+                  <td className="border p-2 break-words whitespace-normal">{c.title}</td>
+                  <td className="border p-2 break-words whitespace-normal">{c.outcomes}</td>
+                  <td className="border p-2 break-words whitespace-normal">₱ {c.budget}</td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={3} className="border p-2 italic text-gray-500">
+                <td colSpan={3} className="border p-2 italic text-gray-500 text-center">
                   No component projects
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+
 
         <div className="mb-6">
           <p className="font-semibold text-gray-600">Scholarly Connection:</p>
@@ -235,7 +253,8 @@ export const Form1Detail = () => {
             <div key={p.id} className="border p-3 rounded mb-4">
               <p><b className="font-semibold text-gray-600">Title:</b> {p.title}</p>
               <p><b className="font-semibold text-gray-600">Team Leader:</b> {p.teamLeader}</p>
-              <p><b className="font-semibold text-gray-600">Objectives:</b> {p.objectives}</p>
+              <p><b className="font-semibold text-gray-600">Objectives:</b></p>
+              <p className="break-words whitespace-normal">{p.objectives || "—"}</p>
 
               {/* Project Team Members */}
               <h4 className="font-semibold text-gray-600">Project Team Members</h4>
@@ -286,6 +305,137 @@ export const Form1Detail = () => {
         )}
       </div>
 
+     {/* Signature Section (Placed right after buttons) */}
+    {/* Signature Section (Placed right after buttons) */}
+    <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">Consent</h2>
+
+    <div className="w-full max-w-5xl mt-6">
+      <table className="w-full border border-collapse">
+        <thead>
+          <tr>
+            {roleId === 2 && <th className="border p-2 text-center">Dean</th>}
+            <th className="border p-2 text-center">ComEx</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            {/* Dean Column */}
+            {roleId === 2 && (
+              <td className="border p-6 text-center align-bottom h-32">
+                {form1[0]?.dean_approved_by ? (
+                  <div className="flex flex-col justify-end h-full">
+                    <p className="font-semibold text-green-600 mb-2">Approved</p>
+                    <p className="font-medium">
+                      {form1[0]?.dean_approver?.firstname}{" "}
+                      {form1[0]?.dean_approver?.lastname}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {new Date(form1[0]?.dean_approve_date).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="italic text-gray-500">Awaiting Approval</p>
+                  </div>
+                )}
+              </td>
+            )}
+
+            {/* ComEx Column */}
+            <td className="border p-6 text-center align-bottom h-32">
+              {form1[0]?.commex_approved_by ? (
+                <div className="flex flex-col justify-end h-full">
+                  <p className="font-semibold text-green-600 mb-2">Approved</p>
+                  <p className="font-medium">
+                    {form1[0]?.commex_approver?.firstname}{" "}
+                    {form1[0]?.commex_approver?.lastname}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {new Date(form1[0]?.commex_approve_date).toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric', 
+                      year: 'numeric' 
+                    })}
+                  </p>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="italic text-gray-500">Awaiting Approval</p>
+                </div>
+              )}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div className="w-full max-w-5xl mt-6">
+      <table className="w-full border border-collapse">
+        <thead>
+          <tr>
+            <th className="border p-2 text-center">Academic Services Director</th>
+            <th className="border p-2 text-center">Academic Director</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            {/* ASD Column */}
+            <td className="border p-6 text-center align-bottom h-32">
+              {form1[0]?.asd_approved_by ? (
+                <div className="flex flex-col justify-end h-full">
+                  <p className="font-semibold text-green-600 mb-2">Approved</p>
+                  <p className="font-medium">
+                    {form1[0]?.asd_approver?.firstname}{" "}
+                    {form1[0]?.asd_approver?.lastname}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {new Date(form1[0]?.asd_approve_date).toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric', 
+                      year: 'numeric' 
+                    })}
+                  </p>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="italic text-gray-500">Awaiting Approval</p>
+                </div>
+              )}
+            </td>
+
+            {/* AD Column */}
+            <td className="border p-6 text-center align-bottom h-32">
+              {form1[0]?.ad_approved_by ? (
+                <div className="flex flex-col justify-end h-full">
+                  <p className="font-semibold text-green-600 mb-2">Approved</p>
+                  <p className="font-medium">
+                    {form1[0]?.ad_approver?.firstname}{" "}
+                    {form1[0]?.ad_approver?.lastname}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {new Date(form1[0]?.ad_approve_date).toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric', 
+                      year: 'numeric' 
+                    })}
+                  </p>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <p className="italic text-gray-500">Awaiting Approval</p>
+                </div>
+              )}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+
       {/* Buttons */}
       <div className="flex gap-2 mt-4">
         {isEventOwner && (
@@ -311,20 +461,16 @@ export const Form1Detail = () => {
             />
           </>
         )}
-        {/* ✅ PDF Download Button */}
-        <Button
-          onClick={() => downloadForm1Pdf(form1, event)}
-          className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-          label="Download PDF"
-        />
-        {/* <Button
-          onClick={handleDownloadPdf}
-          disabled={loading}
-          className={`px-3 py-2 rounded-md text-xs font-semibold ${
-            loading ? "bg-gray-400 cursor-not-allowed" : "bg-indigo-600 text-white"
-          }`}
-          label={loading ? "Generating PDF…" : "Download PDF"}
-        /> */}
+
+       {/* PDF Download Button - Conditionally shown */}
+        {canDownloadPdf && (
+          <Button
+            onClick={() => downloadForm1Pdf(form1, event, owner, roleId)}
+            className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+          >
+            Download PDF
+          </Button>
+        )}
       </div>
 
       {/* Revise Dialog */}

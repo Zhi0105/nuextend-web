@@ -16,6 +16,7 @@ export const Activity = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const data = location.state;
+  console.log(data);
   const { token } = useUserStore((s) => ({ token: s.token }));
   const decryptedToken = token && DecryptString(token);
 
@@ -56,7 +57,7 @@ export const Activity = () => {
       <button
         onClick={() =>
           navigate("/event/activities/report", {
-            state: { data: rowData, user_id: data?.user_id, activities_id: rowData.id, creator_id: data?.user_id },
+            state: { data, user_id: data?.user_id, activities_id: rowData.id, creator_id: data?.user_id },
           })
         }
       >

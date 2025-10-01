@@ -7,23 +7,24 @@ import { useUserStore } from "@_src/store/auth";
 import { Dialog } from "primereact/dialog";
 import { InputTextarea } from "primereact/inputtextarea";
 import { DecryptUser, DecryptString } from "@_src/utils/helpers";
+import { downloadForm14Pdf } from "@_src/utils/pdf/form14Pdf";
 
 export const ViewReport = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { report, creator_id } = location.state || {};
+  const { data, report, creator_id } = location.state || {};
+  console.log(data);
 
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
   const decryptedUser = token ? DecryptUser(user) : null;
   const decryptedToken = token ? DecryptString(token) : null;
   const currentUserId = decryptedUser?.id;
   const currentRoleId = decryptedUser?.role_id;
+  
   const [showRemarksDialog, setShowRemarksDialog] = useState(false);
   const [remarksText, setRemarksText] = useState("");
-
   const [showReviseDialog, setShowReviseDialog] = useState(false);
   const [revisionRemarks, setRevisionRemarks] = useState("");
-
   const [currentReport, setCurrentReport] = useState(report);
   const [loading, setLoading] = useState(false);
 
@@ -41,6 +42,9 @@ export const ViewReport = () => {
   const canApproveOrRevise = [1, 10].includes(currentRoleId) && !hasApproved;
 
   const isCreator = currentUserId === creator_id;
+
+  // PDF Download Logic
+  const canDownloadPdf = currentReport?.is_commex && currentReport?.is_asd;
 
   // Redirect if no report
   useEffect(() => {
@@ -107,292 +111,386 @@ export const ViewReport = () => {
     }
   };
 
-  const [isEditing, setIsEditing] = useState(false); // <-- new
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleRevise = () => {
-    setRevisionRemarks(""); // reset input
-    setIsEditing(true);     // editing mode
+    setRevisionRemarks("");
+    setIsEditing(true);
     setShowReviseDialog(true);
   };
 
   const handleViewRemarks = (remarks) => {
-    setRevisionRemarks(remarks); // show the existing remark
-    setIsEditing(false);         // view-only mode
-    setShowReviseDialog(true);
+    setRemarksText(remarks);
+    setShowRemarksDialog(true);
   };
-const submitRevision = async () => {
-  if (!revisionRemarks.trim()) {
-    toast.info("Remarks are required.");
-    return;
-  }
 
-  try {
-    setLoading(true);
-    await updateForm14Status({
-      token: decryptedToken,
-      id: currentReport.form14_id,
-      event_status_id: 6, // revise
-      remarks: revisionRemarks,
-    });
+  const submitRevision = async () => {
+    if (!revisionRemarks.trim()) {
+      toast.info("Remarks are required.");
+      return;
+    }
 
-    toast.success("Report sent back for revision!");
-    setShowReviseDialog(false);
-    navigate(-1);
-  } catch (error) {
-    console.error("Revise error:", error.response?.data || error.message);
-    toast.error("Failed to send report for revision.");
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+      await updateForm14Status({
+        token: decryptedToken,
+        id: currentReport.form14_id,
+        event_status_id: 6, // revise
+        remarks: revisionRemarks,
+      });
 
-
+      toast.success("Report sent back for revision!");
+      setShowReviseDialog(false);
+      navigate(-1);
+    } catch (error) {
+      console.error("Revise error:", error.response?.data || error.message);
+      toast.error("Failed to send report for revision.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-white w-full flex flex-col items-center xs:pl-0 sm:pl-52 pt-20 px-4">
-      <div className="p-4">
-      {/* 🔹 Approval Status Panel */}
-      <div className="w-full max-w-3xl mb-6 p-4 border rounded bg-gray-50">
-        <h2 className="font-bold mb-2">Approval Status</h2>
+    <div className="project-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
+      <div className="w-full max-w-5xl bg-white shadow rounded-lg p-6 my-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">PROGRESS REPORT</h2>
 
-        {/* Commex Status */}
-        <div className="flex items-center justify-between mb-2">
-          <span>
-            Commex:{" "}
-            {currentReport.is_commex ? (
-              <span className="text-green-600 font-medium">✅ Approved</span>
-            ) : currentReport.commex_remarks ? (
-              <span className="text-red-600 font-medium">✏️ Sent for Revision</span>
-            ) : (
-              <span className="text-gray-600">⏳ Pending</span>
+        {/* 🔹 Approval Status Panel */}
+        <div className="w-full mb-6 p-4 border rounded bg-gray-50">
+          <h2 className="font-bold mb-2">Approval Status</h2>
+
+          {/* Commex Status */}
+          <div className="flex items-center justify-between mb-2">
+            <span>
+              Commex:{" "}
+              {currentReport.is_commex ? (
+                <span className="text-green-600 font-medium">✅ Approved</span>
+              ) : currentReport.commex_remarks ? (
+                <span className="text-red-600 font-medium">✏️ Sent for Revision</span>
+              ) : (
+                <span className="text-gray-600">⏳ Pending</span>
+              )}
+            </span>
+
+            {currentReport.commex_remarks && (
+              <Button
+                label="View Remarks"
+                size="small"
+                className="bg-blue-600 text-white px-2 py-1 rounded text-xs"
+                onClick={() => handleViewRemarks(currentReport.commex_remarks)}
+              />
             )}
-          </span>
+          </div>
 
-          {currentReport.commex_remarks && (
-            <Button
-              label="View Remarks"
-              size="small"
-              severity="info"
-              onClick={() => {
-                setRemarksText(currentReport.commex_remarks || currentReport.asd_remarks);
-                setShowRemarksDialog(true);
-              }}
-            />
-          )}
-        </div>
+          {/* ASD Status */}
+          <div className="flex items-center justify-between">
+            <span>
+              ASD:{" "}
+              {currentReport.is_asd ? (
+                <span className="text-green-600 font-medium">✅ Approved</span>
+              ) : currentReport.asd_remarks ? (
+                <span className="text-red-600 font-medium">✏️ Sent for Revision</span>
+              ) : !currentReport.is_commex ? (
+                <span className="text-gray-600">⏳ Pending Commex approval...</span>
+              ) : (
+                <span className="text-gray-600">⏳ Pending ASD review</span>
+              )}
+            </span>
 
-        {/* ASD Status */}
-        <div className="flex items-center justify-between">
-          <span>
-            ASD:{" "}
-            {currentReport.is_asd ? (
-              <span className="text-green-600 font-medium">✅ Approved</span>
-            ) : currentReport.asd_remarks ? (
-              <span className="text-red-600 font-medium">✏️ Sent for Revision</span>
-            ) : !currentReport.is_commex ? (
-              <span className="text-gray-600">⏳ Pending Commex approval...</span>
-            ) : (
-              <span className="text-gray-600">⏳ Pending ASD review</span>
+            {currentReport.asd_remarks && (
+              <Button
+                label="View Remarks"
+                size="small"
+                className="bg-blue-600 text-white px-2 py-1 rounded text-xs"
+                onClick={() => handleViewRemarks(currentReport.asd_remarks)}
+              />
             )}
-          </span>
-
-          {currentReport.asd_remarks && (
-            <Button
-              label="View Remarks"
-              size="small"
-              severity="info"
-              onClick={() => {
-                setRemarksText(currentReport.commex_remarks || currentReport.asd_remarks);
-                setShowRemarksDialog(true);
-              }}
-            />
-          )}
+          </div>
         </div>
 
-          {/* 🔹 Remarks Popup */}
-          <Dialog
-            header="Remarks"
-            visible={showRemarksDialog}
-            style={{ width: "40vw" }}
-            modal
-            onHide={() => setShowRemarksDialog(false)}
-          >
-            <p className="whitespace-pre-line">{remarksText}</p>
-          </Dialog>
+        {/* Report Details */}
+        <div className="space-y-6">
+          <div className="mb-6">
+            <p className="font-semibold text-gray-600">Objectives:</p>
+            <p className="break-words whitespace-normal">{currentReport.objectives || "N/A"}</p>
+          </div>
 
-          <Dialog
-            header="Revise Report"
-            visible={showReviseDialog}
-            style={{ width: "40vw" }}
-            modal
-            onHide={() => setShowReviseDialog(false)}
-          >
-            <InputTextarea
-              value={revisionRemarks}
-              onChange={(e) => setRevisionRemarks(e.target.value)}
-              rows={5}
-              placeholder="Enter your revision remarks..."
-            />
-            <Button
-              label="Submit Revision"
-              severity="success"
-              loading={loading}
-              onClick={submitRevision}
-            />
-          </Dialog>
-      </div>
-      {/* 🔹 Existing Approve / Revise buttons */}
-      {eventStatusId === 4 && (
-        <div>
-          {/* ... your existing button logic */}
-        </div>
-      )}
-    </div>
-      <h1 className="text-2xl font-semibold mb-4">View Report</h1>
-      
+          <div className="mb-6">
+            <p className="font-semibold text-gray-600">Target Group:</p>
+            <p className="break-words whitespace-normal">{currentReport.target_group || "N/A"}</p>
+          </div>
 
-      {/* Buttons */}
-      <div className="flex gap-2 mb-4 items-center">
-        <Button label="Back" onClick={() => navigate(-1)} />
+          <div className="mb-6">
+            <p className="font-semibold text-gray-600">Description:</p>
+            <p className="break-words whitespace-normal">{currentReport.description || "N/A"}</p>
+          </div>
 
-        {/* Submit button */}
-        {canSubmitOrPullBack && isCreator && eventStatusId !== 4 && !isApprovedByAny && (
-          <Button label="Submit" severity="success" loading={loading} onClick={handleSubmit} />
-        )}
+          <div className="mb-6">
+            <p className="font-semibold text-gray-600">Achievements:</p>
+            <p className="break-words whitespace-normal">{currentReport.achievements || "N/A"}</p>
+          </div>
 
-        {/* Pull-back button: only show if already submitted, not approved, AND user is creator */}
-        {canSubmitOrPullBack && isCreator && [8, 4,].includes(eventStatusId) && !isFullyApproved && (
-          <Button label="Pull-back" severity="danger" loading={loading} onClick={handlePullBack} />
-        )}
-        {isCreator && !isFullyApproved && eventStatusId == 5 && (
-          <Button label="Update" severity="warning" onClick={() => navigate("/create-report-progress", { state: { activities_id: currentReport.activities_id, report: currentReport } })}/>
-        )}
+          <div className="mb-6">
+            <p className="font-semibold text-gray-600">Challenges:</p>
+            <p className="break-words whitespace-normal">{currentReport.challenges || "N/A"}</p>
+          </div>
 
- {[4, 8].includes(eventStatusId) && (
-  <>
-    {/* Commex Approve/Revise (role_id = 1) */}
-    {currentRoleId === 1 && !currentReport.is_commex && (
-      <>
-        <Button
-          label="Approve"
-          severity="success"
-          loading={loading}
-          onClick={handleApprove}
-          tooltip="Approving will mark your approval. ASD can only review after this."
-        />
-        <Button
-          label="Revise"
-          severity="warning"
-          loading={loading}
-          onClick={handleRevise}
-          tooltip="Send report back for revision with remarks"
-        />
-      </>
-    )}
+          <div className="mb-6">
+            <p className="font-semibold text-gray-600">Feedback:</p>
+            <p className="break-words whitespace-normal">{currentReport.feedback || "N/A"}</p>
+          </div>
 
-    {/* ASD Approve/Revise (role_id = 10) */}
-    {currentRoleId === 10 && (
-      <>
-        {!currentReport.is_commex ? (
-          <p className="text-gray-600 italic">⏳ Pending Commex approval...</p>
-        ) : !currentReport.is_asd ? (
-          <>
-            <Button
-              label="Approve"
-              severity="success"
-              loading={loading}
-              onClick={handleApprove}
-              tooltip="Approving will finalize the review process."
-            />
-            <Button
-              label="Revise"
-              severity="warning"
-              loading={loading}
-              onClick={handleRevise}
-              tooltip="Send report back for revision with remarks"
-            />
-          </>
-        ) : (
-          <p className="text-green-600 italic">✅ ASD already approved.</p>
-        )}
-      </>
-    )}
-  </>
-)}
+          <div className="mb-6">
+            <p className="font-semibold text-gray-600">Acknowledgements:</p>
+            <p className="break-words whitespace-normal">{currentReport.acknowledgements || "N/A"}</p>
+          </div>
 
-
-      </div>
-
-      {/* Report Details */}
-      <div className="w-full max-w-3xl space-y-4">
-        <div>
-          <h2 className="font-bold">Objectives:</h2>
-          <p>{currentReport.objectives || "N/A"}</p>
-        </div>
-        <div>
-          <h2 className="font-bold">Target Group:</h2>
-          <p>{currentReport.target_group || "N/A"}</p>
-        </div>
-        <div>
-          <h2 className="font-bold">Description:</h2>
-          <p>{currentReport.description || "N/A"}</p>
-        </div>
-        <div>
-          <h2 className="font-bold">Achievements:</h2>
-          <p>{currentReport.achievements || "N/A"}</p>
-        </div>
-        <div>
-          <h2 className="font-bold">Challenges:</h2>
-          <p>{currentReport.challenges || "N/A"}</p>
-        </div>
-        <div>
-          <h2 className="font-bold">Feedback:</h2>
-          <p>{currentReport.feedback || "N/A"}</p>
-        </div>
-        <div>
-          <h2 className="font-bold">Acknowledgements:</h2>
-          <p>{currentReport.acknowledgements || "N/A"}</p>
-        </div>
-
-        {/* Budget Summaries */}
-        <div className="mt-6">
-          <h2 className="font-bold mb-2">Budget Summaries:</h2>
-          {currentReport.budget_summaries?.length > 0 ? (
-            <table className="w-full border-collapse border border-gray-300">
+          {/* Budget Summaries */}
+          <div className="mb-6">
+            <p className="font-semibold text-gray-600">Budget Summaries:</p>
+            <table className="w-full border mt-2 table-fixed">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="border p-2">Description</th>
-                  <th className="border p-2">Item</th>
-                  <th className="border p-2">Personnel</th>
-                  <th className="border p-2">Quantity</th>
-                  <th className="border p-2">Cost</th>
+                  <th className="border p-2 break-words whitespace-normal">Description</th>
+                  <th className="border p-2 break-words whitespace-normal">Item</th>
+                  <th className="border p-2 break-words whitespace-normal">Personnel</th>
+                  <th className="border p-2 break-words whitespace-normal">Quantity</th>
+                  <th className="border p-2 break-words whitespace-normal">Cost</th>
                 </tr>
               </thead>
               <tbody>
-                {currentReport.budget_summaries.map((b, idx) => (
-                  <tr key={idx} className="text-center">
-                    <td className="border p-2">{b.description || "N/A"}</td>
-                    <td className="border p-2">{b.item || "N/A"}</td>
-                    <td className="border p-2">{b.personnel || "N/A"}</td>
-                    <td className="border p-2">{b.quantity || "N/A"}</td>
-                    <td className="border p-2">{b.cost}</td>
+                {currentReport.budget_summaries?.length > 0 ? (
+                  <>
+                    {currentReport.budget_summaries.map((b, idx) => (
+                      <tr key={idx}>
+                        <td className="border p-2 break-words whitespace-normal">{b.description || "N/A"}</td>
+                        <td className="border p-2 break-words whitespace-normal">{b.item || "N/A"}</td>
+                        <td className="border p-2 break-words whitespace-normal">{b.personnel || "N/A"}</td>
+                        <td className="border p-2 break-words whitespace-normal">{b.quantity || "N/A"}</td>
+                        <td className="border p-2 break-words whitespace-normal">{b.cost || "0"}</td>
+                      </tr>
+                    ))}
+                    <tr className="bg-gray-100 font-bold">
+                      <td className="border p-2 break-words whitespace-normal" colSpan={4}>
+                        Total Budget
+                      </td>
+                      <td className="border p-2 break-words whitespace-normal">
+                        {currentReport.budget_summaries.reduce((sum, b) => sum + Number(b.cost || 0), 0)}
+                      </td>
+                    </tr>
+                  </>
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="border p-2 italic text-gray-500 text-center">
+                      No budget summaries available
+                    </td>
                   </tr>
-                ))}
-                <tr className="text-center font-bold bg-gray-100">
-                  <td className="border p-2" colSpan={4}>
-                    Total budget
-                  </td>
-                  <td className="border p-2">
-                    {currentReport.budget_summaries.reduce((sum, b) => sum + Number(b.cost || 0), 0)}
-                  </td>
-                </tr>
+                )}
               </tbody>
             </table>
-          ) : (
-            <p>No budget summaries available.</p>
-          )}
+          </div>
         </div>
       </div>
+
+      {/* Consent Section - Only ComEx and ASD */}
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">Consent</h2>
+
+      <div className="w-full max-w-5xl mt-6">
+        <table className="w-full border border-collapse">
+          <thead>
+            <tr>
+              <th className="border p-2 text-center">ComEx</th>
+              <th className="border p-2 text-center">Academic Services Director</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              {/* ComEx Column */}
+              <td className="border p-6 text-center align-bottom h-32">
+                {currentReport?.is_commex ? (
+                  <div className="flex flex-col justify-end h-full">
+                    <p className="font-semibold text-green-600 mb-2">Approved</p>
+                    <p className="font-medium">
+                      {currentReport?.commex_approver?.firstname}{" "}
+                      {currentReport?.commex_approver?.lastname}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {currentReport?.commex_approve_date ? 
+                        new Date(currentReport.commex_approve_date).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        }) : ""}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="italic text-gray-500">Awaiting Approval</p>
+                  </div>
+                )}
+              </td>
+
+              {/* ASD Column */}
+              <td className="border p-6 text-center align-bottom h-32">
+                {currentReport?.is_asd ? (
+                  <div className="flex flex-col justify-end h-full">
+                    <p className="font-semibold text-green-600 mb-2">Approved</p>
+                    <p className="font-medium">
+                      {currentReport?.asd_approver?.firstname}{" "}
+                      {currentReport?.asd_approver?.lastname}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {currentReport?.asd_approve_date ? 
+                        new Date(currentReport.asd_approve_date).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric', 
+                          year: 'numeric' 
+                        }) : ""}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="italic text-gray-500">Awaiting Approval</p>
+                  </div>
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Buttons */}
+      <div className="flex gap-2 mt-4">
+        <Button 
+          onClick={() => navigate(-1)}
+          className="bg-gray-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+          label="Back"
+        />
+
+        {/* Submit button */}
+        {canSubmitOrPullBack && isCreator && eventStatusId !== 4 && !isApprovedByAny && (
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label={loading ? "Submitting…" : "Submit"}
+          />
+        )}
+
+        {/* Pull-back button */}
+        {canSubmitOrPullBack && isCreator && [8, 4].includes(eventStatusId) && !isFullyApproved && (
+          <Button
+            onClick={handlePullBack}
+            disabled={loading}
+            className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label={loading ? "Pulling Back…" : "Pull-back"}
+          />
+        )}
+
+        {/* Update button */}
+        {isCreator && !isFullyApproved && eventStatusId == 5 && (
+          <Button
+            onClick={() => navigate("/create-report-progress", { state: { activities_id: currentReport.activities_id, report: currentReport } })}
+            className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label="Update"
+          />
+        )}
+
+        {/* Approve/Revise buttons */}
+        {[4, 8].includes(eventStatusId) && (
+          <>
+            {/* Commex Approve/Revise (role_id = 1) */}
+            {currentRoleId === 1 && !currentReport.is_commex && (
+              <>
+                <Button
+                  onClick={handleApprove}
+                  disabled={loading}
+                  className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+                  label={loading ? "Approving…" : "Approve"}
+                />
+                <Button
+                  onClick={handleRevise}
+                  disabled={loading}
+                  className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+                  label="Revise"
+                />
+              </>
+            )}
+
+            {/* ASD Approve/Revise (role_id = 10) */}
+            {currentRoleId === 10 && (
+              <>
+                {!currentReport.is_commex ? (
+                  <p className="text-gray-600 italic">⏳ Pending Commex approval...</p>
+                ) : !currentReport.is_asd ? (
+                  <>
+                    <Button
+                      onClick={handleApprove}
+                      disabled={loading}
+                      className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+                      label={loading ? "Approving…" : "Approve"}
+                    />
+                    <Button
+                      onClick={handleRevise}
+                      disabled={loading}
+                      className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+                      label="Revise"
+                    />
+                  </>
+                ) : (
+                  <p className="text-green-600 italic">✅ ASD already approved.</p>
+                )}
+              </>
+            )}
+          </>
+        )}
+
+        {/* Use this simple conditional instead */}
+        {canDownloadPdf && (
+          <Button
+            onClick={() => downloadForm14Pdf(currentReport, event, { id: creator_id }, currentRoleId)}
+            className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+          >
+            Download PDF
+          </Button>
+        )}
+      </div>
+
+      {/* Remarks Dialog */}
+      <Dialog
+        header="Remarks"
+        visible={showRemarksDialog}
+        style={{ width: "40vw" }}
+        modal
+        onHide={() => setShowRemarksDialog(false)}
+      >
+        <p className="whitespace-pre-line">{remarksText}</p>
+      </Dialog>
+
+      {/* Revise Dialog */}
+      <Dialog
+        header="Revise Report"
+        visible={showReviseDialog}
+        style={{ width: "50vw" }}
+        modal
+        onHide={() => setShowReviseDialog(false)}
+      >
+        <div className="flex flex-col gap-4 w-full my-4">
+          <InputTextarea
+            value={revisionRemarks}
+            onChange={(e) => setRevisionRemarks(e.target.value)}
+            rows={5}
+            placeholder="Enter your revision remarks..."
+            className="w-full"
+          />
+          <Button
+            label="Submit Revision"
+            severity="success"
+            loading={loading}
+            onClick={submitRevision}
+          />
+        </div>
+      </Dialog>
     </div>
   );
 };

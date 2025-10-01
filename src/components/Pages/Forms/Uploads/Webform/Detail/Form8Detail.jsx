@@ -9,6 +9,7 @@ import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
+import { downloadForm8Pdf } from "@_src/utils/pdf/form8Pdf";
 
 export const Form8Detail = () => {
   const { state } = useLocation();
@@ -30,7 +31,7 @@ export const Form8Detail = () => {
   const form8Data = form8?.[0] || form8;
   
   // Get team leader and members from form1
-  const teamLeader = event?.user ? `${event.user.firstname} ${event.user.middlename} ${event.user.lastname}` : ""// Assuming first member is leader
+  const teamLeader = event?.user ? `${event.user.firstname} ${event.user.middlename} ${event.user.lastname}` : ""
   const teamMembers = form1Data?.team_members || [];
   
   const proposedTitle = event?.eventName;
@@ -62,6 +63,16 @@ export const Form8Detail = () => {
     return true;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form8, isApprover]);
+
+  // PDF Download Logic
+  const canDownloadPdf = useMemo(() => {
+    if (!form8) return false;
+    
+    const formData = form8[0] || form8;
+    
+    // For Form8, only need ComEx approval
+    return formData?.commex_approved_by;
+  }, [form8]);
 
   // ✅ Approve
   const { mutate: doApprove, isLoading: approveLoading } = useMutation({
@@ -134,140 +145,165 @@ export const Form8Detail = () => {
 
   if (!form8) return null;
 
+  const formData = form8[0] || form8;
+
   return (
-    <div className="form8-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
-      <div className="w-full max-w-4xl px-4">
+    <div className="project-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
+      <div className="w-full max-w-5xl bg-white shadow rounded-lg p-6 my-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">TARGET GROUP NEEDS DIAGNOSIS REPORT</h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">NEEDS ASSESSMENT REPORT</h2>
 
-        {/* Needs Assessment Report Content */}
-        <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
-          <h1 className="text-2xl font-bold text-center mb-8 text-gray-800">TARGET GROUP NEEDS DIAGNOSIS REPORT</h1>
-          <h1 className="text-2xl font-bold text-center mb-8 text-gray-800">NEEDS ASSESSMENT REPORT</h1>
+        {/* I. PROPOSED TITLE */}
+        <div className="mb-6">
+          <p className="font-semibold text-gray-600">I. PROPOSED TITLE:</p>
+          <p>{proposedTitle || "No title provided"}</p>
+        </div>
+
+        {/* II. TEAM */}
+        <div className="mb-6">
+          <p className="font-semibold text-gray-600">II. TEAM:</p>
           
-          {/* I. PROPOSED TITLE */}
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-2 text-gray-700">I. PROPOSED TITLE:</h2>
-            <div className="p-3 rounded bg-gray-50 min-h-[40px]">
-              {proposedTitle || "No title provided"}
-            </div>
+          {/* Team Leader */}
+          <div className="ml-4 mt-2">
+            <p className="font-semibold text-gray-600">A. Leader</p>
+            <p>{teamLeader || "No team leader specified"}</p>
           </div>
 
-          {/* II. TEAM */}
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold mb-2 text-gray-700">II. TEAM:</h2>
-            
-             {/* Team Leader */}
-            <div className="mb-3">
-              <h3 className="font-medium mb-1 text-gray-600">A. Leader</h3>
-              <div className="p-3 rounded bg-gray-50">
-                {teamLeader || "No team leader specified"}
-              </div>
-            </div>
-            
-            {/* Team Members */}
-            <div>
-              <h3 className="font-medium mb-1 text-gray-600">B. Members</h3>
-              <div className=" p-3 rounded bg-gray-50">
-                {teamMembers.length > 0 ? (
-                  <ul className="list-disc list-inside space-y-1">
-                    {teamMembers.map((member, index) => (
-                      <li key={member.id || index} className="text-gray-700">
-                        {member.name}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  "No team members specified"
-                )}
-              </div>
-            </div>
+          {/* Team Members */}
+          <div className="ml-4 mt-4">
+            <p className="font-semibold text-gray-600">B. Members</p>
+            <ul className="list-disc ml-6">
+              {teamMembers.length > 0 ? (
+                teamMembers.map((member, index) => (
+                  <li key={member.id || index}>{member.name}</li>
+                ))
+              ) : (
+                <li>No team members specified</li>
+              )}
+            </ul>
           </div>
+        </div>
 
-          {/* III. REPORT PROPER */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4 text-gray-700">III. REPORT PROPER:</h2>
-            
-            {/* A. Introduction */}
-            <div className="mb-6">
-              <h3 className="font-medium mb-2 text-gray-600">A. Introduction</h3>
-              <div className=" p-3 rounded bg-gray-50 min-h-[80px]">
-                {introduction || "No introduction provided"}
-              </div>
-            </div>
+        {/* III. REPORT PROPER */}
+        <h2 className="text-1xl font-bold text-gray-800 mb-6">III. REPORT PROPER:</h2>
 
-            {/* B. Method */}
-            <div className="mb-6">
-              <h3 className="font-medium mb-2 text-gray-600">B. Method</h3>
-              <div className=" p-3 rounded bg-gray-50 min-h-[80px]">
-                {method || "No method provided"}
-              </div>
-            </div>
+        {/* A. Introduction */}
+        <div className="mb-6">
+          <p className="font-semibold text-gray-600">A. Introduction</p>
+          <p className="break-words whitespace-normal">{introduction || "No introduction provided"}</p>
+        </div>
 
-            {/* C. Findings and Discussion */}
-            <div className="mb-6">
-              <h3 className="font-medium mb-2 text-gray-600">C. Findings and Discussion</h3>
-              <div className=" p-3 rounded bg-gray-50 min-h-[80px]">
-                {findingsDiscussion || "No findings and discussion provided"}
-              </div>
-            </div>
+        {/* B. Method */}
+        <div className="mb-6">
+          <p className="font-semibold text-gray-600">B. Method</p>
+          <p className="break-words whitespace-normal">{method || "No method provided"}</p>
+        </div>
 
-            {/* D. Implication for Intervention */}
-            <div className="mb-6">
-              <h3 className="font-medium mb-2 text-gray-600">D. Implication for Intervention</h3>
-              <div className=" p-3 rounded bg-gray-50 min-h-[80px]">
-                {implicationIntervention || "No implication for intervention provided"}
-              </div>
-            </div>
+        {/* C. Findings and Discussion */}
+        <div className="mb-6">
+          <p className="font-semibold text-gray-600">C. Findings and Discussion</p>
+          <p className="break-words whitespace-normal">{findingsDiscussion || "No findings and discussion provided"}</p>
+        </div>
 
-            {/* E. References */}
-            <div>
-              <h3 className="font-medium mb-2 text-gray-600">E. References</h3>
-              <div className=" p-3 rounded bg-gray-50">
-                {references.length > 0 ? (
-                  <ul className="list-disc list-inside space-y-1">
-                    {references.map((reference, index) => (
-                      <li key={reference.id || index} className="text-gray-700">
-                        {reference.reference || `Reference ${index + 1}`}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  "No references provided"
-                )}
-              </div>
-            </div>
-          </div>
+        {/* D. Implication for Intervention */}
+        <div className="mb-6">
+          <p className="font-semibold text-gray-600">D. Implication for Intervention</p>
+          <p className="break-words whitespace-normal">{implicationIntervention || "No implication for intervention provided"}</p>
+        </div>
+
+        {/* E. References */}
+        <div className="mb-6">
+          <p className="font-semibold text-gray-600">E. References</p>
+          <ul className="list-disc ml-6">
+            {references.length > 0 ? (
+              references.map((reference, index) => (
+                <li key={reference.id || index} className="break-words whitespace-normal">
+                  {reference.reference || `Reference ${index + 1}`}
+                </li>
+              ))
+            ) : (
+              <li>No references provided</li>
+            )}
+          </ul>
         </div>
       </div>
 
-      {/* Action Buttons */}
-        <div className="flex gap-2 mb-6">
-          {/* Update button */}
-          {isEventOwner && (
-            <Button
-              onClick={() => navigate("/event/form/008", { state: { formdata: form8 } })}
-              className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
-              label="Update"
-            />
-          )}
+      {/* Consent Section - Only ComEx */}
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">Consent</h2>
 
-          {/* Approve + Revise */}
-          {canAction && (
-            <>
-              <Button
-                onClick={onApprove}
-                disabled={approveLoading}
-                className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-                label={approveLoading ? "Approving…" : "Approve"}
-              />
-              <Button
-                onClick={() => setShowRevise(true)}
-                disabled={rejectLoading}
-                className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-                label="Revise"
-              />
-            </>
-          )}
-        </div>
+      <div className="w-full max-w-5xl mt-6">
+        <table className="w-full border border-collapse">
+          <thead>
+            <tr>
+              <th className="border p-2 text-center">ComEx</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              {/* ComEx Column Only */}
+              <td className="border p-6 text-center align-bottom h-32">
+                {formData?.commex_approved_by ? (
+                  <div className="flex flex-col justify-end h-full">
+                    <p className="font-semibold text-green-600 mb-2">Approved</p>
+                    <p className="font-medium">
+                      {formData?.commex_approver?.firstname}{" "}
+                      {formData?.commex_approver?.lastname}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {new Date(formData?.commex_approve_date).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="italic text-gray-500">Awaiting Approval</p>
+                  </div>
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Buttons */}
+      <div className="flex gap-2 mt-4">
+        {isEventOwner && (
+          <Button
+            onClick={() => navigate("/event/form/008", { state: { formdata: form8 } })}
+            className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label="Update"
+          />
+        )}
+        {canAction && (
+          <>
+            <Button
+              onClick={onApprove}
+              disabled={approveLoading}
+              className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label={approveLoading ? "Approving…" : "Approve"}
+            />
+            <Button
+              onClick={() => setShowRevise(true)}
+              disabled={rejectLoading}
+              className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label="Revise"
+            />
+          </>
+        )}
+
+        {/* PDF Download Button - Conditionally shown */}
+        {canDownloadPdf && (
+          <Button
+            onClick={() => downloadForm8Pdf(form8, event, owner, roleId)}
+            className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+          >
+            Download PDF
+          </Button>
+        )}
+      </div>
 
       {/* Revise Dialog */}
       <Dialog
@@ -284,9 +320,10 @@ export const Form8Detail = () => {
             rules={{ required: true }}
             render={({ field: { onChange, value } }) => (
               <InputTextarea
-                className={`${
-                  errors.remarks ? "border border-red-500" : ""
-                } bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                className={`${errors.remarks ? "border border-red-500" : ""} 
+                  bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm 
+                  rounded-lg focus:ring-primary-600 focus:border-primary-600 
+                  block leading-normal w-full p-2.5`}
                 rows={4}
                 placeholder="Enter your remarks here"
                 value={value}

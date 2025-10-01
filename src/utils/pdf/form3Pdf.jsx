@@ -8,205 +8,236 @@ if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
 } else if (pdfFonts && pdfFonts.vfs) {
   pdfMake.vfs = pdfFonts.vfs;
 }
+// utils/pdfGenerator.js - Add this function for Form3
+export const downloadForm3Pdf = (form3, event, owner, roleId) => {
+  console.log("downloadForm3Pdf called", { form3, event, owner, roleId });
 
-export const downloadForm1Pdf = (form1, event, owner, roleId) => {
-  console.log("downloadForm1Pdf called", { form1, event, owner, roleId });
-
-  if (!form1) {
-    console.warn("downloadForm1Pdf: no form1 provided");
+  if (!form3) {
+    console.warn("downloadForm3Pdf: no form3 provided");
     return;
   }
 
   // support either an array [obj] or a direct object
-  const f = Array.isArray(form1) ? form1[0] || {} : form1 || {};
+  const f = Array.isArray(form3) ? form3[0] || {} : form3 || {};
+  const eventName = event?.eventName || event?.title || f?.title || "—";
 
   const content = [];
 
-  // I. PROGRAM DESCRIPTION header
+  // TITLE
   content.push({
-    text: "I. PROGRAM DESCRIPTION:",
+    text: "TITLE:",
+    bold: true,
+    fontSize: 13,
+    margin: [0, 0, 0, 10],
+  });
+  content.push({ text: eventName, margin: [0, 0, 0, 15] });
+
+  // BRIEF DESCRIPTION AND RATIONALE
+  content.push({
+    text: "BRIEF DESCRIPTION AND RATIONALE OF THE ACTIVITY OR SERVICE:",
+    bold: true,
+    fontSize: 13,
+    margin: [0, 0, 0, 10],
+  });
+  content.push({ text: f?.description || "—", margin: [0, 0, 0, 15] });
+
+  // TARGET GROUP
+  content.push({
+    text: "TARGET GROUP AND REASONS FOR CHOOSING IT:",
+    bold: true,
+    fontSize: 13,
+    margin: [0, 0, 0, 10],
+  });
+  content.push({ text: f?.targetGroup || "—", margin: [0, 0, 0, 15] });
+
+  // DATE OF IMPLEMENTATION
+  content.push({
+    text: "DATE OF IMPLEMENTATION:",
     bold: true,
     fontSize: 13,
     margin: [0, 0, 0, 10],
   });
 
-  // A. Title
-  content.push({ text: "A. Title", bold: true, margin: [0, 4, 0, 2] });
-  content.push({ text: event?.eventName || event?.title || f?.title || "—", margin: [20, 0, 0, 8] });
+  // Date formatting function
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      return dateString;
+    }
+  };
 
-  // B. Implementer
-  content.push({ text: "B. Implementer", bold: true, margin: [0, 4, 0, 2] });
-  const implementer = event?.organization?.name || f?.implementer || "—";
-  content.push({ text: implementer, margin: [20, 0, 0, 8] });
-
-  // C. Extension Program Management Team
   content.push({
-    text: "C. Extension Program Management Team",
-    bold: true,
-    margin: [0, 6, 0, 4],
+    columns: [
+      {
+        width: '50%',
+        stack: [
+          { text: "A. Start Date", bold: true, margin: [0, 0, 0, 5] },
+          { text: f?.startDate ? formatDate(f.startDate) : "—" }
+        ]
+      },
+      {
+        width: '50%',
+        stack: [
+          { text: "B. End Date", bold: true, margin: [0, 0, 0, 5] },
+          { text: f?.endDate ? formatDate(f.endDate) : "—" }
+        ]
+      }
+    ],
+    margin: [0, 0, 0, 15]
   });
 
-  // 1. Program Coordinator (plain numbered text)
-  content.push({ text: "1. Program Coordinator", italics: false, margin: [15, 2, 0, 2] });
-  const coordinator =
-    `${event?.user?.firstname || owner?.firstname || f?.coordinatorFirstName || ""} ${event?.user?.middlename || owner?.middlename || f?.coordinatorMiddleName || ""} ${event?.user?.lastname || owner?.lastname || f?.coordinatorLastName || ""}`.trim()
-      || f?.coordinator
-      || "—";
-  content.push({ text: coordinator, margin: [30, 0, 0, 8] });
+  // V. ACTIVITY PLAN AND BUDGET
+  content.push({
+    text: "V. ACTIVITY PLAN AND BUDGET:",
+    bold: true,
+    fontSize: 13,
+    margin: [0, 0, 0, 10],
+  });
 
-  // 2. Program Team Members (render each name as its own text line to avoid list rendering quirks)
-  content.push({ text: "2. Program Team Members", italics: false, margin: [15, 2, 0, 2] });
-  if (f?.team_members && f.team_members.length > 0) {
-    f.team_members.forEach((m) => {
-      content.push({ text: m?.name || "—", margin: [30, 0, 0, 4] });
-    });
-  } else {
-    content.push({ text: "No team members", margin: [30, 0, 0, 6] });
-  }
-
-  // D. Target Group
-  content.push({ text: "D. Target Group", bold: true, margin: [0, 6, 0, 2] });
-  content.push({ text: event?.target_group || f?.target_group || "—", margin: [20, 0, 0, 8] });
-
-  // E. Cooperating Agencies
-  content.push({ text: "E. Cooperating Agencies", bold: true, margin: [0, 6, 0, 2] });
-  if (f?.cooperating_agencies && f.cooperating_agencies.length > 0) {
-    f.cooperating_agencies.forEach((a) => {
-      content.push({ text: a?.name || "—", margin: [30, 0, 0, 4] });
-    });
-  } else {
-    content.push({ text: "No cooperating agencies", margin: [30, 0, 0, 6] });
-  }
-
-  // F. Duration
-  content.push({ text: "F. Duration", bold: true, margin: [0, 6, 0, 2] });
-  content.push({ text: f?.duration || "—", margin: [20, 0, 0, 8] });
-
-  // G. Proposed Budget
-  content.push({ text: "G. Proposed Budget", bold: true, margin: [0, 6, 0, 2] });
-  const budgetText = event?.budget_proposal ? `₱ ${Number(event.budget_proposal).toLocaleString()}` : "₱ 0.00";
-  content.push({ text: budgetText, margin: [20, 0, 0, 10] });
-
-  // II. PROGRAM DETAILS
-  content.push({ text: "II. PROGRAM DETAILS:", bold: true, fontSize: 13, margin: [0, 10, 0, 8] });
-
-  // A. Background
-  content.push({ text: "A. Background", bold: true, margin: [0, 4, 0, 2] });
-  content.push({ text: f?.background || "—", margin: [20, 0, 0, 8] });
-
-  // B. Overall Goal
-  content.push({ text: "B. Overall Goal", bold: true, margin: [0, 4, 0, 2] });
-  content.push({ text: f?.overall_goal || "—", margin: [20, 0, 0, 8] });
-
-  // C. Component Projects - table
-  content.push({ text: "C. Component Projects, Outcomes, and Budget", bold: true, margin: [0, 6, 0, 4] });
-
-  const componentBody = [
+  const activityPlanBody = [
     [
-      { text: "Title", bold: true },
-      { text: "Outcomes", bold: true },
-      { text: "Budget", bold: true },
+      { text: "Objectives", bold: true, fontSize: 10 },
+      { text: "Activities", bold: true, fontSize: 10 },
+      { text: "Outputs", bold: true, fontSize: 10 },
+      { text: "Personnel", bold: true, fontSize: 10 },
+      { text: "Budget", bold: true, fontSize: 10 },
     ],
   ];
 
-  if (f?.component_projects && f.component_projects.length > 0) {
-    f.component_projects.forEach((c) => {
-      componentBody.push([
-        c?.title || "—",
-        c?.outcomes || "—",
-        c?.budget ? `₱ ${c.budget}` : "₱ 0.00",
+  if (f?.activity_plans_budgets && f.activity_plans_budgets.length > 0) {
+    f.activity_plans_budgets.forEach((activity) => {
+      activityPlanBody.push([
+        { text: activity?.objectives || "—", fontSize: 9 },
+        { text: activity?.activities || "—", fontSize: 9 },
+        { text: activity?.outputs || "—", fontSize: 9 },
+        { text: activity?.personnel || "—", fontSize: 9 },
+        { text: activity?.budget ? `₱ ${parseFloat(activity.budget).toLocaleString()}` : "₱ 0.00", fontSize: 9 },
       ]);
     });
   } else {
-    componentBody.push(["—", "—", "—"]);
+    activityPlanBody.push([
+      { text: "—", fontSize: 9 },
+      { text: "—", fontSize: 9 },
+      { text: "—", fontSize: 9 },
+      { text: "—", fontSize: 9 },
+      { text: "—", fontSize: 9 },
+    ]);
   }
 
   content.push({
-    table: { headerRows: 1, widths: ["30%", "50%", "20%"], body: componentBody },
+    table: {
+      headerRows: 1,
+      widths: ["20%", "20%", "20%", "20%", "20%"],
+      body: activityPlanBody,
+    },
     layout: { dontBreakRows: true, keepWithHeaderRows: 1 },
-    margin: [10, 0, 0, 10],
+    margin: [0, 0, 0, 15],
   });
 
-  // Scholarly Connection
-  content.push({ text: "Scholarly Connection", bold: true, margin: [0, 4, 0, 2] });
-  content.push({ text: f?.scholarly_connection || "—", margin: [20, 0, 0, 10] });
+  // VI. DETAILED BUDGET
+  content.push({
+    text: "VI. DETAILED BUDGET:",
+    bold: true,
+    fontSize: 13,
+    margin: [0, 0, 0, 10],
+  });
 
-  // III. PROJECT DETAILS
-  content.push({ text: "III. PROJECT DETAILS:", bold: true, fontSize: 13, margin: [0, 10, 0, 8] });
+  const detailedBudgetBody = [
+    [
+      { text: "Budget Item", bold: true, fontSize: 10 },
+      { text: "Details or Particulars", bold: true, fontSize: 10 },
+      { text: "Quantity", bold: true, fontSize: 10 },
+      { text: "Amount", bold: true, fontSize: 10 },
+      { text: "Total", bold: true, fontSize: 10 },
+    ],
+  ];
 
-  if (f?.projects && f.projects.length > 0) {
-    f.projects.forEach((p, index) => {
-      // Project Header
-      content.push({
-        text: `Project ${index + 1}: ${p?.title || "—"}`,
-        bold: true,
-        fontSize: 12,
-        margin: [0, 8, 0, 6],
-      });
-
-      // Team Leader
-      content.push({
-        text: `Team Leader: ${p?.teamLeader || "—"}`,
-        margin: [20, 0, 0, 4],
-      });
-
-      // Team Members
-      content.push({ text: "Project Team Members:", italics: true, margin: [20, 2, 0, 2] });
-      if (p?.team_members && p.team_members.length > 0) {
-        p.team_members.forEach((tm) => {
-          content.push({ text: tm?.name || "—", margin: [30, 0, 0, 4] });
-        });
-      } else {
-        content.push({ text: "No team members", margin: [30, 0, 0, 6] });
-      }
-
-      // Objectives
-      content.push({ text: "Objectives:", italics: true, margin: [20, 6, 0, 2] });
-      content.push({ text: p?.objectives || "—", margin: [30, 0, 0, 6] });
-
-      // Budget Summary
-      content.push({ text: "Budget Summary", italics: true, margin: [20, 8, 0, 4] });
-
-      const budgetBody = [
-        [
-          { text: "Activities", bold: true },
-          { text: "Outputs", bold: true },
-          { text: "Timeline", bold: true },
-          { text: "Personnel", bold: true },
-          { text: "Budget", bold: true },
-        ],
-      ];
-
-      if (p?.budget_summaries && p.budget_summaries.length > 0) {
-        p.budget_summaries.forEach((b) => {
-          budgetBody.push([
-            b?.activities || "—",
-            b?.outputs || "—",
-            b?.timeline || "—",
-            b?.personnel || "—",
-            b?.budget ? `₱ ${Number(b.budget).toLocaleString()}` : "₱ 0.00",
-          ]);
-        });
-      } else {
-        budgetBody.push(["—", "—", "—", "—", "—"]);
-      }
-
-      content.push({
-        table: {
-          headerRows: 1,
-          widths: ["20%", "20%", "20%", "20%", "20%"],
-          body: budgetBody,
-        },
-        layout: { dontBreakRows: true, keepWithHeaderRows: 1 },
-        margin: [30, 0, 0, 10],
-      });
+  if (f?.detailed_budgets && f.detailed_budgets.length > 0) {
+    f.detailed_budgets.forEach((item) => {
+      detailedBudgetBody.push([
+        { text: item?.item || "—", fontSize: 9 },
+        { text: item?.details || "—", fontSize: 9 },
+        { text: item?.quantity || "—", fontSize: 9 },
+        { text: item?.amount ? `₱ ${parseFloat(item.amount).toLocaleString()}` : "₱ 0.00", fontSize: 9 },
+        { text: item?.amount ? `₱ ${parseFloat(item.amount).toLocaleString()}` : "₱ 0.00", fontSize: 9 },
+      ]);
     });
   } else {
-    content.push({ text: "No projects", margin: [0, 6, 0, 6] });
+    detailedBudgetBody.push([
+      { text: "—", fontSize: 9 },
+      { text: "—", fontSize: 9 },
+      { text: "—", fontSize: 9 },
+      { text: "—", fontSize: 9 },
+      { text: "—", fontSize: 9 },
+    ]);
   }
 
+  content.push({
+    table: {
+      headerRows: 1,
+      widths: ["20%", "25%", "15%", "20%", "20%"],
+      body: detailedBudgetBody,
+    },
+    layout: { dontBreakRows: true, keepWithHeaderRows: 1 },
+    margin: [0, 0, 0, 15],
+  });
 
-    // PREPARED BY SECTION - Only show for roleId 3 (student) or 4 (faculty)
+  // VII. BUDGET SOURCING
+  content.push({
+    text: "VII. BUDGET SOURCING:",
+    bold: true,
+    fontSize: 13,
+    margin: [0, 0, 0, 10],
+  });
+
+  const budgetSourcingBody = [
+    [
+      { text: "Counterpart of the University", bold: true, fontSize: 10 },
+      { text: "Counterpart of the Outreach Group", bold: true, fontSize: 10 },
+      { text: "Counterpart of the Target Group", bold: true, fontSize: 10 },
+      { text: "Other Source(s) of Funding", bold: true, fontSize: 10 },
+      { text: "Total", bold: true, fontSize: 10 },
+    ],
+  ];
+
+  if (f?.budget_sourcings && f.budget_sourcings.length > 0) {
+    f.budget_sourcings.forEach((item) => {
+      budgetSourcingBody.push([
+        { text: item?.university || "—", fontSize: 9 },
+        { text: item?.outreachGroup || "—", fontSize: 9 },
+        { text: item?.service || "—", fontSize: 9 },
+        { text: item?.other || "—", fontSize: 9 },
+        { text: item?.total ? `₱ ${parseFloat(item.total).toLocaleString()}` : "₱ 0.00", fontSize: 9 },
+      ]);
+    });
+  } else {
+    budgetSourcingBody.push([
+      { text: "—", fontSize: 9 },
+      { text: "—", fontSize: 9 },
+      { text: "—", fontSize: 9 },
+      { text: "—", fontSize: 9 },
+      { text: "—", fontSize: 9 },
+    ]);
+  }
+
+  content.push({
+    table: {
+      headerRows: 1,
+      widths: ["20%", "20%", "20%", "20%", "20%"],
+      body: budgetSourcingBody,
+    },
+    layout: { dontBreakRows: true, keepWithHeaderRows: 1 },
+    margin: [0, 0, 0, 20],
+  });
+
+  // PREPARED BY SECTION - Only show for roleId 3 (student) or 4 (faculty)
   content.push({ 
     text: "Prepared By:", 
     bold: true, 
@@ -215,12 +246,12 @@ export const downloadForm1Pdf = (form1, event, owner, roleId) => {
   });
 
   // Get coordinator details
-  const coordinatorFirstName = event?.user?.firstname || owner?.firstname || f?.coordinatorFirstName || "";
-  const coordinatorMiddleName = event?.user?.middlename || owner?.middlename || f?.coordinatorMiddleName || "";
-  const coordinatorLastName = event?.user?.lastname || owner?.lastname || f?.coordinatorLastName || "";
+  const coordinatorFirstName = event?.user?.firstname || owner?.firstname || "";
+  const coordinatorMiddleName = event?.user?.middlename || owner?.middlename || "";
+  const coordinatorLastName = event?.user?.lastname || owner?.lastname || "";
   const coordinatorFullName = `${coordinatorFirstName} ${coordinatorMiddleName} ${coordinatorLastName}`.trim();
-  const coordinatorContact = event?.user?.contact || owner?.contact || f?.coordinatorContact || "—";
-  const coordinatorEmail = event?.user?.email || owner?.email || f?.coordinatorEmail || "—";
+  const coordinatorContact = event?.user?.contact || owner?.contact || "—";
+  const coordinatorEmail = event?.user?.email || owner?.email || "—";
 
   // Checkboxes for Faculty Member / Student - only show for roleId 3 or 4
   if (roleId === 3 || roleId === 4) {
@@ -258,7 +289,8 @@ export const downloadForm1Pdf = (form1, event, owner, roleId) => {
     ],
     margin: [0, 0, 0, 20]
   });
-  // CONSENT SECTION
+
+  // CONSENT SECTION - Same as Form1 and Form2
   content.push({ 
     text: "Consent", 
     bold: true, 
@@ -477,7 +509,7 @@ export const downloadForm1Pdf = (form1, event, owner, roleId) => {
 
   content.push(secondApprovalTable);
 
-    // RECEIVED BY SECTION - at the very bottom
+  // RECEIVED BY SECTION - at the very bottom
   content.push({ 
     text: "Received By:", 
     bold: true, 
@@ -506,8 +538,8 @@ export const downloadForm1Pdf = (form1, event, owner, roleId) => {
               {
                 width: '60%',
                 stack: [
-                  { text: 'Signature Over Printed Name', margin: [0, 20, 0, 5] },
-                  { text: ' ', margin: [0, 15, 0, 0] }
+                  { text: ' ', margin: [0, 15, 0, 0] },
+                  { text: 'Signature Over Printed Name', margin: [0, 20, 0, 5] }
                 ]
               },
               {
@@ -561,5 +593,5 @@ export const downloadForm1Pdf = (form1, event, owner, roleId) => {
     pageMargins: [40, 40, 40, 40],
   };
 
-  pdfMake.createPdf(docDefinition).download("form1-proposal.pdf");
+  pdfMake.createPdf(docDefinition).download("form3-outreach-proposal.pdf");
 };

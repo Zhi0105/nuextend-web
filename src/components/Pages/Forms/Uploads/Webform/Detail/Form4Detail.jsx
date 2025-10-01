@@ -9,6 +9,7 @@ import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
+import { downloadForm4Pdf } from "@_src/utils/pdf/form4Pdf";
 
 // ✅ Buttons: UPDATE + APPROVE + REVISE + CHECKLIST + DOWNLOAD PDF
 export const Form4Detail = () => {
@@ -42,13 +43,13 @@ export const Form4Detail = () => {
   };
 
   const canAction = useMemo(() => {
-    if (!form4) return false;
-    if (!isApprover) return false;
-    if (hasUserRoleApproved(form4[0])) return false;
-    if (form4.status === "approved") return false;
-    return true;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form4, isApprover]);
+  if (!form4) return false;
+  if (!isApprover) return false;
+  if (hasUserRoleApproved(form4)) return false; // Remove [0] since form4 is the object
+  if (form4.status === "approved") return false;
+  return true;
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [form4, isApprover]);
 
   const isChecked = (key) => {
     const v = form4?.[key];
@@ -107,6 +108,22 @@ export const Form4Detail = () => {
   };
 
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;
+
+  const canDownloadPdf = useMemo(() => {
+  if (!form4) return false;
+  
+  // For ComEx (roleId 1) and Faculty (roleId 4) - need ComEx and ASD approvals
+  if ([1, 4].includes(roleId)) {
+    return form4?.commex_approved_by && form4?.asd_approved_by;
+  }
+  
+  // For Student (roleId 3) - need ComEx and either ASD or Dean approval
+  if (roleId === 3) {
+    return form4?.commex_approved_by && (form4?.asd_approved_by || form4?.dean_approved_by);
+  }
+  
+  return false;
+}, [form4, roleId]);
 
  
 
@@ -227,9 +244,110 @@ export const Form4Detail = () => {
           </>
         )}
         {/* ✅ PDF Button */}
-       
+        {canDownloadPdf && (
+          <Button
+            onClick={() => downloadForm4Pdf(form4, checklist, roleId, owner)}
+            className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label="Download PDF"
+          />
+        )}
       </div>
 
+{/* Consent Section */}
+<h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">Consent</h2>
+
+<div className="w-full max-w-5xl mt-6">
+  <table className="w-full border border-collapse table-fixed">
+    <colgroup>
+      <col className="w-1/2" />
+      <col className="w-1/2" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th className="border p-2 text-center w-1/2">ComEx</th>
+        <th className="border p-2 text-center w-1/2">Academic Services Director / Dean</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        {/* ComEx Column */}
+        <td className="border p-6 text-center align-bottom h-32 w-1/2">
+          {form4?.commex_approved_by ? (
+            <div className="flex flex-col justify-end h-full">
+              <p className="font-semibold text-green-600 mb-2">Approved</p>
+              <p className="font-medium">
+                {form4?.commex_approver?.firstname}{" "}
+                {form4?.commex_approver?.lastname}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                {new Date(form4?.commex_approve_date).toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric', 
+                  year: 'numeric' 
+                })}
+              </p>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <p className="italic text-gray-500">Awaiting Approval</p>
+            </div>
+          )}
+        </td>
+
+        {/* ASD/Dean Column - Show only one approver based on role requirements */}
+        <td className="border p-6 text-center align-bottom h-32 w-1/2">
+          {/* For role 3 (student) - show either ASD or Dean, whichever approved first */}
+          {[1, 4].includes(roleId) ? (
+            // For ComEx (1) and Faculty (4) - only need ASD
+            form4?.asd_approved_by ? (
+              <div className="flex flex-col justify-end h-full">
+                <p className="font-semibold text-green-600 mb-2">Approved</p>
+                <p className="font-medium">
+                  {form4?.asd_approver?.firstname} {form4?.asd_approver?.lastname}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  {new Date(form4?.asd_approve_date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="italic text-gray-500">Awaiting Academic Services Director Approval</p>
+              </div>
+            )
+          ) : (
+            // For other roles (including student role 3) - show whichever approved first
+            form4?.asd_approved_by || form4?.dean_approved_by ? (
+              <div className="flex flex-col justify-end h-full">
+                <p className="font-semibold text-green-600 mb-2">Approved</p>
+                <p className="font-medium">
+                  {form4?.asd_approved_by ? 
+                    `${form4.asd_approver?.firstname} ${form4.asd_approver?.lastname}` :
+                    `${form4.dean_approver?.firstname} ${form4.dean_approver?.lastname}`
+                  }
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  {new Date(form4?.asd_approve_date || form4?.dean_approve_date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="italic text-gray-500">Awaiting Approval</p>
+              </div>
+            )
+          )}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
       {/* Revise Dialog */}
       <Dialog header="Remarks" visible={showRevise} style={{ width: "50vw" }} onHide={() => setShowRevise(false)} modal={false}>
         <form onSubmit={handleSubmit(onSubmitRevise)} className="flex flex-col gap-4 w-full my-4">

@@ -9,204 +9,269 @@ if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
   pdfMake.vfs = pdfFonts.vfs;
 }
 
-export const downloadForm1Pdf = (form1, event, owner, roleId) => {
-  console.log("downloadForm1Pdf called", { form1, event, owner, roleId });
+export const downloadForm2Pdf = (form2, event, owner, roleId) => {
+  console.log("downloadForm2Pdf called", { form2, event, owner, roleId });
 
-  if (!form1) {
-    console.warn("downloadForm1Pdf: no form1 provided");
+  if (!form2) {
+    console.warn("downloadForm2Pdf: no form2 provided");
     return;
   }
 
   // support either an array [obj] or a direct object
-  const f = Array.isArray(form1) ? form1[0] || {} : form1 || {};
+  const f = Array.isArray(form2) ? form2[0] || {} : form2 || {};
+  const eventName = event?.eventName || event?.title || f?.title || "—";
 
   const content = [];
 
-  // I. PROGRAM DESCRIPTION header
+  // I. PROJECT DESCRIPTION header
   content.push({
-    text: "I. PROGRAM DESCRIPTION:",
+    text: "I. PROJECT DESCRIPTION:",
     bold: true,
     fontSize: 13,
     margin: [0, 0, 0, 10],
   });
 
   // A. Title
-  content.push({ text: "A. Title", bold: true, margin: [0, 4, 0, 2] });
-  content.push({ text: event?.eventName || event?.title || f?.title || "—", margin: [20, 0, 0, 8] });
+  content.push({ text: "A. Project Title", bold: true, margin: [0, 4, 0, 2] });
+  content.push({ text: eventName, margin: [20, 0, 0, 8] });
 
-  // B. Implementer
-  content.push({ text: "B. Implementer", bold: true, margin: [0, 4, 0, 2] });
-  const implementer = event?.organization?.name || f?.implementer || "—";
-  content.push({ text: implementer, margin: [20, 0, 0, 8] });
+  // B. Type of Project
+  content.push({ text: "B. Type of Project", bold: true, margin: [0, 4, 0, 2] });
+  content.push({ text: f?.event_type?.name || "—", margin: [20, 0, 0, 8] });
 
-  // C. Extension Program Management Team
-  content.push({
-    text: "C. Extension Program Management Team",
-    bold: true,
-    margin: [0, 6, 0, 4],
-  });
+  // C. Project Proponent(s)
+  content.push({ text: "C. Project Proponent(s)", bold: true, margin: [0, 4, 0, 2] });
+  content.push({ text: f?.proponents || "—", margin: [20, 0, 0, 8] });
 
-  // 1. Program Coordinator (plain numbered text)
-  content.push({ text: "1. Program Coordinator", italics: false, margin: [15, 2, 0, 2] });
-  const coordinator =
-    `${event?.user?.firstname || owner?.firstname || f?.coordinatorFirstName || ""} ${event?.user?.middlename || owner?.middlename || f?.coordinatorMiddleName || ""} ${event?.user?.lastname || owner?.lastname || f?.coordinatorLastName || ""}`.trim()
-      || f?.coordinator
-      || "—";
-  content.push({ text: coordinator, margin: [30, 0, 0, 8] });
+  // D. Project Collaborator(s)
+  content.push({ text: "D. Project Collaborator(s)", bold: true, margin: [0, 4, 0, 2] });
+  content.push({ text: f?.collaborators || "—", margin: [20, 0, 0, 8] });
 
-  // 2. Program Team Members (render each name as its own text line to avoid list rendering quirks)
-  content.push({ text: "2. Program Team Members", italics: false, margin: [15, 2, 0, 2] });
-  if (f?.team_members && f.team_members.length > 0) {
-    f.team_members.forEach((m) => {
-      content.push({ text: m?.name || "—", margin: [30, 0, 0, 4] });
-    });
-  } else {
-    content.push({ text: "No team members", margin: [30, 0, 0, 6] });
-  }
+  // E. Number of Participants
+  content.push({ text: "E. Number of Participants", bold: true, margin: [0, 4, 0, 2] });
+  content.push({ text: f?.participants || "—", margin: [20, 0, 0, 8] });
 
-  // D. Target Group
-  content.push({ text: "D. Target Group", bold: true, margin: [0, 6, 0, 2] });
-  content.push({ text: event?.target_group || f?.target_group || "—", margin: [20, 0, 0, 8] });
+  // F. Project Partner(s)
+  content.push({ text: "F. Project Partner(s)", bold: true, margin: [0, 4, 0, 2] });
+  content.push({ text: f?.partners || "—", margin: [20, 0, 0, 8] });
 
-  // E. Cooperating Agencies
-  content.push({ text: "E. Cooperating Agencies", bold: true, margin: [0, 6, 0, 2] });
-  if (f?.cooperating_agencies && f.cooperating_agencies.length > 0) {
-    f.cooperating_agencies.forEach((a) => {
-      content.push({ text: a?.name || "—", margin: [30, 0, 0, 4] });
-    });
-  } else {
-    content.push({ text: "No cooperating agencies", margin: [30, 0, 0, 6] });
-  }
+  // G. Date of Implementation
+  content.push({ text: "G. Date of Implementation and Duration in Hours", bold: true, margin: [0, 4, 0, 2] });
+  content.push({ text: f?.implementationDate || "—", margin: [20, 0, 0, 8] });
 
-  // F. Duration
-  content.push({ text: "F. Duration", bold: true, margin: [0, 6, 0, 2] });
-  content.push({ text: f?.duration || "—", margin: [20, 0, 0, 8] });
+  // H. Area of Project Implementation
+  content.push({ text: "H. Area of Project Implementation", bold: true, margin: [0, 4, 0, 2] });
+  content.push({ text: f?.area || "—", margin: [20, 0, 0, 8] });
 
-  // G. Proposed Budget
-  content.push({ text: "G. Proposed Budget", bold: true, margin: [0, 6, 0, 2] });
-  const budgetText = event?.budget_proposal ? `₱ ${Number(event.budget_proposal).toLocaleString()}` : "₱ 0.00";
-  content.push({ text: budgetText, margin: [20, 0, 0, 10] });
+  // I. Budget Requirement
+  content.push({ text: "I. Budget Requirement", bold: true, margin: [0, 4, 0, 2] });
+  const budgetReqText = f?.budgetRequirement ? `₱ ${Number(f.budgetRequirement).toLocaleString()}` : "₱ 0.00";
+  content.push({ text: budgetReqText, margin: [20, 0, 0, 8] });
 
-  // II. PROGRAM DETAILS
-  content.push({ text: "II. PROGRAM DETAILS:", bold: true, fontSize: 13, margin: [0, 10, 0, 8] });
+  // J. Budget Requested
+  content.push({ text: "J. Budget Requested", bold: true, margin: [0, 4, 0, 2] });
+  const budgetReqdText = f?.budgetRequested ? `₱ ${Number(f.budgetRequested).toLocaleString()}` : "₱ 0.00";
+  content.push({ text: budgetReqdText, margin: [20, 0, 0, 10] });
 
-  // A. Background
-  content.push({ text: "A. Background", bold: true, margin: [0, 4, 0, 2] });
-  content.push({ text: f?.background || "—", margin: [20, 0, 0, 8] });
+  // II. BACKGROUND/SITUATION ANALYSIS
+  content.push({ text: "II. BACKGROUND/SITUATION ANALYSIS:", bold: true, fontSize: 13, margin: [0, 10, 0, 8] });
+  content.push({ text: f?.background || "—", margin: [0, 0, 0, 10] });
 
-  // B. Overall Goal
-  content.push({ text: "B. Overall Goal", bold: true, margin: [0, 4, 0, 2] });
-  content.push({ text: f?.overall_goal || "—", margin: [20, 0, 0, 8] });
+  // III. PROJECT OBJECTIVES
+  content.push({ text: "III. PROJECT OBJECTIVES:", bold: true, fontSize: 13, margin: [0, 10, 0, 8] });
 
-  // C. Component Projects - table
-  content.push({ text: "C. Component Projects, Outcomes, and Budget", bold: true, margin: [0, 6, 0, 4] });
-
-  const componentBody = [
+  const objectivesBody = [
     [
-      { text: "Title", bold: true },
-      { text: "Outcomes", bold: true },
-      { text: "Budget", bold: true },
+      { text: "Objectives", bold: true },
+      { text: "Strategies", bold: true },
     ],
   ];
 
-  if (f?.component_projects && f.component_projects.length > 0) {
-    f.component_projects.forEach((c) => {
-      componentBody.push([
-        c?.title || "—",
-        c?.outcomes || "—",
-        c?.budget ? `₱ ${c.budget}` : "₱ 0.00",
+  if (f?.objectives && f.objectives.length > 0) {
+    f.objectives.forEach((obj) => {
+      objectivesBody.push([
+        obj?.objectives || "—",
+        obj?.strategies || "—",
       ]);
     });
   } else {
-    componentBody.push(["—", "—", "—"]);
+    objectivesBody.push(["—", "—"]);
   }
 
   content.push({
-    table: { headerRows: 1, widths: ["30%", "50%", "20%"], body: componentBody },
+    table: { headerRows: 1, widths: ["50%", "50%"], body: objectivesBody },
     layout: { dontBreakRows: true, keepWithHeaderRows: 1 },
-    margin: [10, 0, 0, 10],
+    margin: [0, 0, 0, 10],
   });
 
-  // Scholarly Connection
-  content.push({ text: "Scholarly Connection", bold: true, margin: [0, 4, 0, 2] });
-  content.push({ text: f?.scholarly_connection || "—", margin: [20, 0, 0, 10] });
+  // IV. DESIRED IMPACT AND OUTCOME
+  content.push({ text: "IV. DESIRED IMPACT AND OUTCOME OF THE PROJECT:", bold: true, fontSize: 13, margin: [0, 10, 0, 8] });
 
-  // III. PROJECT DETAILS
-  content.push({ text: "III. PROJECT DETAILS:", bold: true, fontSize: 13, margin: [0, 10, 0, 8] });
+  const impactBody = [
+    [
+      { text: "Impact", bold: true },
+      { text: "Outcome", bold: true },
+      { text: "Linkage", bold: true },
+    ],
+  ];
 
-  if (f?.projects && f.projects.length > 0) {
-    f.projects.forEach((p, index) => {
-      // Project Header
-      content.push({
-        text: `Project ${index + 1}: ${p?.title || "—"}`,
-        bold: true,
-        fontSize: 12,
-        margin: [0, 8, 0, 6],
-      });
-
-      // Team Leader
-      content.push({
-        text: `Team Leader: ${p?.teamLeader || "—"}`,
-        margin: [20, 0, 0, 4],
-      });
-
-      // Team Members
-      content.push({ text: "Project Team Members:", italics: true, margin: [20, 2, 0, 2] });
-      if (p?.team_members && p.team_members.length > 0) {
-        p.team_members.forEach((tm) => {
-          content.push({ text: tm?.name || "—", margin: [30, 0, 0, 4] });
-        });
-      } else {
-        content.push({ text: "No team members", margin: [30, 0, 0, 6] });
-      }
-
-      // Objectives
-      content.push({ text: "Objectives:", italics: true, margin: [20, 6, 0, 2] });
-      content.push({ text: p?.objectives || "—", margin: [30, 0, 0, 6] });
-
-      // Budget Summary
-      content.push({ text: "Budget Summary", italics: true, margin: [20, 8, 0, 4] });
-
-      const budgetBody = [
-        [
-          { text: "Activities", bold: true },
-          { text: "Outputs", bold: true },
-          { text: "Timeline", bold: true },
-          { text: "Personnel", bold: true },
-          { text: "Budget", bold: true },
-        ],
-      ];
-
-      if (p?.budget_summaries && p.budget_summaries.length > 0) {
-        p.budget_summaries.forEach((b) => {
-          budgetBody.push([
-            b?.activities || "—",
-            b?.outputs || "—",
-            b?.timeline || "—",
-            b?.personnel || "—",
-            b?.budget ? `₱ ${Number(b.budget).toLocaleString()}` : "₱ 0.00",
-          ]);
-        });
-      } else {
-        budgetBody.push(["—", "—", "—", "—", "—"]);
-      }
-
-      content.push({
-        table: {
-          headerRows: 1,
-          widths: ["20%", "20%", "20%", "20%", "20%"],
-          body: budgetBody,
-        },
-        layout: { dontBreakRows: true, keepWithHeaderRows: 1 },
-        margin: [30, 0, 0, 10],
-      });
+  if (f?.impact_outcomes && f.impact_outcomes.length > 0) {
+    f.impact_outcomes.forEach((impact) => {
+      impactBody.push([
+        impact?.impact || "—",
+        impact?.outcome || "—",
+        impact?.linkage || "—",
+      ]);
     });
   } else {
-    content.push({ text: "No projects", margin: [0, 6, 0, 6] });
+    impactBody.push(["—", "—", "—"]);
   }
 
+  content.push({
+    table: { headerRows: 1, widths: ["33%", "33%", "34%"], body: impactBody },
+    layout: { dontBreakRows: true, keepWithHeaderRows: 1 },
+    margin: [0, 0, 0, 10],
+  });
 
-    // PREPARED BY SECTION - Only show for roleId 3 (student) or 4 (faculty)
+  // V. RISK MANAGEMENT
+  content.push({ text: "V. RISK MANAGEMENT:", bold: true, fontSize: 13, margin: [0, 10, 0, 8] });
+
+  const riskBody = [
+    [
+      { text: "Risk Identification", bold: true },
+      { text: "Risk Mitigation", bold: true },
+    ],
+  ];
+
+  if (f?.risks && f.risks.length > 0) {
+    f.risks.forEach((risk) => {
+      riskBody.push([
+        risk?.risk_identification || "—",
+        risk?.risk_mitigation || "—",
+      ]);
+    });
+  } else {
+    riskBody.push(["—", "—"]);
+  }
+
+  content.push({
+    table: { headerRows: 1, widths: ["50%", "50%"], body: riskBody },
+    layout: { dontBreakRows: true, keepWithHeaderRows: 1 },
+    margin: [0, 0, 0, 10],
+  });
+
+  // VI. PROJECT ORGANIZATION AND STAFFING
+  content.push({ text: "VI. PROJECT ORGANIZATION AND STAFFING:", bold: true, fontSize: 13, margin: [0, 10, 0, 8] });
+
+  const staffingBody = [
+    [
+      { text: "Office Staff Designated", bold: true },
+      { text: "Responsibilities", bold: true },
+      { text: "Contact Details", bold: true },
+    ],
+  ];
+
+  if (f?.staffings && f.staffings.length > 0) {
+    f.staffings.forEach((staff) => {
+      staffingBody.push([
+        staff?.staff || "—",
+        staff?.responsibilities || "—",
+        staff?.contact || "—",
+      ]);
+    });
+  } else {
+    staffingBody.push(["—", "—", "—"]);
+  }
+
+  content.push({
+    table: { headerRows: 1, widths: ["33%", "34%", "33%"], body: staffingBody },
+    layout: { dontBreakRows: true, keepWithHeaderRows: 1 },
+    margin: [0, 0, 0, 10],
+  });
+
+  // VII. PROJECT WORK PLAN
+  content.push({ text: "VII. PROJECT WORK PLAN:", bold: true, fontSize: 13, margin: [0, 10, 0, 8] });
+
+  const workPlanBody = [
+    [
+      { text: "Phases of Project and Date", bold: true, fontSize: 8 },
+      { text: "Activities", bold: true, fontSize: 8 },
+      { text: "Targets and Outputs", bold: true, fontSize: 8 },
+      { text: "Indicators and Outcomes", bold: true, fontSize: 8 },
+      { text: "Personnel In Charge", bold: true, fontSize: 8 },
+      { text: "Resources Needed", bold: true, fontSize: 8 },
+      { text: "Cost", bold: true, fontSize: 8 },
+    ],
+  ];
+
+  if (f?.work_plans && f.work_plans.length > 0) {
+    f.work_plans.forEach((work) => {
+      workPlanBody.push([
+        { text: work?.phaseDate || "—", fontSize: 8 },
+        { text: work?.activities || "—", fontSize: 8 },
+        { text: work?.targets || "—", fontSize: 8 },
+        { text: work?.indicators || "N/A", fontSize: 8 },
+        { text: work?.personnel || "N/A", fontSize: 8 },
+        { text: work?.resources || "N/A", fontSize: 8 },
+        { text: work?.cost ? `₱ ${work.cost}` : "₱ 0.00", fontSize: 8 },
+      ]);
+    });
+  } else {
+    workPlanBody.push([
+      { text: "—", fontSize: 8 },
+      { text: "—", fontSize: 8 },
+      { text: "—", fontSize: 8 },
+      { text: "—", fontSize: 8 },
+      { text: "—", fontSize: 8 },
+      { text: "—", fontSize: 8 },
+      { text: "—", fontSize: 8 },
+    ]);
+  }
+
+  content.push({
+    table: { headerRows: 1, widths: ["14%", "14%", "14%", "14%", "14%", "15%", "15%"], body: workPlanBody },
+    layout: { dontBreakRows: true, keepWithHeaderRows: 1 },
+    margin: [0, 0, 0, 10],
+  });
+
+  // VIII. DETAILED BUDGET REQUIREMENT
+  content.push({ text: "VIII. DETAILED BUDGET REQUIREMENT:", bold: true, fontSize: 13, margin: [0, 10, 0, 8] });
+
+  const budgetBody = [
+    [
+      { text: "Budget Item", bold: true },
+      { text: "Description", bold: true },
+      { text: "Quantity", bold: true },
+      { text: "Amount", bold: true },
+      { text: "Proposed Source(s)", bold: true },
+    ],
+  ];
+
+  if (f?.detailed_budgets && f.detailed_budgets.length > 0) {
+    f.detailed_budgets.forEach((budget) => {
+      budgetBody.push([
+        budget?.item || "—",
+        budget?.description || "—",
+        budget?.quantity || "—",
+        budget?.amount ? `₱ ${Number(budget.amount).toLocaleString()}` : "₱ 0.00",
+        budget?.source || "N/A",
+      ]);
+    });
+  } else {
+    budgetBody.push(["—", "—", "—", "—", "—"]);
+  }
+
+  content.push({
+    table: { headerRows: 1, widths: ["20%", "25%", "15%", "20%", "20%"], body: budgetBody },
+    layout: { dontBreakRows: true, keepWithHeaderRows: 1 },
+    margin: [0, 0, 0, 10],
+  });
+
+  // IX. OTHER RELEVANT INFORMATION
+  content.push({ text: "IX. OTHER RELEVANT INFORMATION:", bold: true, fontSize: 13, margin: [0, 10, 0, 8] });
+  content.push({ text: f?.otherInfo || "—", margin: [0, 0, 0, 20] });
+
+  // PREPARED BY SECTION - Only show for roleId 3 (student) or 4 (faculty)
   content.push({ 
     text: "Prepared By:", 
     bold: true, 
@@ -215,12 +280,12 @@ export const downloadForm1Pdf = (form1, event, owner, roleId) => {
   });
 
   // Get coordinator details
-  const coordinatorFirstName = event?.user?.firstname || owner?.firstname || f?.coordinatorFirstName || "";
-  const coordinatorMiddleName = event?.user?.middlename || owner?.middlename || f?.coordinatorMiddleName || "";
-  const coordinatorLastName = event?.user?.lastname || owner?.lastname || f?.coordinatorLastName || "";
+  const coordinatorFirstName = event?.user?.firstname || owner?.firstname || "";
+  const coordinatorMiddleName = event?.user?.middlename || owner?.middlename || "";
+  const coordinatorLastName = event?.user?.lastname || owner?.lastname || "";
   const coordinatorFullName = `${coordinatorFirstName} ${coordinatorMiddleName} ${coordinatorLastName}`.trim();
-  const coordinatorContact = event?.user?.contact || owner?.contact || f?.coordinatorContact || "—";
-  const coordinatorEmail = event?.user?.email || owner?.email || f?.coordinatorEmail || "—";
+  const coordinatorContact = event?.user?.contact || owner?.contact || "—";
+  const coordinatorEmail = event?.user?.email || owner?.email || "—";
 
   // Checkboxes for Faculty Member / Student - only show for roleId 3 or 4
   if (roleId === 3 || roleId === 4) {
@@ -258,7 +323,8 @@ export const downloadForm1Pdf = (form1, event, owner, roleId) => {
     ],
     margin: [0, 0, 0, 20]
   });
-  // CONSENT SECTION
+
+  // CONSENT SECTION - Same as Form1
   content.push({ 
     text: "Consent", 
     bold: true, 
@@ -477,7 +543,7 @@ export const downloadForm1Pdf = (form1, event, owner, roleId) => {
 
   content.push(secondApprovalTable);
 
-    // RECEIVED BY SECTION - at the very bottom
+  // RECEIVED BY SECTION - at the very bottom
   content.push({ 
     text: "Received By:", 
     bold: true, 
@@ -561,5 +627,5 @@ export const downloadForm1Pdf = (form1, event, owner, roleId) => {
     pageMargins: [40, 40, 40, 40],
   };
 
-  pdfMake.createPdf(docDefinition).download("form1-proposal.pdf");
+  pdfMake.createPdf(docDefinition).download("form2-project-proposal.pdf");
 };
