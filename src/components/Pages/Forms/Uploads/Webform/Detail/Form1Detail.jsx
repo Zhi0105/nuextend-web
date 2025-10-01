@@ -10,19 +10,24 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { downloadForm1Pdf } from "@_src/utils/pdf/form1Pdf";
+import { checkApprovalProcess } from "@_src/utils/approval";
+import { getFormNumber } from "@_src/utils/approval";
+
 
 export const Form1Detail = () => {
-  const { state } = useLocation();
+  const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const { event, owner, data: initialData } = state || {};
-  console.log(event);
-  
+
   const queryClient = useQueryClient();
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
   const decryptedUser = token && DecryptUser(user);
   const decryptedToken = token && DecryptString(token);
 
   const [form1, setForm1] = useState(initialData || null);
+
+  const approvalCheck = checkApprovalProcess(getFormNumber(pathname), decryptedUser?.role_id, [ form1[0]?.is_dean && 9, form1[0]?.is_commex && 1, form1[0]?.is_asd && 10, form1[0]?.is_ad && 11, ].filter(Boolean))
+  const isApprovalCheckPass = approvalCheck?.included && ( Number(decryptedUser?.role_id) === Number(approvalCheck?.nextApprover))
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
@@ -445,7 +450,7 @@ const canDownloadPdf = useMemo(() => {
             label="Update"
           />
         )}
-        {canAction && (
+        {canAction && isApprovalCheckPass && (
           <>
             <Button
               onClick={onApprove}
