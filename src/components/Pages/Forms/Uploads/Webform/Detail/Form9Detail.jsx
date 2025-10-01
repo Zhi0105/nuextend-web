@@ -9,6 +9,7 @@ import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
+import { downloadForm9Pdf } from "@_src/utils/pdf/form9Pdf";
 
 export const Form9Detail = () => {
   const { state } = useLocation();
@@ -35,7 +36,7 @@ export const Form9Detail = () => {
 
   // Executive Summary Data from form9
   const logicModels = form9Data?.logic_models || [];
-  const findingsDiscussion = form9Data?.finding_discussion;
+  const findingsDiscussion = form9Data?.findings_discussion;
   const conclusionRecommendations = form9Data?.conclusion_recommendations;
 
   // Get team leader from user data
@@ -69,12 +70,30 @@ export const Form9Detail = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form9, isApprover]);
 
+  // PDF Download Logic
+  const canDownloadPdf = useMemo(() => {
+    if (!form9) return false;
+    
+    const formData = form9[0] || form9;
+    
+    // For ComEx (roleId 1) and role 4 - need 3 approvals (excluding dean)
+    if ([1, 4].includes(roleId)) {
+      return formData?.commex_approved_by && formData?.asd_approved_by && formData?.ad_approved_by;
+    }
+    
+    // For role 3 - need dean approval AND the other 3 approvers
+    if (roleId === 3) {
+      return formData?.dean_approved_by && formData?.commex_approved_by && formData?.asd_approved_by && formData?.ad_approved_by;
+    }
+    
+    return false;
+  }, [form9, roleId]);
+
   // ✅ Approve
   const { mutate: doApprove, isLoading: approveLoading } = useMutation({
     mutationFn: (vars) => approveForm9(vars),
     onSuccess: (res) => {
       toast(res?.message || "Approved", { type: "success" })
-      // Update local form1 state para mawala agad yung button
       setForm9((prev) => {
         if (!prev) return prev;
         return [
@@ -145,159 +164,274 @@ export const Form9Detail = () => {
 
   if (!form9) return null;
 
+  const formData = form9[0] || form9;
+
   return (
-    <div className="form9-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
-      <div className="w-full max-w-6xl px-4">
+    <div className="project-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
+      <div className="w-full max-w-5xl bg-white shadow rounded-lg p-6 my-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">EXTENSION PROGRAM EVALUATION AND TERMINAL REPORT</h2>
 
-        {/* Evaluation and Terminal Report Content */}
-        <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
-          <h1 className="text-2xl font-bold text-center mb-8 text-gray-800">
-            EXTENSION PROGRAM EVALUATION AND TERMINAL REPORT
-          </h1>
+        {/* I. PROGRAM TITLE */}
+        <h2 className="text-1xl font-bold text-gray-800 mb-6">I. PROGRAM TITLE:</h2>
+        <div className="mb-6">
+          <p>{programTitle || "No program title provided"}</p>
+        </div>
 
-          {/* I. PROGRAM TITLE */}
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold mb-4 text-gray-700">I. PROGRAM TITLE:</h2>
-            <div className="border border-gray-300 p-4 rounded bg-gray-50 min-h-[50px] mb-4">
-              {programTitle || "No program title provided"}
-            </div>
+        {/* A. Implementer */}
+        <div className="mb-6">
+          <p className="font-semibold text-gray-600">A. Implementer</p>
+          <p>{implementer || "No implementer specified"}</p>
+        </div>
 
-            {/* A. Implementer */}
-            <div className="mb-4">
-              <h3 className="font-medium mb-2 text-gray-600">A. Implementer</h3>
-              <div className="border border-gray-300 p-3 rounded bg-gray-50 min-h-[40px]">
-                {implementer || "No implementer specified"}
-              </div>
-            </div>
-
-            {/* B. Extension Program Management Team */}
-            <div className="mb-4">
-              <h3 className="font-medium mb-2 text-gray-600">B. Extension Program Management Team</h3>
-              <div className="border border-gray-300 p-3 rounded bg-gray-50">
-                {managementTeam.length > 0 ? (
-                  <div>
-                    <p className="font-semibold text-gray-600">1. Program Coordinator</p>
-                    <p>{teamLeader || "No program coordinator specified"}</p>
-                    <p className="font-semibold mb-2">Team members</p>
-                    <ul className="list-disc list-inside space-y-1">
-                      {managementTeam.map((member, index) => (
-                        <li key={member.id || index} className="text-gray-700">
-                          {member.name}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : (
-                  "No management team members specified"
-                )}
-              </div>
-            </div>
-
-            {/* C. Target Group */}
-            <div>
-              <h3 className="font-medium mb-2 text-gray-600">C. Target Group</h3>
-              <div className="border border-gray-300 p-3 rounded bg-gray-50 min-h-[40px]">
-                {targetGroup || "No target group specified"}
-              </div>
-            </div>
+        {/* B. Extension Program Management Team */}
+        <div className="mb-6">
+          <p className="font-semibold text-gray-600">B. Extension Program Management Team</p>
+          
+          {/* 1. Program Coordinator */}
+          <div className="ml-4 mt-2">
+            <p className="font-semibold text-gray-600">1. Program Coordinator</p>
+            <p>{teamLeader || "No program coordinator specified"}</p>
           </div>
 
-          {/* II. EXECUTIVE SUMMARY */}
-          <div>
-            <h2 className="text-lg font-semibold mb-4 text-gray-700">II. EXECUTIVE SUMMARY:</h2>
-            
-          {/* A. Program Logic Model */}
-            <div className="mb-6">
-              <h3 className="font-medium mb-3 text-gray-600">A. Program Logic Model</h3>
-              
-              {logicModels.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse border border-gray-300">
-                    <thead>
-                      <tr className="bg-gray-100">
-                        <th className="border border-gray-300 p-2 font-semibold">Objectives</th>
-                        <th className="border border-gray-300 p-2 font-semibold">Inputs</th>
-                        <th className="border border-gray-300 p-2 font-semibold">Activities</th>
-                        <th className="border border-gray-300 p-2 font-semibold">Outputs</th>
-                        <th className="border border-gray-300 p-2 font-semibold">Outcomes</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {logicModels.map((item, index) => (
-                        <tr key={item.id || index}>
-                          <td className="border border-gray-300 p-2 align-top">
-                            {item.objectives || "No objectives provided"}
-                          </td>
-                          <td className="border border-gray-300 p-2 align-top">
-                            {item.inputs || "No inputs provided"}
-                          </td>
-                          <td className="border border-gray-300 p-2 align-top">
-                            {item.activities || "No activities provided"}
-                          </td>
-                          <td className="border border-gray-300 p-2 align-top">
-                            {item.outputs || "No outputs provided"}
-                          </td>
-                          <td className="border border-gray-300 p-2 align-top">
-                            {item.outcomes || "No outcomes provided"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+          {/* 2. Team Members */}
+          <div className="ml-4 mt-4">
+            <p className="font-semibold text-gray-600">2. Team Members</p>
+            <ul className="list-disc ml-6">
+              {managementTeam.length > 0 ? (
+                managementTeam.map((member, index) => (
+                  <li key={member.id || index}>{member.name}</li>
+                ))
               ) : (
-                <div className="text-center text-gray-500 py-4 border border-gray-300 rounded">
-                  No logic model data provided
-                </div>
+                <li>No management team members specified</li>
               )}
-            </div>
-
-            {/* B. Findings and Discussion */}
-            <div className="mb-6">
-              <h3 className="font-medium mb-2 text-gray-600">B. Findings and Discussion</h3>
-              <div className="border border-gray-300 p-4 rounded bg-gray-50 min-h-[80px]">
-                {findingsDiscussion || "No findings and discussion provided"}
-              </div>
-            </div>
-
-            {/* C. Conclusion and Recommendations */}
-            <div className="mb-6">
-              <h3 className="font-medium mb-2 text-gray-600">C. Conclusion and Recommendations</h3>
-              <div className="border border-gray-300 p-4 rounded bg-gray-50 min-h-[80px]">
-                {conclusionRecommendations || "No conclusion and recommendations provided"}
-              </div>
-            </div>
+            </ul>
           </div>
+        </div>
+
+        {/* C. Target Group */}
+        <div className="mb-6">
+          <p className="font-semibold text-gray-600">C. Target Group</p>
+          <p>{targetGroup || "No target group specified"}</p>
+        </div>
+
+        {/* II. EXECUTIVE SUMMARY */}
+        <h2 className="text-1xl font-bold text-gray-800 mb-6">II. EXECUTIVE SUMMARY:</h2>
+
+        {/* A. Program Logic Model */}
+        <div className="mb-6">
+          <p className="font-semibold text-gray-600">A. Program Logic Model</p>
+        </div>
+        <table className="w-full border mt-2 table-fixed">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border p-2 break-words whitespace-normal">Objectives</th>
+              <th className="border p-2 break-words whitespace-normal">Inputs</th>
+              <th className="border p-2 break-words whitespace-normal">Activities</th>
+              <th className="border p-2 break-words whitespace-normal">Outputs</th>
+              <th className="border p-2 break-words whitespace-normal">Outcomes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {logicModels.length > 0 ? (
+              logicModels.map((item, index) => (
+                <tr key={item.id || index}>
+                  <td className="border p-2 break-words whitespace-normal">{item.objectives || "No objectives provided"}</td>
+                  <td className="border p-2 break-words whitespace-normal">{item.inputs || "No inputs provided"}</td>
+                  <td className="border p-2 break-words whitespace-normal">{item.activities || "No activities provided"}</td>
+                  <td className="border p-2 break-words whitespace-normal">{item.outputs || "No outputs provided"}</td>
+                  <td className="border p-2 break-words whitespace-normal">{item.outcomes || "No outcomes provided"}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5} className="border p-2 italic text-gray-500 text-center">
+                  No logic model data provided
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        {/* B. Findings and Discussion */}
+        <div className="mb-6 mt-6">
+          <p className="font-semibold text-gray-600">B. Findings and Discussion</p>
+          <p className="break-words whitespace-normal">{findingsDiscussion || "No findings and discussion provided"}</p>
+        </div>
+
+        {/* C. Conclusion and Recommendations */}
+        <div className="mb-6">
+          <p className="font-semibold text-gray-600">C. Conclusion and Recommendations</p>
+          <p className="break-words whitespace-normal">{conclusionRecommendations || "No conclusion and recommendations provided"}</p>
         </div>
       </div>
 
-       {/* Action Buttons */}
-        <div className="flex gap-2 mb-6">
-          {isEventOwner && (
-            <Button
-              onClick={() => navigate("/event/form/009", { state: { formdata: form9 } })}
-              className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
-              label="Update"
-            />
-          )}
-          {canAction && (
-            <>
-              <Button
-                onClick={onApprove}
-                disabled={approveLoading}
-                className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-                label={approveLoading ? "Approving…" : "Approve"}
-              />
-              <Button
-                onClick={() => setShowRevise(true)}
-                disabled={rejectLoading}
-                className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-                label="Revise"
-              />
-            </>
-          )}
-        </div>
+      {/* Consent Section */}
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">Consent</h2>
 
+      <div className="w-full max-w-5xl mt-6">
+        <table className="w-full border border-collapse">
+          <thead>
+            <tr>
+              {roleId === 2 && <th className="border p-2 text-center">Dean</th>}
+              <th className="border p-2 text-center">ComEx</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              {/* Dean Column */}
+              {roleId === 2 && (
+                <td className="border p-6 text-center align-bottom h-32">
+                  {formData?.dean_approved_by ? (
+                    <div className="flex flex-col justify-end h-full">
+                      <p className="font-semibold text-green-600 mb-2">Approved</p>
+                      <p className="font-medium">
+                        {formData?.dean_approver?.firstname}{" "}
+                        {formData?.dean_approver?.lastname}
+                      </p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {new Date(formData?.dean_approve_date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="italic text-gray-500">Awaiting Approval</p>
+                    </div>
+                  )}
+                </td>
+              )}
+
+              {/* ComEx Column */}
+              <td className="border p-6 text-center align-bottom h-32">
+                {formData?.commex_approved_by ? (
+                  <div className="flex flex-col justify-end h-full">
+                    <p className="font-semibold text-green-600 mb-2">Approved</p>
+                    <p className="font-medium">
+                      {formData?.commex_approver?.firstname}{" "}
+                      {formData?.commex_approver?.lastname}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {new Date(formData?.commex_approve_date).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="italic text-gray-500">Awaiting Approval</p>
+                  </div>
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="w-full max-w-5xl mt-6">
+        <table className="w-full border border-collapse">
+          <thead>
+            <tr>
+              <th className="border p-2 text-center">Academic Services Director</th>
+              <th className="border p-2 text-center">Academic Director</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              {/* ASD Column */}
+              <td className="border p-6 text-center align-bottom h-32">
+                {formData?.asd_approved_by ? (
+                  <div className="flex flex-col justify-end h-full">
+                    <p className="font-semibold text-green-600 mb-2">Approved</p>
+                    <p className="font-medium">
+                      {formData?.asd_approver?.firstname}{" "}
+                      {formData?.asd_approver?.lastname}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {new Date(formData?.asd_approve_date).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="italic text-gray-500">Awaiting Approval</p>
+                  </div>
+                )}
+              </td>
+
+              {/* AD Column */}
+              <td className="border p-6 text-center align-bottom h-32">
+                {formData?.ad_approved_by ? (
+                  <div className="flex flex-col justify-end h-full">
+                    <p className="font-semibold text-green-600 mb-2">Approved</p>
+                    <p className="font-medium">
+                      {formData?.ad_approver?.firstname}{" "}
+                      {formData?.ad_approver?.lastname}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {new Date(formData?.ad_approve_date).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="italic text-gray-500">Awaiting Approval</p>
+                  </div>
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Buttons */}
+      <div className="flex gap-2 mt-4">
+        {isEventOwner && (
+          <Button
+            onClick={() => navigate("/event/form/009", { state: { formdata: form9 } })}
+            className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label="Update"
+          />
+        )}
+        {canAction && (
+          <>
+            <Button
+              onClick={onApprove}
+              disabled={approveLoading}
+              className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label={approveLoading ? "Approving…" : "Approve"}
+            />
+            <Button
+              onClick={() => setShowRevise(true)}
+              disabled={rejectLoading}
+              className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label="Revise"
+            />
+          </>
+        )}
+
+        {/* PDF Download Button - Conditionally shown */}
+        {canDownloadPdf && (
+          <Button
+            onClick={() => downloadForm9Pdf(form9, event, owner, roleId)}
+            className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+          >
+            Download PDF
+          </Button>
+        )}
+      </div>
+
+      {/* Revise Dialog */}
       <Dialog
         header="Remarks"
         visible={showRevise}
@@ -312,9 +446,10 @@ export const Form9Detail = () => {
             rules={{ required: true }}
             render={({ field: { onChange, value } }) => (
               <InputTextarea
-                className={`${
-                  errors.remarks ? "border border-red-500" : ""
-                } bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                className={`${errors.remarks ? "border border-red-500" : ""} 
+                  bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm 
+                  rounded-lg focus:ring-primary-600 focus:border-primary-600 
+                  block leading-normal w-full p-2.5`}
                 rows={4}
                 placeholder="Enter your remarks here"
                 value={value}

@@ -12,7 +12,7 @@ import dayjs from "dayjs";
 export const Report = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { activities_id, creator_id } = location.state || {}; // Receive creator_id
+  const { data, activities_id, creator_id } = location.state || {}; 
   const { token, user } = useUserStore((s) => ({ token: s.token, user: s.user }));
   const decryptedToken = token && DecryptString(token);
   const decryptedUser = user && DecryptUser(user);
@@ -70,7 +70,7 @@ export const Report = () => {
     <Button
       label="View"
       className="p-button-sm p-button-info"
-      onClick={() => navigate("/view-report", { state: { report: rowData, creator_id: creatorId } })}
+      onClick={() => navigate("/view-report", { state: { data ,report: rowData, creator_id: creatorId } })}
     />
   );
 

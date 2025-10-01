@@ -9,6 +9,7 @@ import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
+import { downloadForm6Pdf } from "@_src/utils/pdf/form6Pdf";
 
 export const Form6Detail = () => {
   const location = useLocation();
@@ -126,10 +127,17 @@ export const Form6Detail = () => {
     setShowRevise(false);
   };
 
+  const canDownloadPdf = useMemo(() => {
+  if (!details) return false;
+  
+  // For Form6, only need ComEx approval
+  return details?.commex_approved_by;
+}, [details]);
+
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === (routeState?.owner?.id ?? routeState?.owner);
   return (
     <div className="form6-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
-
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">MANIFESTATION OF CONSENT AND COOPERATION FOR THE EXTENSION PROGRAM</h2>
 
       <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-4xl">
         
@@ -212,7 +220,55 @@ export const Form6Detail = () => {
             />
           </>
         )}
+
+        {/* download pdf*/}
+        {canDownloadPdf && (
+          <Button
+            onClick={() => downloadForm6Pdf(details, routeState?.owner)}
+            className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label="Download PDF"
+          />
+        )}
       </div>
+
+ {/* Consent Section - Only ComEx for Form6 */}
+<h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">Consent</h2>
+
+<div className="w-full max-w-5xl mt-6">
+  <table className="w-full border border-collapse">
+    <thead>
+      <tr>
+        <th className="border p-2 text-center">ComEx</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td className="border p-6 text-center align-bottom h-32">
+          {details?.commex_approved_by ? (
+            <div className="flex flex-col justify-end h-full">
+              <p className="font-semibold text-green-600 mb-2">Approved</p>
+              <p className="font-medium">
+                {details?.commex_approver?.firstname}{" "}
+                {details?.commex_approver?.lastname}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                {new Date(details?.commex_approve_date).toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric', 
+                  year: 'numeric' 
+                })}
+              </p>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <p className="italic text-gray-500">Awaiting Approval</p>
+            </div>
+          )}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
       <Dialog
         header="Remarks"

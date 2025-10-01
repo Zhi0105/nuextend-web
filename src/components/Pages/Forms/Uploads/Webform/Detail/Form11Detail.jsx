@@ -9,6 +9,7 @@ import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
+import { downloadForm11Pdf } from "@_src/utils/pdf/form11Pdf";
 
 export const Form11Detail = () => {
   const { state } = useLocation();
@@ -59,12 +60,21 @@ export const Form11Detail = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form11, isApprover]);
 
+  // PDF Download Logic
+  const canDownloadPdf = useMemo(() => {
+    if (!form11) return false;
+    
+    const formData = form11[0] || form11;
+    
+    // For Form11, only need ComEx and ASD approval
+    return formData?.commex_approved_by && formData?.asd_approved_by;
+  }, [form11]);
+
   // ✅ Approve
   const { mutate: doApprove, isLoading: approveLoading } = useMutation({
     mutationFn: (vars) => approveForm11(vars),
     onSuccess: (res) => {
       toast(res?.message || "Approved", { type: "success" })
-      // Update local form1 state para mawala agad yung button
       setForm11((prev) => {
         if (!prev) return prev;
         return [
@@ -136,118 +146,182 @@ export const Form11Detail = () => {
 
   if (!form11) return null;
 
+  const formData = form11[0] || form11;
+
   return (
-    <div className="form11-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
-      <div className="w-full max-w-6xl px-4">
+    <div className="project-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
+      <div className="w-full max-w-5xl bg-white shadow rounded-lg p-6 my-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">EXTENSION PROGRAM AND PROJECT ITINERARY OF TRAVEL</h2>
 
-        {/* Travel Itinerary Table */}
-        <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
-          <h1 className="text-2xl font-bold text-center mb-8 text-gray-800">
-            EXTENSION PROGRAM AND PROJECT ITINERARY OF TRAVEL
-          </h1>
-
-          {/* Header Info */}
-          <div className="grid grid-cols-3 gap-4 mb-6 border-b pb-4">
-            <div>
-              <label className="font-semibold text-gray-700">Program Coordinator / Project Leader</label>
-              <div className="border border-gray-300 p-2 rounded bg-gray-50 min-h-[40px] mt-1">
-                {programCoordinator || "Not specified"}
-              </div>
-            </div>
-            <div>
-              <label className="font-semibold text-gray-700">Transportation Medium</label>
-              <div className="border border-gray-300 p-2 rounded bg-gray-50 min-h-[40px] mt-1">
-                {transportationMedium || "Not specified"}
-              </div>
-            </div>
-            <div>
-              <label className="font-semibold text-gray-700">Driver</label>
-              <div className="border border-gray-300 p-2 rounded bg-gray-50 min-h-[40px] mt-1">
-                {driver || "Not specified"}
-              </div>
-            </div>
+        {/* Header Info */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="mb-4">
+            <p className="font-semibold text-gray-600">Program Coordinator / Project Leader</p>
+            <p>{programCoordinator || "Not specified"}</p>
           </div>
-
-          {/* Travel Details Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border border-gray-300 p-2 font-semibold">Date and Phase</th>
-                  <th className="border border-gray-300 p-2 font-semibold" colSpan="2">Destination</th>
-                  <th className="border border-gray-300 p-2 font-semibold" colSpan="2">Time</th>
-                  <th className="border border-gray-300 p-2 font-semibold">Trip Duration</th>
-                  <th className="border border-gray-300 p-2 font-semibold">Purpose</th>
-                </tr>
-                <tr className="bg-gray-50">
-                  <th className="border border-gray-300 p-2"></th>
-                  <th className="border border-gray-300 p-2 font-medium">From</th>
-                  <th className="border border-gray-300 p-2 font-medium">To</th>
-                  <th className="border border-gray-300 p-2 font-medium">Departure</th>
-                  <th className="border border-gray-300 p-2 font-medium">Arrival</th>
-                  <th className="border border-gray-300 p-2 font-medium"></th>
-                  <th className="border border-gray-300 p-2 font-medium"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {travelDetails.map((detail, index) => (
-                  <tr key={detail.id || index}>
-                    <td className="border border-gray-300 p-2">
-                      {detail.date ? new Date(detail.date).toLocaleDateString() : ""}
-                    </td>
-                    <td className="border border-gray-300 p-2">{detail.from || ""}</td>
-                    <td className="border border-gray-300 p-2">{detail.to || ""}</td>
-                    <td className="border border-gray-300 p-2">
-        {detail.departure ? new Date(detail.departure).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
-      </td>
-                     <td className="border border-gray-300 p-2">
-        {detail.arrival ? new Date(detail.arrival).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
-      </td>
-                    <td className="border border-gray-300 p-2">{detail.trip_duration || ""}</td>
-                    <td className="border border-gray-300 p-2">{detail.purpose || ""}</td>
-                  </tr>
-                ))}
-                {/* Empty rows if needed */}
-                {travelDetails.length === 0 && (
-                  <tr>
-                    <td className="border border-gray-300 p-2 text-center text-gray-500" colSpan="7">
-                      No travel details provided
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          <div className="mb-4">
+            <p className="font-semibold text-gray-600">Transportation Medium</p>
+            <p>{transportationMedium || "Not specified"}</p>
+          </div>
+          <div className="mb-4">
+            <p className="font-semibold text-gray-600">Driver</p>
+            <p>{driver || "Not specified"}</p>
           </div>
         </div>
+
+        {/* Travel Details Table */}
+        <table className="w-full border mt-2 table-fixed">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border p-2 break-words whitespace-normal">Date and Phase</th>
+              <th className="border p-2 break-words whitespace-normal" colSpan="2">Destination</th>
+              <th className="border p-2 break-words whitespace-normal" colSpan="2">Time</th>
+              <th className="border p-2 break-words whitespace-normal">Trip Duration</th>
+              <th className="border p-2 break-words whitespace-normal">Purpose</th>
+            </tr>
+            <tr className="bg-gray-50">
+              <th className="border p-2"></th>
+              <th className="border p-2 font-medium break-words whitespace-normal">From</th>
+              <th className="border p-2 font-medium break-words whitespace-normal">To</th>
+              <th className="border p-2 font-medium break-words whitespace-normal">Departure</th>
+              <th className="border p-2 font-medium break-words whitespace-normal">Arrival</th>
+              <th className="border p-2 font-medium break-words whitespace-normal"></th>
+              <th className="border p-2 font-medium break-words whitespace-normal"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {travelDetails.length > 0 ? (
+              travelDetails.map((detail, index) => (
+                <tr key={detail.id || index}>
+                  <td className="border p-2 break-words whitespace-normal">
+                    {detail.date ? new Date(detail.date).toLocaleDateString() : ""}
+                  </td>
+                  <td className="border p-2 break-words whitespace-normal">{detail.from || ""}</td>
+                  <td className="border p-2 break-words whitespace-normal">{detail.to || ""}</td>
+                  <td className="border p-2 break-words whitespace-normal">
+                    {detail.departure ? new Date(detail.departure).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
+                  </td>
+                  <td className="border p-2 break-words whitespace-normal">
+                    {detail.arrival ? new Date(detail.arrival).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
+                  </td>
+                  <td className="border p-2 break-words whitespace-normal">{detail.trip_duration || ""}</td>
+                  <td className="border p-2 break-words whitespace-normal">{detail.purpose || ""}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={7} className="border p-2 italic text-gray-500 text-center">
+                  No travel details provided
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {/* Action Buttons */}
-        <div className="flex gap-2 mb-6">
-          {isEventOwner && (
-            <Button
-              onClick={() => navigate("/event/form/011", { state: { formdata: form11 } })}
-              className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
-              label="Update"
-            />
-          )}
-          {canAction && (
-            <>
-              <Button
-                onClick={onApprove}
-                disabled={approveLoading}
-                className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-                label={approveLoading ? "Approving…" : "Approve"}
-              />
-              <Button
-                onClick={() => setShowRevise(true)}
-                disabled={rejectLoading}
-                className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-                label="Revise"
-              />
-            </>
-          )}
-        </div>
+      {/* Consent Section - Only ComEx and ASD */}
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">Consent</h2>
 
+      <div className="w-full max-w-5xl mt-6">
+        <table className="w-full border border-collapse">
+          <thead>
+            <tr>
+              <th className="border p-2 text-center">ComEx</th>
+              <th className="border p-2 text-center">Academic Services Director</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              {/* ComEx Column */}
+              <td className="border p-6 text-center align-bottom h-32">
+                {formData?.commex_approved_by ? (
+                  <div className="flex flex-col justify-end h-full">
+                    <p className="font-semibold text-green-600 mb-2">Approved</p>
+                    <p className="font-medium">
+                      {formData?.commex_approver?.firstname}{" "}
+                      {formData?.commex_approver?.lastname}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {new Date(formData?.commex_approve_date).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="italic text-gray-500">Awaiting Approval</p>
+                  </div>
+                )}
+              </td>
+
+              {/* ASD Column */}
+              <td className="border p-6 text-center align-bottom h-32">
+                {formData?.asd_approved_by ? (
+                  <div className="flex flex-col justify-end h-full">
+                    <p className="font-semibold text-green-600 mb-2">Approved</p>
+                    <p className="font-medium">
+                      {formData?.asd_approver?.firstname}{" "}
+                      {formData?.asd_approver?.lastname}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {new Date(formData?.asd_approve_date).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="italic text-gray-500">Awaiting Approval</p>
+                  </div>
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Buttons */}
+      <div className="flex gap-2 mt-4">
+        {isEventOwner && (
+          <Button
+            onClick={() => navigate("/event/form/011", { state: { formdata: form11 } })}
+            className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label="Update"
+          />
+        )}
+        {canAction && (
+          <>
+            <Button
+              onClick={onApprove}
+              disabled={approveLoading}
+              className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label={approveLoading ? "Approving…" : "Approve"}
+            />
+            <Button
+              onClick={() => setShowRevise(true)}
+              disabled={rejectLoading}
+              className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label="Revise"
+            />
+          </>
+        )}
+
+        {/* PDF Download Button - Conditionally shown */}
+        {canDownloadPdf && (
+          <Button
+            onClick={() => downloadForm11Pdf(form11, event, owner, roleId)}
+            className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+          >
+            Download PDF
+          </Button>
+        )}
+      </div>
+
+      {/* Revise Dialog */}
       <Dialog
         header="Remarks"
         visible={showRevise}
@@ -262,9 +336,10 @@ export const Form11Detail = () => {
             rules={{ required: true }}
             render={({ field: { onChange, value } }) => (
               <InputTextarea
-                className={`${
-                  errors.remarks ? "border border-red-500" : ""
-                } bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                className={`${errors.remarks ? "border border-red-500" : ""} 
+                  bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm 
+                  rounded-lg focus:ring-primary-600 focus:border-primary-600 
+                  block leading-normal w-full p-2.5`}
                 rows={4}
                 placeholder="Enter your remarks here"
                 value={value}

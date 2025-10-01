@@ -9,6 +9,7 @@ import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
+import { downloadForm3Pdf } from "@_src/utils/pdf/form3Pdf";
 
 export const Form3Detail = () => {
   const { state } = useLocation();
@@ -27,7 +28,6 @@ export const Form3Detail = () => {
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
   
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const hasUserRoleApproved = (row) => {
     if (!row) return false;
     switch (roleId) {
@@ -46,6 +46,25 @@ export const Form3Detail = () => {
     if (form3.status === "approved") return false;
     return true;
   }, [form3, isApprover, hasUserRoleApproved]);
+
+  // PDF Download Logic
+  const canDownloadPdf = useMemo(() => {
+    if (!form3) return false;
+    
+    const formData = form3[0];
+    
+    // For ComEx (roleId 1) and role 4 - need 3 approvals (excluding dean)
+    if ([1, 4].includes(roleId)) {
+      return formData?.commex_approved_by && formData?.asd_approved_by && formData?.ad_approved_by;
+    }
+    
+    // For role 3 - need dean approval AND the other 3 approvers
+    if (roleId === 3) {
+      return formData?.dean_approved_by && formData?.commex_approved_by && formData?.asd_approved_by && formData?.ad_approved_by;
+    }
+    
+    return false;
+  }, [form3, roleId]);
 
   // Approve mutation
   const { mutate: doApprove, isLoading: approveLoading } = useMutation({
@@ -122,6 +141,7 @@ export const Form3Detail = () => {
   const formData = form3[0];
   const detailedBudgets = formData.detailed_budgets || [];
   const budgetSourcing = formData.budget_sourcings || [];
+
   // Date formatting function
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -135,276 +155,330 @@ export const Form3Detail = () => {
       });
     } catch (error) {
       console.log(error)
-      return dateString; // Return original string if parsing fails
+      return dateString;
     }
   };
 
   return (
-    <div className="outreach-detail-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] py-8 px-4">
-      
-      {/* Header with Title and Action Buttons */}
+    <div className="project-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
       <div className="w-full max-w-5xl bg-white shadow rounded-lg p-6 my-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-6">OutReach Project Proposal</h2>
 
-        {/* Form Content */}
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
-          {/* TITLE */}
-          <div className="border-b border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-2">TITLE:</h2>
-            <p className="text-gray-900">{event?.eventName || "N/A"}</p>
-          </div>
+        {/* TITLE */}
+        <div className="mb-6">
+          <p className="font-semibold text-gray-600">TITLE:</p>
+          <p>{event?.eventName || "N/A"}</p>
+        </div>
 
-          {/* BRIEF DESCRIPTION AND RATIONALE */}
-          <div className="border-b border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-2">
-              BRIEF DESCRIPTION AND RATIONALE OF THE ACTIVITY OR SERVICE:
-            </h2>
-            <p className="text-gray-900 whitespace-pre-wrap">
-              {formData.description || "N/A"}
-            </p>
-          </div>
+        {/* BRIEF DESCRIPTION AND RATIONALE */}
+        <div className="mb-6">
+          <p className="font-semibold text-gray-600">BRIEF DESCRIPTION AND RATIONALE OF THE ACTIVITY OR SERVICE:</p>
+          <p className="break-words whitespace-normal">{formData.description || "N/A"}</p>
+        </div>
 
-          {/* TARGET GROUP */}
-          <div className="border-b border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-2">
-              TARGET GROUP AND REASONS FOR CHOOSING IT:
-            </h2>
-            <p className="text-gray-900 whitespace-pre-wrap">
-              {formData.targetGroup || "N/A"}
-            </p>
-          </div>
+        {/* TARGET GROUP */}
+        <div className="mb-6">
+          <p className="font-semibold text-gray-600">TARGET GROUP AND REASONS FOR CHOOSING IT:</p>
+          <p className="break-words whitespace-normal">{formData.targetGroup || "N/A"}</p>
+        </div>
 
-          {/* DATE OF IMPLEMENTATION */}
-          <div className="border-b border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">
-              DATE OF IMPLEMENTATION:
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h3 className="font-medium text-gray-700 mb-1">A. Start Date</h3>
-                <p className="text-gray-900">
-                  {formData.startDate ? formatDate(formData.startDate) : "N/A"}
-                </p>
-              </div>
-              <div>
-                <h3 className="font-medium text-gray-700 mb-1">B. End Date</h3>
-                <p className="text-gray-900">
-                  {formData.endDate ? formatDate(formData.endDate) : "N/A"}
-                </p>
-              </div>
+        {/* DATE OF IMPLEMENTATION */}
+        <div className="mb-6">
+          <p className="font-semibold text-gray-600">DATE OF IMPLEMENTATION:</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+            <div>
+              <p className="font-medium text-gray-600">A. Start Date</p>
+              <p>{formData.startDate ? formatDate(formData.startDate) : "N/A"}</p>
             </div>
-          </div>
-
-          {/* ACTIVITY PLAN AND BUDGET */}
-          <div className="border-b border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">
-              V. ACTIVITY PLAN AND BUDGET:
-            </h2>
-            
-            <div className="overflow-x-auto">
-              <table className="min-w-full border border-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
-                      Objectives
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
-                      Activities
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
-                      Outputs
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
-                      Personnel
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
-                      Budget
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {formData.activity_plans_budgets?.map((activity, index) => (
-                    <tr key={activity.id || index}>
-                      <td className="border border-gray-300 px-4 py-3 text-gray-900">
-                        {activity.objectives || "N/A"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-gray-900">
-                        {activity.activities || "N/A"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-gray-900">
-                        {activity.outputs || "N/A"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-gray-900">
-                        {activity.personnel || "N/A"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-3 text-gray-900">
-                        {activity.budget ? `₱${parseFloat(activity.budget).toLocaleString()}` : "N/A"}
-                      </td>
-                    </tr>
-                  ))}
-                  {(!formData.activity_plans_budgets || formData.activity_plans_budgets.length === 0) && (
-                    <tr>
-                      <td colSpan="5" className="border border-gray-300 px-4 py-3 text-center text-gray-500">
-                        No activity plan data found
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* DETAILED BUDGET */}
-          <div className="border-b border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">
-              VI. DETAILED BUDGET:
-            </h2>
-            
-            <div className="overflow-x-auto">
-              <table className="min-w-full border border-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
-                      Budget Item
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
-                      Details or Particulars
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
-                      Quantity
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
-                      Amount
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
-                      Total
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {detailedBudgets.map((item, index) => (
-                    <tr key={item.id || index}>
-                      <td className="border border-gray-300 px-4 py-2 text-gray-900">
-                        {item.item || "N/A"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-gray-900">
-                        {item.details || "N/A"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-gray-900">
-                        {item.quantity || "N/A"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-gray-900">
-                        {item.amount ? `₱${parseFloat(item.amount).toLocaleString()}` : "N/A"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-gray-900">
-                        {item.amount ? `₱${parseFloat(item.amount).toLocaleString()}` : "N/A"}
-                      </td>
-                    </tr>
-                  ))}
-                  {detailedBudgets.length === 0 && (
-                    <tr>
-                      <td colSpan="5" className="border border-gray-300 px-4 py-3 text-center text-gray-500">
-                        No budget items found
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* BUDGET SOURCING */}
-          <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">
-              VII. BUDGET SOURCING:
-            </h2>
-            
-            <div className="overflow-x-auto">
-              <table className="min-w-full border border-gray-300">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
-                      Counterpart of the University
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
-                      Counterpart of the Outreach Group
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
-                      Counterpart of the Target Group
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
-                      Other Source(s) of Funding
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
-                      Total
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {budgetSourcing.map((item, index) => (
-                    <tr key={item.id || index}>
-                      <td className="border border-gray-300 px-4 py-2 text-gray-900">
-                        {item.university || "N/A"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-gray-900">
-                        {item.outreachGroup || "N/A"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-gray-900">
-                        {item.service || "N/A"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-gray-900">
-                        {item.other || "N/A"}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-gray-900">
-                        {item.total ? `₱${parseFloat(item.total).toLocaleString()}` : "N/A"}
-                      </td>
-                    </tr>
-                  ))}
-                  {budgetSourcing.length === 0 && (
-                    <tr>
-                      <td colSpan="5" className="border border-gray-300 px-4 py-3 text-center text-gray-500">
-                        No budget sourcing data found
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+            <div>
+              <p className="font-medium text-gray-600">B. End Date</p>
+              <p>{formData.endDate ? formatDate(formData.endDate) : "N/A"}</p>
             </div>
           </div>
         </div>
+
+        {/* ACTIVITY PLAN AND BUDGET */}
+        <h2 className="text-1xl font-bold text-gray-800 mb-6">V. ACTIVITY PLAN AND BUDGET:</h2>
+        <table className="w-full border mt-2 table-fixed">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border p-2 break-words whitespace-normal">Objectives</th>
+              <th className="border p-2 break-words whitespace-normal">Activities</th>
+              <th className="border p-2 break-words whitespace-normal">Outputs</th>
+              <th className="border p-2 break-words whitespace-normal">Personnel</th>
+              <th className="border p-2 break-words whitespace-normal">Budget</th>
+            </tr>
+          </thead>
+          <tbody>
+            {formData.activity_plans_budgets?.length > 0 ? (
+              formData.activity_plans_budgets.map((activity, index) => (
+                <tr key={activity.id || index}>
+                  <td className="border p-2 break-words whitespace-normal">{activity.objectives || "N/A"}</td>
+                  <td className="border p-2 break-words whitespace-normal">{activity.activities || "N/A"}</td>
+                  <td className="border p-2 break-words whitespace-normal">{activity.outputs || "N/A"}</td>
+                  <td className="border p-2 break-words whitespace-normal">{activity.personnel || "N/A"}</td>
+                  <td className="border p-2 break-words whitespace-normal">
+                    {activity.budget ? `₱ ${parseFloat(activity.budget).toLocaleString()}` : "N/A"}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5} className="border p-2 italic text-gray-500 text-center">
+                  No activity plan data found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        {/* DETAILED BUDGET */}
+        <h2 className="text-1xl font-bold text-gray-800 mb-6 mt-6">VI. DETAILED BUDGET:</h2>
+        <table className="w-full border mt-2 table-fixed">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border p-2 break-words whitespace-normal">Budget Item</th>
+              <th className="border p-2 break-words whitespace-normal">Details or Particulars</th>
+              <th className="border p-2 break-words whitespace-normal">Quantity</th>
+              <th className="border p-2 break-words whitespace-normal">Amount</th>
+              <th className="border p-2 break-words whitespace-normal">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {detailedBudgets.length > 0 ? (
+              detailedBudgets.map((item, index) => (
+                <tr key={item.id || index}>
+                  <td className="border p-2 break-words whitespace-normal">{item.item || "N/A"}</td>
+                  <td className="border p-2 break-words whitespace-normal">{item.details || "N/A"}</td>
+                  <td className="border p-2 break-words whitespace-normal">{item.quantity || "N/A"}</td>
+                  <td className="border p-2 break-words whitespace-normal">
+                    {item.amount ? `₱ ${parseFloat(item.amount).toLocaleString()}` : "N/A"}
+                  </td>
+                  <td className="border p-2 break-words whitespace-normal">
+                    {item.amount ? `₱ ${parseFloat(item.amount).toLocaleString()}` : "N/A"}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5} className="border p-2 italic text-gray-500 text-center">
+                  No budget items found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        {/* BUDGET SOURCING */}
+        <h2 className="text-1xl font-bold text-gray-800 mb-6 mt-6">VII. BUDGET SOURCING:</h2>
+        <table className="w-full border mt-2 table-fixed">
+          <thead>
+            <tr className="bg-gray-100">
+              <th className="border p-2 break-words whitespace-normal">Counterpart of the University</th>
+              <th className="border p-2 break-words whitespace-normal">Counterpart of the Outreach Group</th>
+              <th className="border p-2 break-words whitespace-normal">Counterpart of the Target Group</th>
+              <th className="border p-2 break-words whitespace-normal">Other Source(s) of Funding</th>
+              <th className="border p-2 break-words whitespace-normal">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {budgetSourcing.length > 0 ? (
+              budgetSourcing.map((item, index) => (
+                <tr key={item.id || index}>
+                  <td className="border p-2 break-words whitespace-normal">{item.university || "N/A"}</td>
+                  <td className="border p-2 break-words whitespace-normal">{item.outreachGroup || "N/A"}</td>
+                  <td className="border p-2 break-words whitespace-normal">{item.service || "N/A"}</td>
+                  <td className="border p-2 break-words whitespace-normal">{item.other || "N/A"}</td>
+                  <td className="border p-2 break-words whitespace-normal">
+                    {item.total ? `₱ ${parseFloat(item.total).toLocaleString()}` : "N/A"}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={5} className="border p-2 italic text-gray-500 text-center">
+                  No budget sourcing data found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
-      <div className="flex gap-2">
-            {/* Update button */}
-            {isEventOwner && (
-              <Button
-                onClick={() => navigate('/event/form/003', { state: { formdata: form3 } })}
-                className="bg-[#013a63] text-white px-4 py-2 rounded-md text-sm font-semibold"
-                label="Update"
-              />
-            )}
-            
-            {/* Approve + Revise */}
-            {canAction && (
-              <>
-                <Button
-                  onClick={onApprove}
-                  disabled={approveLoading}
-                  className="bg-emerald-600 text-white px-4 py-2 rounded-md text-sm font-semibold"
-                  label={approveLoading ? "Approving…" : "Approve"}
-                />
-                <Button
-                  onClick={() => setShowRevise(true)}
-                  disabled={rejectLoading}
-                  className="bg-rose-600 text-white px-4 py-2 rounded-md text-sm font-semibold"
-                  label="Revise"
-                />
-              </>
-            )}
-          </div>
+      {/* Consent Section */}
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">Consent</h2>
+
+      <div className="w-full max-w-5xl mt-6">
+        <table className="w-full border border-collapse">
+          <thead>
+            <tr>
+              {roleId === 2 && <th className="border p-2 text-center">Dean</th>}
+              <th className="border p-2 text-center">ComEx</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              {/* Dean Column */}
+              {roleId === 2 && (
+                <td className="border p-6 text-center align-bottom h-32">
+                  {formData?.dean_approved_by ? (
+                    <div className="flex flex-col justify-end h-full">
+                      <p className="font-semibold text-green-600 mb-2">Approved</p>
+                      <p className="font-medium">
+                        {formData?.dean_approver?.firstname}{" "}
+                        {formData?.dean_approver?.lastname}
+                      </p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {new Date(formData?.dean_approve_date).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="italic text-gray-500">Awaiting Approval</p>
+                    </div>
+                  )}
+                </td>
+              )}
+
+              {/* ComEx Column */}
+              <td className="border p-6 text-center align-bottom h-32">
+                {formData?.commex_approved_by ? (
+                  <div className="flex flex-col justify-end h-full">
+                    <p className="font-semibold text-green-600 mb-2">Approved</p>
+                    <p className="font-medium">
+                      {formData?.commex_approver?.firstname}{" "}
+                      {formData?.commex_approver?.lastname}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {new Date(formData?.commex_approve_date).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="italic text-gray-500">Awaiting Approval</p>
+                  </div>
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div className="w-full max-w-5xl mt-6">
+        <table className="w-full border border-collapse">
+          <thead>
+            <tr>
+              <th className="border p-2 text-center">Academic Services Director</th>
+              <th className="border p-2 text-center">Academic Director</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              {/* ASD Column */}
+              <td className="border p-6 text-center align-bottom h-32">
+                {formData?.asd_approved_by ? (
+                  <div className="flex flex-col justify-end h-full">
+                    <p className="font-semibold text-green-600 mb-2">Approved</p>
+                    <p className="font-medium">
+                      {formData?.asd_approver?.firstname}{" "}
+                      {formData?.asd_approver?.lastname}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {new Date(formData?.asd_approve_date).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="italic text-gray-500">Awaiting Approval</p>
+                  </div>
+                )}
+              </td>
+
+              {/* AD Column */}
+              <td className="border p-6 text-center align-bottom h-32">
+                {formData?.ad_approved_by ? (
+                  <div className="flex flex-col justify-end h-full">
+                    <p className="font-semibold text-green-600 mb-2">Approved</p>
+                    <p className="font-medium">
+                      {formData?.ad_approver?.firstname}{" "}
+                      {formData?.ad_approver?.lastname}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {new Date(formData?.ad_approve_date).toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                      })}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="italic text-gray-500">Awaiting Approval</p>
+                  </div>
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Buttons */}
+      <div className="flex gap-2 mt-4">
+        {isEventOwner && (
+          <Button
+            onClick={() => navigate("/event/form/003", { state: { formdata: form3 } })}
+            className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label="Update"
+          />
+        )}
+        {canAction && (
+          <>
+            <Button
+              onClick={onApprove}
+              disabled={approveLoading}
+              className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label={approveLoading ? "Approving…" : "Approve"}
+            />
+            <Button
+              onClick={() => setShowRevise(true)}
+              disabled={rejectLoading}
+              className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label="Revise"
+            />
+          </>
+        )}
+
+        {/* PDF Download Button - Conditionally shown */}
+        {canDownloadPdf && (
+          <Button
+            onClick={() => downloadForm3Pdf(form3, event, owner, roleId)}
+            className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+          >
+            Download PDF
+          </Button>
+        )}
+      </div>
 
       {/* Revise Dialog */}
-      <Dialog header="Remarks" visible={showRevise} style={{ width: "50vw" }} onHide={() => setShowRevise(false)} modal={false}>
+      <Dialog
+        header="Remarks"
+        visible={showRevise}
+        style={{ width: "50vw" }}
+        onHide={() => setShowRevise(false)}
+        modal={false}
+      >
         <form onSubmit={handleSubmit(onSubmitRevise)} className="flex flex-col gap-4 w-full my-4">
           <Controller
             control={control}
@@ -412,7 +486,10 @@ export const Form3Detail = () => {
             rules={{ required: true }}
             render={({ field: { onChange, value } }) => (
               <InputTextarea
-                className={`${errors.remarks ? 'border border-red-500' : ''} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                className={`${errors.remarks ? "border border-red-500" : ""} 
+                  bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm 
+                  rounded-lg focus:ring-primary-600 focus:border-primary-600 
+                  block leading-normal w-full p-2.5`}
                 rows={4}
                 placeholder="Enter your remarks here"
                 value={value}
