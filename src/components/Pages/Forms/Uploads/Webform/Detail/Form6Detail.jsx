@@ -10,6 +10,8 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { downloadForm6Pdf } from "@_src/utils/pdf/form6Pdf";
+import { checkApprovalProcess } from "@_src/utils/approval";
+import { getFormNumber } from "@_src/utils/approval";
 
 export const Form6Detail = () => {
   const location = useLocation();
@@ -27,6 +29,10 @@ export const Form6Detail = () => {
 
   const [form6, setForm6] = useState(incoming ?? null);
   useEffect(() => setForm6(incoming ?? null), [incoming]);
+
+  const approvalCheck = checkApprovalProcess(getFormNumber(location?.pathname), decryptedUser?.role_id, [ form6[0]?.is_dean && 9, form6[0]?.is_commex && 1, form6[0]?.is_asd && 10, form6[0]?.is_ad && 11, ].filter(Boolean), (routeState?.owner?.role_id === 1 || routeState?.owner?.role_id === 4))
+  const isApprovalCheckPass = approvalCheck?.included && ( Number(decryptedUser?.role_id) === Number(approvalCheck?.nextApprover))
+    
 
   // normalize to object in `details`
   const details = Array.isArray(form6) ? form6[0] : form6;
@@ -204,7 +210,7 @@ export const Form6Detail = () => {
         )}
 
         {/* Approve + Revise (unchanged behavior) */}
-        {canAction && (
+        {canAction && isApprovalCheckPass && (
           <>
             <Button
               onClick={onApprove}

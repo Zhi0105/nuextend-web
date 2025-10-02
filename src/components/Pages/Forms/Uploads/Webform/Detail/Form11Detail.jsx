@@ -10,12 +10,13 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { downloadForm11Pdf } from "@_src/utils/pdf/form11Pdf";
+import { checkApprovalProcess } from "@_src/utils/approval";
+import { getFormNumber } from "@_src/utils/approval";
 
 export const Form11Detail = () => {
-  const { state } = useLocation();
+  const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const { event, owner, data: initialData } = state || {};
-  console.log(event);
 
   const queryClient = useQueryClient();
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
@@ -24,9 +25,11 @@ export const Form11Detail = () => {
 
   const [form11, setForm11] = useState(initialData || null);
 
+  const approvalCheck = checkApprovalProcess(getFormNumber(pathname), decryptedUser?.role_id, [ form11[0]?.is_dean && 9, form11[0]?.is_commex && 1, form11[0]?.is_asd && 10, form11[0]?.is_ad && 11, ].filter(Boolean), (owner?.role_id === 1 || owner?.role_id === 4))
+  const isApprovalCheckPass = approvalCheck?.included && ( Number(decryptedUser?.role_id) === Number(approvalCheck?.nextApprover))
+        
   // Extract data from form11 and form1
   const form11Data = form11?.[0] || form11;
-  const form1Data = event?.form1?.[0];
   const programCoordinator = event?.user ? `${event.user.firstname} ${event.user.middlename} ${event.user.lastname}` : "";
   const transportationMedium = form11Data?.transportation_medium;
   const driver = form11Data?.driver;
@@ -293,7 +296,7 @@ export const Form11Detail = () => {
             label="Update"
           />
         )}
-        {canAction && (
+        {canAction && isApprovalCheckPass && (
           <>
             <Button
               onClick={onApprove}

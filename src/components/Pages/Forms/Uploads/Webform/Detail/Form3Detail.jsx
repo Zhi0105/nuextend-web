@@ -10,12 +10,13 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { downloadForm3Pdf } from "@_src/utils/pdf/form3Pdf";
+import { checkApprovalProcess } from "@_src/utils/approval";
+import { getFormNumber } from "@_src/utils/approval";
 
 export const Form3Detail = () => {
-  const { state } = useLocation();
+  const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const { event, owner, data: initialData } = state || {};
-  console.log(event);
 
   const queryClient = useQueryClient();
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
@@ -23,11 +24,16 @@ export const Form3Detail = () => {
   const decryptedToken = token && DecryptString(token);
 
   const [form3, setForm3] = useState(initialData || null);
+  const approvalCheck = checkApprovalProcess(getFormNumber(pathname), decryptedUser?.role_id, [ form3[0]?.is_dean && 9, form3[0]?.is_commex && 1, form3[0]?.is_asd && 10, form3[0]?.is_ad && 11, ].filter(Boolean), (owner?.role_id === 1 || owner?.role_id === 4))
+  const isApprovalCheckPass = approvalCheck?.included && ( Number(decryptedUser?.role_id) === Number(approvalCheck?.nextApprover))
+
+
   const [showRevise, setShowRevise] = useState(false);
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
   
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const hasUserRoleApproved = (row) => {
     if (!row) return false;
     switch (roleId) {
@@ -443,7 +449,7 @@ export const Form3Detail = () => {
             label="Update"
           />
         )}
-        {canAction && (
+        {canAction && isApprovalCheckPass && (
           <>
             <Button
               onClick={onApprove}

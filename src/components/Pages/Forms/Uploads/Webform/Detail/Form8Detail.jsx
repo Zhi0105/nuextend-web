@@ -10,9 +10,11 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { downloadForm8Pdf } from "@_src/utils/pdf/form8Pdf";
+import { checkApprovalProcess } from "@_src/utils/approval";
+import { getFormNumber } from "@_src/utils/approval";
 
 export const Form8Detail = () => {
-  const { state } = useLocation();
+  const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const { event, owner, data: initialData } = state || {};
 
@@ -22,6 +24,10 @@ export const Form8Detail = () => {
   const decryptedToken = token && DecryptString(token);
 
   const [form8, setForm8] = useState(initialData || null);
+
+  const approvalCheck = checkApprovalProcess(getFormNumber(pathname), decryptedUser?.role_id, [ form8[0]?.is_dean && 9, form8[0]?.is_commex && 1, form8[0]?.is_asd && 10, form8[0]?.is_ad && 11, ].filter(Boolean), (owner?.role_id === 1 || owner?.role_id === 4))
+  const isApprovalCheckPass = approvalCheck?.included && ( Number(decryptedUser?.role_id) === Number(approvalCheck?.nextApprover))
+  
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
@@ -277,7 +283,7 @@ export const Form8Detail = () => {
             label="Update"
           />
         )}
-        {canAction && (
+        {canAction && isApprovalCheckPass && (
           <>
             <Button
               onClick={onApprove}

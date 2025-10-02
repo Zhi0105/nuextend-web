@@ -10,9 +10,11 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { downloadForm7Pdf } from "@_src/utils/pdf/form7Pdf";
+import { checkApprovalProcess } from "@_src/utils/approval";
+import { getFormNumber } from "@_src/utils/approval";
 
 export const Form7Detail = () => {
-  const { state } = useLocation();
+  const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const { owner, data: initialData } = state || {};
 
@@ -23,6 +25,10 @@ export const Form7Detail = () => {
 
   const [form7, setForm7] = useState(initialData || null);
   const formData = Array.isArray(form7) ? form7[0] : form7;
+
+  const approvalCheck = checkApprovalProcess(getFormNumber(pathname), decryptedUser?.role_id, [ form7[0]?.is_dean && 9, form7[0]?.is_commex && 1, form7[0]?.is_asd && 10, form7[0]?.is_ad && 11, ].filter(Boolean), (owner?.role_id === 1 || owner?.role_id === 4))
+  const isApprovalCheckPass = approvalCheck?.included && ( Number(decryptedUser?.role_id) === Number(approvalCheck?.nextApprover))
+  
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
@@ -116,6 +122,13 @@ export const Form7Detail = () => {
 
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;
 
+  const canDownloadPdf = useMemo(() => {
+    if (!formData) return false;
+    
+    // For Form7, only need ComEx approval (same as Form6)
+    return formData?.commex_approved_by;
+  }, [formData]);
+
   if (!formData) return null;
 
   const formatDate = (iso) => {
@@ -128,12 +141,7 @@ export const Form7Detail = () => {
     });
   };
 
-  const canDownloadPdf = useMemo(() => {
-  if (!formData) return false;
-  
-  // For Form7, only need ComEx approval (same as Form6)
-  return formData?.commex_approved_by;
-}, [formData]);
+ 
 
   return (
     <div className="form7-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20 px-6">
@@ -202,7 +210,7 @@ export const Form7Detail = () => {
             label="Update"
           />
         )}
-        {canAction && (
+        {canAction && isApprovalCheckPass && (
           <>
             <Button
               onClick={onApprove}

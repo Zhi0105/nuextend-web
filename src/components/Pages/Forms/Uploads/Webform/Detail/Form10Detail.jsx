@@ -10,12 +10,13 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { downloadForm10Pdf } from "@_src/utils/pdf/form10Pdf";
+import { checkApprovalProcess } from "@_src/utils/approval";
+import { getFormNumber } from "@_src/utils/approval";
 
 export const Form10Detail = () => {
-  const { state } = useLocation();
+  const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const { event, owner, data: initialData } = state || {};
-  console.log(event);
 
   const queryClient = useQueryClient();
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
@@ -23,6 +24,10 @@ export const Form10Detail = () => {
   const decryptedToken = token && DecryptString(token);
 
   const [form10, setForm10] = useState(initialData || null);
+
+  const approvalCheck = checkApprovalProcess(getFormNumber(pathname), decryptedUser?.role_id, [ form10[0]?.is_dean && 9, form10[0]?.is_commex && 1, form10[0]?.is_asd && 10, form10[0]?.is_ad && 11, ].filter(Boolean), (owner?.role_id === 1 || owner?.role_id === 4))
+  const isApprovalCheckPass = approvalCheck?.included && ( Number(decryptedUser?.role_id) === Number(approvalCheck?.nextApprover))
+      
 
   // Extract data from form10 and event
   const form10Data = form10?.[0] || form10;
@@ -369,7 +374,7 @@ export const Form10Detail = () => {
             label="Update"
           />
         )}
-        {canAction && (
+        {canAction && isApprovalCheckPass && (
           <>
             <Button
               onClick={onApprove}

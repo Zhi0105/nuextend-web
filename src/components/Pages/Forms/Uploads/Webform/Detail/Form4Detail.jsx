@@ -10,10 +10,12 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { downloadForm4Pdf } from "@_src/utils/pdf/form4Pdf";
+import { checkApprovalProcess } from "@_src/utils/approval";
+import { getFormNumber } from "@_src/utils/approval";
 
 // ✅ Buttons: UPDATE + APPROVE + REVISE + CHECKLIST + DOWNLOAD PDF
 export const Form4Detail = () => {
-  const { state } = useLocation();
+  const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const { owner, data: initialData } = state || {};
 
@@ -27,6 +29,9 @@ export const Form4Detail = () => {
     if (Array.isArray(initialData)) return initialData[0] ?? null;
     return initialData;
   });
+
+  const approvalCheck = checkApprovalProcess(getFormNumber(pathname), decryptedUser?.role_id, [ form4?.is_dean && 9, form4?.is_commex && 1, form4?.is_asd && 10, form4?.is_ad && 11, ].filter(Boolean), (owner?.role_id === 1 || owner?.role_id === 4))
+  const isApprovalCheckPass = approvalCheck?.included && ( Number(decryptedUser?.role_id) === Number(approvalCheck?.nextApprover))
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
@@ -227,7 +232,7 @@ export const Form4Detail = () => {
             label="Update"
           />
         )}
-        {canAction && (
+        {canAction && isApprovalCheckPass && (
           <>
             <Button
               onClick={onApprove}
