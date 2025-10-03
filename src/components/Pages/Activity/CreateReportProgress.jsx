@@ -33,16 +33,22 @@ export const CreateReportProgress = () => {
     },
   });
 
-  useEffect(() => {
-    if (isEditMode) {
-      reset(report); // pre-fill when editing
-    }
-  }, [isEditMode, report, reset]);
-
   const { fields, append, remove } = useFieldArray({
     control,
     name: "budget_summaries",
   });
+
+  // Fix: Properly initialize form with existing data
+  useEffect(() => {
+    if (isEditMode && report) {
+      // Ensure budget_summaries is always an array, even if empty or undefined
+      const formData = {
+        ...report,
+        budget_summaries: report.budget_summaries || []
+      };
+      reset(formData);
+    }
+  }, [isEditMode, report, reset]);
 
   const onSubmit = async (formValues) => {
     if (!activities_id) {
@@ -104,62 +110,67 @@ export const CreateReportProgress = () => {
           </div>
         ))}
 
-<div className="mt-4">
-  <h2 className="font-bold text-lg mb-2">Budget Summary</h2>
-  {fields.map((item, index) => (
-    <div key={item.id} className="flex gap-2 mb-2 items-center">
+        <div className="mt-4">
+          <h2 className="font-bold text-lg mb-2">Budget Summary</h2>
+          {fields.map((item, index) => (
+            <div key={item.id} className="flex gap-2 mb-2 items-center">
+              <input
+                type="text"
+                placeholder="Description"
+                {...register(`budget_summaries.${index}.description`)}
+                className="border p-2 rounded flex-1"
+              />
 
-      <input
-        type="text"
-        placeholder="Description"
-        {...register(`budget_summaries.${index}.description`)}
-        className="border p-2 rounded flex-1"
-      />
+              <input
+                type="text"
+                placeholder="Item"
+                {...register(`budget_summaries.${index}.item`)}
+                className="border p-2 rounded flex-1"
+              />
 
-      <input
-        type="text"
-        placeholder="Item"
-        {...register(`budget_summaries.${index}.item`)}
-        className="border p-2 rounded flex-1"
-      />
+              <input
+                type="number"
+                placeholder="Quantity"
+                {...register(`budget_summaries.${index}.quantity`, { valueAsNumber: true })}
+                className="border p-2 rounded w-24"
+              />
 
-      <input
-        type="number"
-        placeholder="Quantity"
-        {...register(`budget_summaries.${index}.quantity`, { valueAsNumber: true })}
-        className="border p-2 rounded w-24"
-      />
+              <input
+                type="number"
+                placeholder="Cost"
+                {...register(`budget_summaries.${index}.cost`, { valueAsNumber: true })}
+                className="border p-2 rounded w-24"
+              />
 
-      <input
-        type="number"
-        placeholder="Cost"
-        {...register(`budget_summaries.${index}.cost`, { valueAsNumber: true })}
-        className="border p-2 rounded w-24"
-      />
+              <input
+                type="text"
+                placeholder="Personnel"
+                {...register(`budget_summaries.${index}.personnel`)}
+                className="border p-2 rounded flex-1"
+              />
 
-      <input
-        type="text"
-        placeholder="Personnel"
-        {...register(`budget_summaries.${index}.personnel`)}
-        className="border p-2 rounded flex-1"
-      />
+              <Button
+                type="button"
+                label="Remove"
+                className="bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 shrink-0"
+                onClick={() => remove(index)}
+              />
+            </div>
+          ))}
 
-      <Button
-        type="button"
-        label="Remove"
-        className="bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700 shrink-0"
-        onClick={() => remove(index)}
-      />
-    </div>
-  ))}
-
-  <Button
-    type="button"
-    label="Add Budget Item"
-    className="bg-[#2211cc] mr-2"
-    onClick={() => append({ cost: 0 })}
-  />
-</div>
+          <Button
+            type="button"
+            label="Add Budget Item"
+            className="bg-[#2211cc] mr-2"
+            onClick={() => append({ 
+              description: "", 
+              item: "", 
+              quantity: 0, 
+              cost: 0, 
+              personnel: "" 
+            })}
+          />
+        </div>
 
         <Button type="submit" label={isEditMode ? "Update Report" : "Submit Report"} className="bg-green-600 mt-4" />
       </form>

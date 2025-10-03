@@ -12,8 +12,7 @@ import { downloadForm14Pdf } from "@_src/utils/pdf/form14Pdf";
 export const ViewReport = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { data, report, creator_id } = location.state || {};
-  console.log(data);
+  const { activity, report, creator_id } = location.state || {};
 
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
   const decryptedUser = token ? DecryptUser(user) : null;
@@ -28,14 +27,24 @@ export const ViewReport = () => {
   const [currentReport, setCurrentReport] = useState(report);
   const [loading, setLoading] = useState(false);
 
+  // Try different possible locations for form14 data
+  const form14Data = 
+    activity?.[0]?.form14?.[0] || 
+    activity?.[0]?.fromid?.[0] || 
+    activity?.[0] ||
+    report;
+
+    const approvalData = activity?.activity?.[0]?.form14?.[0];
+  
+
   // Event status id
-  const eventStatusId = Number(currentReport?.event_status_id);
-  const isApprovedByAny = currentReport.is_commex || currentReport.is_asd;
-  const isFullyApproved = currentReport.is_commex && currentReport.is_asd;
+  const eventStatusId = Number(form14Data?.event_status_id);
+  const isApprovedByAny = form14Data?.is_commex || form14Data?.is_asd;
+  const isFullyApproved = form14Data?.is_commex && form14Data?.is_asd;
 
   const hasApproved = 
-    (currentRoleId === 1 && currentReport.is_commex) || 
-    (currentRoleId === 10 && currentReport.is_asd);
+    (currentRoleId === 1 && form14Data?.is_commex) || 
+    (currentRoleId === 10 && form14Data?.is_asd);
 
   // Role-based button logic
   const canSubmitOrPullBack = [1, 3, 4, 5, 6, 7, 8, 9].includes(currentRoleId);
@@ -43,8 +52,7 @@ export const ViewReport = () => {
 
   const isCreator = currentUserId === creator_id;
 
-  // PDF Download Logic
-  const canDownloadPdf = currentReport?.is_commex && currentReport?.is_asd;
+  const canDownloadPdf = !!(form14Data?.is_commex && form14Data?.is_asd);
 
   // Redirect if no report
   useEffect(() => {
@@ -60,16 +68,23 @@ export const ViewReport = () => {
   const handleSubmit = async () => {
     try {
       setLoading(true);
+      
+      // Determine the target status based on current status
+      const targetStatus = eventStatusId === 8 ? 9 : 4; // 9 = Resubmitted, 4 = Submitted
+      
       await updateForm14Status({
         token: decryptedToken,
         id: currentReport.form14_id,
-        event_status_id: 4, // Submit
+        event_status_id: targetStatus,
       });
-      toast.success("Report submitted successfully!");
+      
+      const successMessage = targetStatus === 9 ? "Report resubmitted successfully!" : "Report submitted successfully!";
+      toast.success(successMessage);
       navigate(-1);
     } catch (error) {
       console.error("Submit error:", error.response?.data || error.message);
-      toast.error("Failed to submit report.");
+      const errorMessage = eventStatusId === 8 ? "Failed to resubmit report." : "Failed to submit report.";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -153,9 +168,9 @@ export const ViewReport = () => {
   return (
     <div className="project-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
       <div className="w-full max-w-5xl bg-white shadow rounded-lg p-6 my-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">PROGRESS REPORT</h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">POST-ACTIVITY REPORT</h2>
 
-        {/* 🔹 Approval Status Panel */}
+        {/* 🔹 Dynamic Approval Status Panel */}
         <div className="w-full mb-6 p-4 border rounded bg-gray-50">
           <h2 className="font-bold mb-2">Approval Status</h2>
 
@@ -163,21 +178,21 @@ export const ViewReport = () => {
           <div className="flex items-center justify-between mb-2">
             <span>
               Commex:{" "}
-              {currentReport.is_commex ? (
+              {form14Data?.is_commex ? (
                 <span className="text-green-600 font-medium">✅ Approved</span>
-              ) : currentReport.commex_remarks ? (
+              ) : form14Data?.commex_remarks ? (
                 <span className="text-red-600 font-medium">✏️ Sent for Revision</span>
               ) : (
                 <span className="text-gray-600">⏳ Pending</span>
               )}
             </span>
 
-            {currentReport.commex_remarks && (
+            {form14Data?.commex_remarks && (
               <Button
                 label="View Remarks"
                 size="small"
                 className="bg-blue-600 text-white px-2 py-1 rounded text-xs"
-                onClick={() => handleViewRemarks(currentReport.commex_remarks)}
+                onClick={() => handleViewRemarks(form14Data.commex_remarks)}
               />
             )}
           </div>
@@ -186,23 +201,23 @@ export const ViewReport = () => {
           <div className="flex items-center justify-between">
             <span>
               ASD:{" "}
-              {currentReport.is_asd ? (
+              {form14Data?.is_asd ? (
                 <span className="text-green-600 font-medium">✅ Approved</span>
-              ) : currentReport.asd_remarks ? (
+              ) : form14Data?.asd_remarks ? (
                 <span className="text-red-600 font-medium">✏️ Sent for Revision</span>
-              ) : !currentReport.is_commex ? (
+              ) : !form14Data?.is_commex ? (
                 <span className="text-gray-600">⏳ Pending Commex approval...</span>
               ) : (
                 <span className="text-gray-600">⏳ Pending ASD review</span>
               )}
             </span>
 
-            {currentReport.asd_remarks && (
+            {form14Data?.asd_remarks && (
               <Button
                 label="View Remarks"
                 size="small"
                 className="bg-blue-600 text-white px-2 py-1 rounded text-xs"
-                onClick={() => handleViewRemarks(currentReport.asd_remarks)}
+                onClick={() => handleViewRemarks(form14Data.asd_remarks)}
               />
             )}
           </div>
@@ -292,7 +307,7 @@ export const ViewReport = () => {
         </div>
       </div>
 
-      {/* Consent Section - Only ComEx and ASD */}
+      {/* 🔹 Consent Section */}
       <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">Consent</h2>
 
       <div className="w-full max-w-5xl mt-6">
@@ -307,16 +322,15 @@ export const ViewReport = () => {
             <tr>
               {/* ComEx Column */}
               <td className="border p-6 text-center align-bottom h-32">
-                {currentReport?.is_commex ? (
+                {form14Data?.is_commex ? (
                   <div className="flex flex-col justify-end h-full">
                     <p className="font-semibold text-green-600 mb-2">Approved</p>
                     <p className="font-medium">
-                      {currentReport?.commex_approver?.firstname}{" "}
-                      {currentReport?.commex_approver?.lastname}
+                      {approvalData?.commex_approver?.firstname} {approvalData?.commex_approver?.lastname}
                     </p>
                     <p className="text-sm text-gray-600 mt-1">
-                      {currentReport?.commex_approve_date ? 
-                        new Date(currentReport.commex_approve_date).toLocaleDateString('en-US', { 
+                      {form14Data?.commex_approve_date ? 
+                        new Date(form14Data.commex_approve_date).toLocaleDateString('en-US', { 
                           month: 'short', 
                           day: 'numeric', 
                           year: 'numeric' 
@@ -332,16 +346,15 @@ export const ViewReport = () => {
 
               {/* ASD Column */}
               <td className="border p-6 text-center align-bottom h-32">
-                {currentReport?.is_asd ? (
+                {form14Data?.is_asd ? (
                   <div className="flex flex-col justify-end h-full">
                     <p className="font-semibold text-green-600 mb-2">Approved</p>
                     <p className="font-medium">
-                      {currentReport?.asd_approver?.firstname}{" "}
-                      {currentReport?.asd_approver?.lastname}
+                      {approvalData?.asd_approver?.firstname} {approvalData?.asd_approver?.lastname}
                     </p>
                     <p className="text-sm text-gray-600 mt-1">
-                      {currentReport?.asd_approve_date ? 
-                        new Date(currentReport.asd_approve_date).toLocaleDateString('en-US', { 
+                      {form14Data?.asd_approve_date ? 
+                        new Date(form14Data.asd_approve_date).toLocaleDateString('en-US', { 
                           month: 'short', 
                           day: 'numeric', 
                           year: 'numeric' 
@@ -368,17 +381,17 @@ export const ViewReport = () => {
         />
 
         {/* Submit button */}
-        {canSubmitOrPullBack && isCreator && eventStatusId !== 4 && !isApprovedByAny && (
+        {canSubmitOrPullBack && isCreator && ![4, 3, 6, 9].includes(eventStatusId) && !isApprovedByAny && (
           <Button
             onClick={handleSubmit}
             disabled={loading}
             className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-            label={loading ? "Submitting…" : "Submit"}
+            label={loading ? ([8, 5].includes(eventStatusId) ? "Resubmitting…" : "Submitting…") : ([8, 5].includes(eventStatusId) ? "Resubmit" : "Submit")}
           />
         )}
 
         {/* Pull-back button */}
-        {canSubmitOrPullBack && isCreator && [8, 4].includes(eventStatusId) && !isFullyApproved && (
+        {canSubmitOrPullBack && isCreator && [9, 4].includes(eventStatusId) && !isFullyApproved && (
           <Button
             onClick={handlePullBack}
             disabled={loading}
@@ -388,7 +401,7 @@ export const ViewReport = () => {
         )}
 
         {/* Update button */}
-        {isCreator && !isFullyApproved && eventStatusId == 5 && (
+        {isCreator && !isFullyApproved && [5, 6, 8].includes(eventStatusId) && (
           <Button
             onClick={() => navigate("/create-report-progress", { state: { activities_id: currentReport.activities_id, report: currentReport } })}
             className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
@@ -397,10 +410,10 @@ export const ViewReport = () => {
         )}
 
         {/* Approve/Revise buttons */}
-        {[4, 8].includes(eventStatusId) && (
+        {[4, 9].includes(eventStatusId) && (
           <>
             {/* Commex Approve/Revise (role_id = 1) */}
-            {currentRoleId === 1 && !currentReport.is_commex && (
+            {currentRoleId === 1 && !form14Data?.is_commex && (
               <>
                 <Button
                   onClick={handleApprove}
@@ -420,9 +433,9 @@ export const ViewReport = () => {
             {/* ASD Approve/Revise (role_id = 10) */}
             {currentRoleId === 10 && (
               <>
-                {!currentReport.is_commex ? (
+                {!form14Data?.is_commex ? (
                   <p className="text-gray-600 italic">⏳ Pending Commex approval...</p>
-                ) : !currentReport.is_asd ? (
+                ) : !form14Data?.is_asd ? (
                   <>
                     <Button
                       onClick={handleApprove}
@@ -445,10 +458,16 @@ export const ViewReport = () => {
           </>
         )}
 
-        {/* Use this simple conditional instead */}
+        {/* Download PDF */}
         {canDownloadPdf && (
           <Button
-            onClick={() => downloadForm14Pdf(currentReport, event, { id: creator_id }, currentRoleId)}
+            onClick={() => downloadForm14Pdf(
+              currentReport, 
+              activity, 
+              activity?.user || { id: creator_id },  // Use activity.user which has the name fields
+              currentRoleId, 
+              approvalData
+            )}
             className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
           >
             Download PDF
