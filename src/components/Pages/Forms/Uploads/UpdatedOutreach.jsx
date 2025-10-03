@@ -12,6 +12,7 @@ import {
     OutreachPhases, 
 } from "@_src/utils/helpers";
 import { Tooltip } from "primereact/tooltip";
+import { getFormStatus } from "@_src/utils/approval";
 import _ from "lodash";
 
 export const UpdatedOutreach = () => {
@@ -65,6 +66,7 @@ export const UpdatedOutreach = () => {
                             <tr className="bg-[#153e6f] text-white">
                                 <th className="px-4 py-3 text-left font-semibold">Name of the Form</th>
                                 <th className="px-4 py-3 text-left font-semibold">Form Code</th>
+                                <th className="px-4 py-3 text-left font-semibold">Status</th>
                                 <th className="px-4 py-3 text-left font-semibold">Fill up forms</th>
                             </tr>
                             </thead>
@@ -81,7 +83,9 @@ export const UpdatedOutreach = () => {
     
                                             {/* code */}
                                             <td className="px-4 py-4 align-top text-slate-700">{form.code}</td>
-    
+            
+                                            <td>{getFormStatus(event[form.formKey], _.toNumber(_.replace(form.formKey, /^\D+/g, '')))}</td>
+            
                                             {/* upload cell */}
                                             <td className="px-4 py-4 align-top">
                                                 <div className="flex items-center gap-2">

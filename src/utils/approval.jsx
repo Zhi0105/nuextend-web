@@ -50,6 +50,23 @@ import _ from "lodash";
 //   return { approvers, included, approvedList, nextApprover, isFullyApproved };
 // }
 
+  const approverMap = {
+  1: ["dean", "commex", "asd", "ad"],
+  2: ["dean", "commex", "asd", "ad"],
+  3: ["dean", "commex", "asd", "ad"],
+  4: ["dean", "asd", "commex"], // dean OR asd, plus commex
+  5: ["dean", "asd", "commex"], // same as 4
+  6: ["commex"],
+  7: ["commex"],
+  8: ["commex"],
+  9: ["dean", "commex", "asd", "ad"],
+  10: ["dean", "commex", "asd", "ad"],
+  11: ["commex", "asd"],
+  12: ["commex", "asd"],
+  13: ["commex"],
+  14: ["commex", "asd"]
+};
+
 export const checkApprovalProcess = (formNumber, roleId, approvedList = [], isNotStudentOwner = false) => {
   const approverHierarchy = {
     1: [9, 1, 10, 11],   // dean -> comex -> asd -> ad
@@ -111,4 +128,50 @@ export const getFormNumber = (pathname) => {
     const result = _.toNumber(_.last(_.split(pathname, '/')));
     return result
 }
+export const getFormStatus = (form, formNumber) => {
+  if (!form?.length) {
+    return <h1 className="text-blue-600">for fill up</h1>;
+  }
 
+  const { 
+    is_ad, is_asd, is_commex, is_dean, 
+    ad_remarks, asd_remarks, commex_remarks, dean_remarks 
+  } = form[0];
+
+  // ✅ Rule 1: If any remarks exist → sent for revised
+  if (ad_remarks || asd_remarks || commex_remarks || dean_remarks) {
+    return <h1 className="text-red-400">sent for revised</h1>;
+  }
+
+  // ✅ Get required approvers for this form
+  const requiredApprovers = approverMap[formNumber] || [];
+  const approverValues = {
+    ad: is_ad,
+    asd: is_asd,
+    commex: is_commex,
+    dean: is_dean
+  };
+
+  // Special handling: dean OR asd (forms 4 & 5)
+  let approvedCount = 0;
+  let totalApprovers = requiredApprovers.length;
+
+  if (formNumber === 4 || formNumber === 5) {
+    // dean or asd counts as one slot
+    const deanOrAsdApproved = approverValues.dean || approverValues.asd;
+    approvedCount += deanOrAsdApproved ? 1 : 0;
+    totalApprovers = 2; // dean/asd + commex
+    if (approverValues.commex) approvedCount++;
+  } else {
+    // Normal case: count all required
+    approvedCount = requiredApprovers.filter(key => approverValues[key]).length;
+  }
+
+  // ✅ Rule 2: If all required are approved → done
+  if (approvedCount === totalApprovers) {
+    return <h1 className="text-green-500">done</h1>;
+  }
+
+  // ✅ Otherwise → pending with fraction
+  return <h1 className="text-yellow-400">{`pending ${approvedCount} / ${totalApprovers}`}</h1>;
+};

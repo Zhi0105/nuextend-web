@@ -10,6 +10,7 @@ import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
 import { Instruction } from "@_src/components/Partial/Instruction";
 import { Tooltip } from "primereact/tooltip";
+import { getFormStatus } from "@_src/utils/approval";
 import _ from "lodash";
 
 
@@ -66,6 +67,7 @@ export const UpdatedProject = () => {
                         <tr className="bg-[#153e6f] text-white">
                             <th className="px-4 py-3 text-left font-semibold">Name of the Form</th>
                             <th className="px-4 py-3 text-left font-semibold">Form Code</th>
+                            <th className="px-4 py-3 text-left font-semibold">Status</th>
                             <th className="px-4 py-3 text-left font-semibold">Fill up forms</th>
                         </tr>
                         </thead>
@@ -84,6 +86,9 @@ export const UpdatedProject = () => {
                                         {/* code */}
                                         <td className="px-4 py-4 align-top text-slate-700">{form.code}</td>
 
+                                    
+                                        <td>{getFormStatus(event[form.formKey], _.toNumber(_.replace(form.formKey, /^\D+/g, '')))}</td>
+                                        
                                         {/* upload cell */}
                                         <td className="px-4 py-4 align-top">
                                     
