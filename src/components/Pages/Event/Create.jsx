@@ -13,6 +13,7 @@ import { Button } from "primereact/button";
 import { Stepper } from 'primereact/stepper';
 import { StepperPanel } from 'primereact/stepperpanel';
 import { InputNumber } from "primereact/inputnumber";
+import { InputTextarea } from "primereact/inputtextarea";
 import { DecryptString, DecryptUser, SetTermValue } from "@_src/utils/helpers";
 import { Activity } from "@_src/components/Partial/Activity";
 import dayjs from 'dayjs';
@@ -41,6 +42,7 @@ export const Create = () => {
             budget_proposal: 0,
             organization: "",
             name: "",
+            description: "",
             model: "",
             event_type: null,
             unsdgs: [],
@@ -67,7 +69,7 @@ export const Create = () => {
     };
 
     const onSubmit = (data) => {
-        const { target_group, organization, model, event_type, name, term, activities, budget_proposal, skills, unsdgs } = data
+        const { target_group, organization, model, event_type, name, term, description, activities, budget_proposal, skills, unsdgs } = data
         const updatedActivities = _.map(activities, (activity) => ({
             name: activity.name,
             description: activity.description,
@@ -86,6 +88,7 @@ export const Create = () => {
             target_group,
             name,
             term,
+            description,
             budget_proposal,
             skills: _.map(skills, 'id'),
             unsdgs: _.map(unsdgs, 'id'),
@@ -347,6 +350,27 @@ export const Create = () => {
                                 {errors.name && (
                                     <p className="text-sm italic mt-1 text-red-400 indent-2">
                                         event name is required.*
+                                    </p>
+                                )}
+                            </div>
+                            <div className="description">
+                                <Controller
+                                    control={control}
+                                    rules={{ required: true }}
+                                    render={({ field: { onChange, value } }) => (
+                                        <InputTextarea
+                                            value={value}
+                                            onChange={onChange}
+                                            rows={4}
+                                            placeholder="Enter event description"
+                                            className={`${errors.description && 'p-invalid'} w-full`}
+                                        />
+                                    )}
+                                    name="description"
+                                />
+                                {errors.description && (
+                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
+                                        event description is required.*
                                     </p>
                                 )}
                             </div>

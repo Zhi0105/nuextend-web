@@ -8,6 +8,7 @@ import { DecryptString, DecryptUser } from "@_src/utils/helpers";
 import { toast } from "react-toastify";
 import { getReportsByActivity, getEventStatuses } from "@_src/services/form14";
 import dayjs from "dayjs";
+import { LuEye } from "react-icons/lu";
 
 export const Report = () => {
   const location = useLocation();
@@ -96,17 +97,25 @@ const shouldShowViewButton = (rowData) => {
   const dateTemplate = (rowData) => dayjs(rowData.created_at).format("MMM D, YYYY HH:mm");
 
   // Navigate to view report
-  const actionTemplate = (rowData) => {
+// Navigate to view report - UPDATED WITH EYE ICON
+const actionTemplate = (rowData) => {
   if (!shouldShowViewButton(rowData)) {
     return null;
   }
 
   return (
-    <Button
-      label="View"
-      className="p-button-sm p-button-info"
-      onClick={() => navigate("/view-report", { state: { activity: data ,report: rowData, creator_id: creatorId } })}
-    />
+    <div className="relative group flex justify-center">
+      <Button
+        className="p-button-sm p-button-info p-button-outlined flex items-center justify-center w-8 h-8"
+        onClick={() => navigate("/view-report", { state: { activity: data, report: rowData, creator_id: creatorId } })}
+      >
+        <LuEye size={30} />
+      </Button>
+      {/* Tooltip on hover - positioned closer */}
+      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-10">
+        View
+      </div>
+    </div>
   );
 };
 
