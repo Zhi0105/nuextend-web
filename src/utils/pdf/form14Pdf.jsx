@@ -1,21 +1,14 @@
-// utils/pdfGenerator.js
-import pdfMake from "pdfmake/build/pdfmake";
-import pdfFonts from "pdfmake/build/vfs_fonts";
-
-// make vfs assignment robust across pdfmake builds:
-if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
-  pdfMake.vfs = pdfFonts.pdfMake.vfs;
-} else if (pdfFonts && pdfFonts.vfs) {
-  pdfMake.vfs = pdfFonts.vfs;
-}
-// utils/pdfGenerator.js - Add this function for Form14
-export const downloadForm14Pdf = (form14, event, owner, roleId) => {
-  console.log("downloadForm14Pdf called", { form14, event, owner, roleId });
+export const downloadForm14Pdf = (form14, event, owner, roleId, approvalData) => {
+  console.log("downloadForm14Pdf called", { form14, event, owner, roleId, approvalData });
 
   if (!form14) {
     console.warn("downloadForm14Pdf: no form14 provided");
     return;
   }
+
+  // Use approvalData for the consent section, fallback to form14 if not provided
+  const consentData = approvalData || form14;
+  console.log("📍 Consent data for PDF:", consentData);
 
   // Extract data from form14
   const objectives = form14?.objectives || "—";
@@ -27,15 +20,54 @@ export const downloadForm14Pdf = (form14, event, owner, roleId) => {
   const acknowledgements = form14?.acknowledgements || "—";
   const budgetSummaries = form14?.budget_summaries || [];
 
+  // Get project title and date from event data
+  const projectTitle = event?.eventName || event?.name || "—";
+  const reportDate = form14?.updated_at ? new Date(form14.updated_at).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  }) : "—";
+
+  // Get school/department from owner data
+  const schoolName = owner?.department?.name || "—";
+  const departmentName = owner?.program?.name || "—";
+
   const content = [];
 
-  // Main Title
+  // HEADER SECTION - Project Title, School, Department, and Date
   content.push({
-    text: "PROGRESS REPORT",
+    columns: [
+      {
+        width: '70%',
+        stack: [
+          { text: "POST-ACTIVITY REPORT", bold: true, fontSize: 16, margin: [0, 0, 0, 5] },
+          { text: `Project Title: ${projectTitle}`, fontSize: 11, margin: [0, 0, 0, 3] },
+          { text: `School: ${schoolName}`, fontSize: 11, margin: [0, 0, 0, 3] },
+          { text: `Department: ${departmentName}`, fontSize: 11, margin: [0, 0, 0, 3] },
+        ]
+      },
+      {
+        width: '30%',
+        stack: [
+          { text: `Date: ${reportDate}`, fontSize: 11, alignment: 'right', margin: [0, 0, 0, 3] },
+        ]
+      }
+    ],
+    margin: [0, 0, 0, 20]
+  });
+
+  // Separator line
+  content.push({
+    canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1 }],
+    margin: [0, 0, 0, 20]
+  });
+
+  // Main Content continues with your existing sections...
+  content.push({
+    text: "PROGRAM DETAILS",
     bold: true,
-    fontSize: 16,
-    alignment: 'center',
-    margin: [0, 0, 0, 20],
+    fontSize: 14,
+    margin: [0, 0, 0, 15],
   });
 
   // Objectives
@@ -62,7 +94,6 @@ export const downloadForm14Pdf = (form14, event, owner, roleId) => {
     margin: [0, 0, 0, 15] 
   });
 
-  // Description
   content.push({
     text: "Description:",
     bold: true,
@@ -122,7 +153,7 @@ export const downloadForm14Pdf = (form14, event, owner, roleId) => {
     margin: [0, 0, 0, 15] 
   });
 
-  // Budget Summaries
+  // Budget Summaries (your existing budget table code)
   content.push({
     text: "Budget Summaries:",
     bold: true,
@@ -198,14 +229,14 @@ export const downloadForm14Pdf = (form14, event, owner, roleId) => {
   content.push({
     stack: [
       { 
-        text: `Report Coordinator: ${coordinatorFullName || "—"}`,
+        text: coordinatorFullName || "—",
         margin: [0, 0, 0, 5]
       }
     ],
     margin: [0, 0, 0, 20]
   });
 
-  // CONSENT SECTION - Only ComEx and ASD
+  // CONSENT SECTION - Only ComEx and ASD (your existing consent table code)
   content.push({ 
     text: "Consent", 
     bold: true, 
@@ -228,18 +259,18 @@ export const downloadForm14Pdf = (form14, event, owner, roleId) => {
           // ComEx cell
           {
             stack: [
-              form14?.is_commex 
+              consentData?.is_commex 
                 ? { text: 'Approved', bold: true, color: 'green', margin: [0, 0, 0, 5] }
                 : { text: 'Awaiting Approval', italic: true, color: 'gray' },
-              form14?.is_commex 
+              consentData?.is_commex 
                 ? { 
-                    text: `${form14?.commex_approver?.firstname || ''} ${form14?.commex_approver?.lastname || ''}`.trim() || '—',
+                    text: `${consentData?.commex_approver?.firstname || ''} ${consentData?.commex_approver?.lastname || ''}`.trim() || '—',
                     margin: [0, 0, 0, 3]
                   }
                 : '',
-              form14?.commex_approve_date 
+              consentData?.commex_approve_date 
                 ? { 
-                    text: new Date(form14.commex_approve_date).toLocaleDateString('en-US', {
+                    text: new Date(consentData.commex_approve_date).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',
@@ -255,18 +286,18 @@ export const downloadForm14Pdf = (form14, event, owner, roleId) => {
           // ASD cell
           {
             stack: [
-              form14?.is_asd 
+              consentData?.is_asd 
                 ? { text: 'Approved', bold: true, color: 'green', margin: [0, 0, 0, 5] }
                 : { text: 'Awaiting Approval', italic: true, color: 'gray' },
-              form14?.is_asd 
+              consentData?.is_asd 
                 ? { 
-                    text: `${form14?.asd_approver?.firstname || ''} ${form14?.asd_approver?.lastname || ''}`.trim() || '—',
+                    text: `${consentData?.asd_approver?.firstname || ''} ${consentData?.asd_approver?.lastname || ''}`.trim() || '—',
                     margin: [0, 0, 0, 3]
                   }
                 : '',
-              form14?.asd_approve_date 
+              consentData?.asd_approve_date 
                 ? { 
-                    text: new Date(form14.asd_approve_date).toLocaleDateString('en-US', {
+                    text: new Date(consentData.asd_approve_date).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric',

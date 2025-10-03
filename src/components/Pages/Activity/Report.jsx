@@ -12,16 +12,45 @@ import dayjs from "dayjs";
 export const Report = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { data, activities_id, creator_id } = location.state || {}; 
+  const { data, activities_id, creator_id } = location.state || {};
   const { token, user } = useUserStore((s) => ({ token: s.token, user: s.user }));
   const decryptedToken = token && DecryptString(token);
   const decryptedUser = user && DecryptUser(user);
   const currentUserId = decryptedUser?.id;
+  const currentRoleId = decryptedUser?.role_id;
 
   const [reports, setReports] = useState([]);
   const [eventStatuses, setEventStatuses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [creatorId] = useState(creator_id || null); // store creator ID from state
+
+  // Check if view button should be shown
+const shouldShowViewButton = (rowData) => {
+  const isCreator = creatorId === currentUserId;
+  const isCommex = currentRoleId === 1;
+  const isAsd = currentRoleId === 10;
+  const isRole11 = currentRoleId === 0; // Add first additional role
+  const isRole12 = currentRoleId === 11;
+  
+  const hiddenStatuses = [3, 5, 6, 8]; // Statuses to hide
+  
+  // If user is creator, show ALL reports regardless of status
+  if (isCreator) {
+    return true;
+  }
+  
+  // If user is commex (role_id 1), hide only for hidden statuses
+  if (isCommex) {
+    return !hiddenStatuses.includes(rowData.event_status_id);
+  }
+  
+  // If user is ASD (role_id 10) or other users, hide for hidden statuses
+  if (isAsd || isRole11 || isRole12) { // For ASD and all other users
+    return !hiddenStatuses.includes(rowData.event_status_id);
+  }
+  
+  return false;
+};
 
   // Load reports
   useEffect(() => {
@@ -54,7 +83,8 @@ export const Report = () => {
     const statusMap = {
       6: "✏️ Sent for Revision",
       4: "Submitted",
-      8: "✏️ Resubmitted",
+      8: "Updated",
+      9: "Resubmitted",
       5: "Returned",
       3: "Not Yet Submitted",
     };
@@ -66,13 +96,19 @@ export const Report = () => {
   const dateTemplate = (rowData) => dayjs(rowData.created_at).format("MMM D, YYYY HH:mm");
 
   // Navigate to view report
-  const actionTemplate = (rowData) => (
+  const actionTemplate = (rowData) => {
+  if (!shouldShowViewButton(rowData)) {
+    return null;
+  }
+
+  return (
     <Button
       label="View"
       className="p-button-sm p-button-info"
-      onClick={() => navigate("/view-report", { state: { data ,report: rowData, creator_id: creatorId } })}
+      onClick={() => navigate("/view-report", { state: { activity: data ,report: rowData, creator_id: creatorId } })}
     />
   );
+};
 
   // Determine if current user is the creator
   const isCreator = creatorId === currentUserId;

@@ -1,5 +1,3 @@
-// src/components/Screen/Activity/CreateReportScreen.jsx
-
 import { DashboardTemplate } from "@_src/templates/DashboardTemplate"
 import { useUserStore } from '@_src/store/auth';
 import { AdminSidenav } from "@_src/routes/AdminSidenav"
