@@ -46,6 +46,14 @@ export const UpdatedProject = () => {
         
     // 2) Small helpers.
     const hasSubmission = (event, key) =>  Array.isArray(event?.[key]) && event[key].length > 0;
+        const handleNavigateToAttachments = () => {
+        navigate('/upload-attachment', { 
+            state: { 
+                event_id: event?.id,
+                event_data: event 
+            } 
+        });
+    };
             
     return (
         <div className="project-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
@@ -177,6 +185,14 @@ export const UpdatedProject = () => {
                         </tbody>
                     </table>
                 </div>
+            </div>
+            {/* ADD THIS BUTTON RIGHT AFTER THE HEADER DIV */}
+            <div className="flex justify-end p-4 bg-gray-50 border-b">
+                <Button
+                    label="Upload Other Attachments"
+                    className="bg-[#2211cc] text-white font-bold rounded-lg px-4 py-2"
+                    onClick={handleNavigateToAttachments}
+                />
             </div>
         </div>
     )

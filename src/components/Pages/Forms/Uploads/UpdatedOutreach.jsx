@@ -14,6 +14,8 @@ import {
 import { Tooltip } from "primereact/tooltip";
 import { getFormStatus } from "@_src/utils/approval";
 import _ from "lodash";
+import { useState } from "react";
+import { PiWarningCircleThin } from "react-icons/pi";
 
 export const UpdatedOutreach = () => {
     const location = useLocation()
@@ -21,6 +23,7 @@ export const UpdatedOutreach = () => {
     const { event } = location.state || {} 
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedUser = token && DecryptUser(user)
+    const [showInstruction, setShowInstruction] = useState(false);
     
     const eventOwnerId =
     event?.created_by ??
@@ -45,19 +48,45 @@ export const UpdatedOutreach = () => {
 
     // 2) Small helpers.
     const hasSubmission = (event, key) =>  Array.isArray(event?.[key]) && event[key].length > 0;
+    // Navigate to Upload Attachment
+    const handleNavigateToAttachments = () => {
+        navigate('/upload-attachment', { 
+            state: { 
+                event_id: event?.id,
+                event_data: event 
+            } 
+        });
+    };
 
     return (
         <div className="outreach-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-0 sm:pl-[200px] py-20">
             <div className="w-full max-w-5xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-                    {/* INSTRUCTIONS */}
-                    <div className="mb-5">
-                        <Instruction model_id={event?.model_id} />
+                    {/* INSTRUCTIONS with expand/minimize */}
+                    <div className="mb-5 border rounded-lg">
+                        <div
+                            className="flex items-center justify-between bg-blue-100 px-4 py-2 cursor-pointer"
+                            onClick={() => setShowInstruction(!showInstruction)}
+                        >
+                            {/* left side: icon + text */}
+                            <div className="flex items-center gap-2">
+                                <PiWarningCircleThin className="text-blue-800 text-3xl" />
+                                <h2 className="font-semibold text-slate-800">Instruction</h2>
+                            </div>
+    
+                            {/* right side: chevron */}
+                            <i className={`pi ${showInstruction ? "pi-chevron-up" : "pi-chevron-down"} text-slate-600`}></i>
+                        </div>
+    
+                        {showInstruction && (
+                            <div className="p-4 bg-blue-50">
+                                <Instruction model_id={event?.model_id} />
+                            </div>
+                        )}
                     </div>
                     {/* header */}
                     <div className="bg-[#153e6f] px-4 py-3 text-center font-bold text-white">
                         Outreach Forms
                     </div>
-    
                     {/* table */}
                     <div className="overflow-x-auto">
                         {/* <Tooltip target=".status-has-tooltip" position="right" /> */}
@@ -155,6 +184,14 @@ export const UpdatedOutreach = () => {
                             </tbody>
                         </table>
                     </div>
+            </div>
+            {/* ADD THIS BUTTON RIGHT AFTER THE HEADER DIV */}
+            <div className="flex justify-end p-4 bg-gray-50 border-b">
+                <Button
+                    label="Upload Other Attachments"
+                    className="bg-[#2211cc] text-white font-bold rounded-lg px-4 py-2"
+                    onClick={handleNavigateToAttachments}
+                />
             </div>
         </div>
     )
