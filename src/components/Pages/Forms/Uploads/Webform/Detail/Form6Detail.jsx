@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useUserStore } from "@_src/store/auth";
 import { DecryptString, DecryptUser } from "@_src/utils/helpers";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { approveForm6, rejectForm6 } from "@_src/services/formservice"; // form6 services
+import { approveForm6, rejectForm6 } from "@_src/services/formservice";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
@@ -30,9 +30,6 @@ export const Form6Detail = () => {
   const [form6, setForm6] = useState(incoming ?? null);
   useEffect(() => setForm6(incoming ?? null), [incoming]);
 
-  const approvalCheck = checkApprovalProcess(getFormNumber(location?.pathname), decryptedUser?.role_id, [ form6[0]?.is_dean && 9, form6[0]?.is_commex && 1, form6[0]?.is_asd && 10, form6[0]?.is_ad && 11, ].filter(Boolean), (routeState?.owner?.role_id === 1 || routeState?.owner?.role_id === 4))
-  const isApprovalCheckPass = approvalCheck?.included && ( Number(decryptedUser?.role_id) === Number(approvalCheck?.nextApprover))
-    
 
   // normalize to object in `details`
   const details = Array.isArray(form6) ? form6[0] : form6;
@@ -41,7 +38,9 @@ export const Form6Detail = () => {
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
   const decryptedUser = token && DecryptUser(user);
   const decryptedToken = token && DecryptString(token);
-
+  const approvalCheck = checkApprovalProcess(getFormNumber(location?.pathname), decryptedUser?.role_id, [ form6[0]?.is_dean && 9, form6[0]?.is_commex && 1, form6[0]?.is_asd && 10, form6[0]?.is_ad && 11, ].filter(Boolean), (routeState?.owner?.role_id === 1 || routeState?.owner?.role_id === 4))
+  const isApprovalCheckPass = approvalCheck?.included && ( Number(decryptedUser?.role_id) === Number(approvalCheck?.nextApprover))
+    
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
