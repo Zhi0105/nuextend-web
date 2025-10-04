@@ -2,7 +2,7 @@ import { DashboardTemplate } from "@_src/templates/DashboardTemplate"
 import { useUserStore } from '@_src/store/auth';
 import { AdminSidenav } from "@_src/routes/AdminSidenav"
 import { Sidenav } from "@_src/routes/Sidenav";
-import { CreateReport } from "@_src/components/Pages/Activity/CreateReport";
+import { CreateReportProgress } from "@_src/components/Pages/Activity/CreateReportProgress";
 import { Header } from "@_src/components/Partial/Header"
 import { DecryptUser } from "@_src/utils/helpers";
 
@@ -18,7 +18,7 @@ export const CreateReportScreen = () => {
             sidenav={isAdminRole ? <AdminSidenav /> : <Sidenav />}
             header={<Header />}
         >
-            <CreateReport />
+            <CreateReportProgress />
         </DashboardTemplate>
     )
 }

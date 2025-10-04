@@ -79,7 +79,7 @@ import { Form10DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform
 import { Form11DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form11DetailScreen'
 import { Form12DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form12DetailScreen'
 
-import { CreateReportProgress } from "@_src/components/Pages/Activity/CreateReportProgress";
+import { CreateReportScreen } from '@_src/components/Screen/Activity/CreateReportScreen';
 import { ViewReportScreen } from "@_src/components/Screen/Activity/ViewReportScreen";
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
@@ -94,7 +94,7 @@ export const RouteList = () => {
             <Route path="/dashboard" element={<DashboardScreen />} />
 
                 <Route path="/certificate-print" element={<Certificate />} />
-                <Route path="/create-report-progress" element={<CreateReportProgress />} />
+                <Route path="/create-report-progress" element={<CreateReportScreen />} />
                 <Route path="/view-report" element={<ViewReportScreen />} />
 
                 <Route path="/email-verified-sendlink" element={<EmailSendLinkScreen />} />
