@@ -105,7 +105,7 @@ export const UpdatedProject = () => {
                                         <td className="px-4 py-4 align-top text-slate-700">{form.code}</td>
 
                                     
-                                        <td>{getFormStatus(event[form.formKey], _.toNumber(_.replace(form.formKey, /^\D+/g, '')))}</td>
+                                        <td>{getFormStatus(event[form.formKey], _.toNumber(_.replace(form.formKey, /^\D+/g, '')), ( event?.user.role_id === 1 || event?.user.role_id === 4 ))}</td>
                                         
                                         {/* upload cell */}
                                         <td className="px-4 py-4 align-top">

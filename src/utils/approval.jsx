@@ -128,7 +128,7 @@ export const getFormNumber = (pathname) => {
     const result = _.toNumber(_.last(_.split(pathname, '/')));
     return result
 }
-export const getFormStatus = (form, formNumber) => {
+export const getFormStatus = (form, formNumber, isAdminOwner = false) => {
   if (!form?.length) {
     return <h1 className="text-blue-600">for fill up</h1>;
   }
@@ -138,13 +138,20 @@ export const getFormStatus = (form, formNumber) => {
     ad_remarks, asd_remarks, commex_remarks, dean_remarks 
   } = form[0];
 
-  // ✅ Rule 1: If any remarks exist → sent for revised
+  // ✅ Rule 1: any remarks = sent for revised
   if (ad_remarks || asd_remarks || commex_remarks || dean_remarks) {
     return <h1 className="text-red-400">sent for revised</h1>;
   }
 
-  // ✅ Get required approvers for this form
-  const requiredApprovers = approverMap[formNumber] || [];
+  // ✅ Determine required approvers for this form
+  let requiredApprovers = approverMap[formNumber] || [];
+
+  // ✅ If admin owner, exclude dean
+  if (isAdminOwner) {
+    requiredApprovers = requiredApprovers.filter(a => a !== "dean");
+  }
+
+  // ✅ Map of approval flags
   const approverValues = {
     ad: is_ad,
     asd: is_asd,
@@ -152,26 +159,34 @@ export const getFormStatus = (form, formNumber) => {
     dean: is_dean
   };
 
-  // Special handling: dean OR asd (forms 4 & 5)
   let approvedCount = 0;
   let totalApprovers = requiredApprovers.length;
 
+  // ✅ Special handling for forms 4 & 5
   if (formNumber === 4 || formNumber === 5) {
-    // dean or asd counts as one slot
-    const deanOrAsdApproved = approverValues.dean || approverValues.asd;
-    approvedCount += deanOrAsdApproved ? 1 : 0;
-    totalApprovers = 2; // dean/asd + commex
+    // dean OR asd counts as one slot
+    const deanOrAsdApproved = isAdminOwner
+      ? approverValues.asd // if admin, dean excluded
+      : (approverValues.dean || approverValues.asd);
+
+    // if dean/asd slot approved
+    if (deanOrAsdApproved) approvedCount++;
+
+    // commex is always required
     if (approverValues.commex) approvedCount++;
+
+    // Total approvers logic
+    totalApprovers = 2; // (dean/asd slot + commex)
   } else {
-    // Normal case: count all required
+    // ✅ Normal counting
     approvedCount = requiredApprovers.filter(key => approverValues[key]).length;
   }
 
-  // ✅ Rule 2: If all required are approved → done
+  // ✅ Rule 2: all required approved → done
   if (approvedCount === totalApprovers) {
     return <h1 className="text-green-500">done</h1>;
   }
 
-  // ✅ Otherwise → pending with fraction
+  // ✅ Otherwise → pending with progress
   return <h1 className="text-yellow-400">{`pending ${approvedCount} / ${totalApprovers}`}</h1>;
 };
