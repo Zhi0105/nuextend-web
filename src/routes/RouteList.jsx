@@ -81,6 +81,7 @@ import { Form12DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform
 
 import { CreateReportScreen } from '@_src/components/Screen/Activity/CreateReportScreen';
 import { ViewReportScreen } from "@_src/components/Screen/Activity/ViewReportScreen";
+import { UploadAttachmentScreen } from "@_src/components/Screen/Forms/Upload/UploadAttachmentScreen";
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
 
@@ -96,6 +97,7 @@ export const RouteList = () => {
                 <Route path="/certificate-print" element={<Certificate />} />
                 <Route path="/create-report-progress" element={<CreateReportScreen />} />
                 <Route path="/view-report" element={<ViewReportScreen />} />
+                <Route path="/upload-attachment" element={<UploadAttachmentScreen />} />
 
                 <Route path="/email-verified-sendlink" element={<EmailSendLinkScreen />} />
                 <Route path="/email-verified" element={<EmailVerifiedScreen />} />
