@@ -28,7 +28,7 @@ export const FormList = () => {
     const [visibleRow, setVisibleRow] = useState(null);
     const [approveVisibleRow, setApproveVisibleRow] = useState(null);
 
-    const { data: formData, isLoading: formLoading, refetch, isFetching: fetchLoading } = getForms({token: decryptedToken, event: data.id})
+    const { data: formData, isLoading: formLoading, refetch, isFetching: fetchLoading } = getForms({token: decryptedToken, event: data.id}) 
 
     const { mutate: handleAcceptForm, isLoading: approveFormLoading } = useMutation({
         mutationFn: approveForm,

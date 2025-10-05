@@ -21,7 +21,7 @@ export const Report = () => {
   const currentRoleId = decryptedUser?.role_id;
 
   const [reports, setReports] = useState([]);
-  const [eventStatuses, setEventStatuses] = useState([]);
+  const [ setEventStatuses ] = useState([]);
   const [loading, setLoading] = useState(false);
   const [creatorId] = useState(creator_id || null); // store creator ID from state
 
@@ -71,6 +71,7 @@ const shouldShowViewButton = (rowData) => {
     getEventStatuses({ token: decryptedToken })
       .then((res) => setEventStatuses(res || []))
       .catch(() => toast.error("Failed to fetch event statuses"));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [decryptedToken]);
 
   // Generate status text based on partial/full approval or revision

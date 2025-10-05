@@ -378,87 +378,90 @@ const pesoFormat = (value) => {
           />
         </div>
       </div>
-
-      <DataTable
-        value={mergedEvents}
-        size="normal"
-        paginator
-        rows={10}
-        dataKey="_rowId"
-        emptyMessage="Event(s) Not Found."
-        className="datatable-responsive min-w-full px-2 py-2 text-sm"
-        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-        currentPageReportTemplate="Showing {first} to {last} of {totalRecords} events"
-        removableSort
-        /* keep filters active, but hide per-column UI */
-        filterDisplay="menu"       /* or "row"; column UIs are suppressed below */
-        filters={filters}
-        globalFilterFields={[
-          "name",
-          "model.name",
-          "eventstatus.name",
-          "computedStatus",
-          "creatorRoleName",
-          "user.lastname",
-          "user.firstname",
-          "department.name",
-          "user.role.name",
-          "user.department.name",
-          "organization.name",        // <-- add for global search
-          "budget_proposal",          // <-- add for global search
-        ]}
-      >
-        <Column
-          headerClassName="bg-[#364190] text-white text-sm"
-          className="capitalize font-bold"
-          field="name"
-          header="Event"
-          sortable
-        />
-        <Column headerClassName="bg-[#364190] text-white text-sm" header="Creator" body={creatorBody} sortable />
-        <Column headerClassName="bg-[#364190] text-white text-sm" header="Model" body={modelBody} sortable />
-        <Column headerClassName="bg-[#364190] text-white text-sm" header="Department" body={departmentBody} sortable />
-        <Column
-          headerClassName="bg-[#364190] text-white text-sm"
-          header="Status"
-          body={statusBody}
-          field="computedStatus"
-          sortable
-          /* hide column filter UI, but still filter via external dropdown */
-          filter
-          showFilterMenu={false}
-          showFilterOperator={false}
-          showClearButton={false}
-        />
-        <Column headerClassName="bg-[#364190] text-white text-sm" header="Role" body={roleBody} sortable />
-
-        {/* Hidden utility column: used for Admin filter; UI hidden but filter active via external dropdown */}
-        <Column
-          field="createdByAdmin"
-          header="Created by Admin"
-          headerClassName="bg-[#364190] text-white text-sm"
-          style={{ display: "none" }}
-          filter
-          dataType="boolean"
-          showFilterMenu={false}
-          showFilterOperator={false}
-          showClearButton={false}
-        />
-        <Column
+    
+      <div className="w-full overflow-x-auto">
+        <DataTable
+          value={mergedEvents}
+          size="normal"
+          paginator
+          rows={10}
+          dataKey="_rowId"
+          emptyMessage="Event(s) Not Found."
+          className="datatable-responsive min-w-full px-2 py-2 text-sm"
+          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+          currentPageReportTemplate="Showing {first} to {last} of {totalRecords} events"
+          removableSort
+          /* keep filters active, but hide per-column UI */
+          filterDisplay="menu"       /* or "row"; column UIs are suppressed below */
+          filters={filters}
+          globalFilterFields={[
+            "name",
+            "model.name",
+            "eventstatus.name",
+            "computedStatus",
+            "creatorRoleName",
+            "user.lastname",
+            "user.firstname",
+            "department.name",
+            "user.role.name",
+            "user.department.name",
+            "organization.name",        // <-- add for global search
+            "budget_proposal",          // <-- add for global search
+          ]}
+        >
+          <Column
             headerClassName="bg-[#364190] text-white text-sm"
-            header="Budget Proposal"
-            body={budgetProposalBody}
+            className="capitalize font-bold"
+            field="name"
+            header="Event"
             sortable
-        />
-        <Column
+          />
+          <Column headerClassName="bg-[#364190] text-white text-sm" header="Creator" body={creatorBody} sortable />
+          <Column headerClassName="bg-[#364190] text-white text-sm" header="Model" body={modelBody} sortable />
+          <Column headerClassName="bg-[#364190] text-white text-sm" header="Department" body={departmentBody} sortable />
+          <Column
             headerClassName="bg-[#364190] text-white text-sm"
-            header="Organization"
-            body={organizationBody}
+            header="Status"
+            body={statusBody}
+            field="computedStatus"
             sortable
-        />
+            /* hide column filter UI, but still filter via external dropdown */
+            filter
+            showFilterMenu={false}
+            showFilterOperator={false}
+            showClearButton={false}
+          />
+          <Column headerClassName="bg-[#364190] text-white text-sm" header="Role" body={roleBody} sortable />
 
-        <Column headerClassName="bg-[#FCA712] text-white text-sm" body={actionBodyTemplateForActivity} header="Action" />
-      </DataTable>
+          {/* Hidden utility column: used for Admin filter; UI hidden but filter active via external dropdown */}
+          <Column
+            field="createdByAdmin"
+            header="Created by Admin"
+            headerClassName="bg-[#364190] text-white text-sm"
+            style={{ display: "none" }}
+            filter
+            dataType="boolean"
+            showFilterMenu={false}
+            showFilterOperator={false}
+            showClearButton={false}
+          />
+          <Column
+              headerClassName="bg-[#364190] text-white text-sm"
+              header="Budget Proposal"
+              body={budgetProposalBody}
+              sortable
+          />
+          <Column
+              headerClassName="bg-[#364190] text-white text-sm"
+              header="Organization"
+              body={organizationBody}
+              sortable
+          />
+
+          <Column headerClassName="bg-[#FCA712] text-white text-sm" body={actionBodyTemplateForActivity} header="Action" />
+        </DataTable>
+      </div>
+  
     </div>
   );
 };
