@@ -381,7 +381,7 @@ export const ViewReport = () => {
         />
 
         {/* Submit button */}
-        {canSubmitOrPullBack && isCreator && ![4, 3, 6, 9].includes(eventStatusId) && !isApprovedByAny && (
+        {canSubmitOrPullBack && isCreator && ![4, 6, 9].includes(eventStatusId) && !isApprovedByAny && (
           <Button
             onClick={handleSubmit}
             disabled={loading}

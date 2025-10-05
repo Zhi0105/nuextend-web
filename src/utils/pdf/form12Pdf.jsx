@@ -65,7 +65,6 @@ export const downloadForm12Pdf = (form12, event, owner, roleId) => {
         { text: attender?.full_name || "—", fontSize: 9 },
         { text: attender?.designation || "—", fontSize: 9 },
         {text: `${attender?.department?.name || ""}${attender?.program?.name ? " - " + attender.program.name : ""}` || "—",fontSize: 9}
-
       ]);
     });
   } else {
@@ -185,11 +184,10 @@ export const downloadForm12Pdf = (form12, event, owner, roleId) => {
     })}.`
   : "The meeting adjourned at exactly ______.";
 
-content.push({ 
-  text: adjournmentText, 
-  margin: [0, 0, 0, 15] 
-});
-
+  content.push({ 
+    text: adjournmentText, 
+    margin: [0, 0, 0, 15] 
+  });
 
   // VII. DOCUMENTATION
   content.push({
@@ -203,125 +201,185 @@ content.push({
     margin: [0, 0, 0, 20] 
   });
 
-  // CONSENT SECTION - Only ComEx and ASD
-  content.push({ 
-    text: "Consent", 
-    bold: true, 
-    fontSize: 16, 
-    margin: [0, 20, 0, 15],
-    alignment: 'center'
-  });
+  // Helper function to create approval cell with e-signatures (from Form11 reference)
+  const createApprovalCell = (approved, approver, approveDate, title) => {
+    const isApproved = !!approved;
+    const approverName = approver ? `${approver.firstname || ''} ${approver.lastname || ''}`.trim() : '';
+    const signatureBase64 = approver?.esign;
+    
+    const cellContent = [];
 
-  // Single table with ComEx and ASD only
-  const consentTable = {
+    // Add signature image
+    if (isApproved && signatureBase64) {
+      cellContent.push({
+        image: signatureBase64,
+        width: 220,
+        height: 100,
+        alignment: 'center',
+        margin: [0, -20, 0, -20]
+      });
+    } else if (isApproved) {
+      cellContent.push({
+        canvas: [
+          {
+            type: 'line',
+            x1: 0, y1: 0,
+            x2: 120, y2: 0,
+            lineWidth: 1,
+            lineColor: 'black'
+          }
+        ],
+        margin: [0, 8, 0, 2]
+      });
+    } else {
+      cellContent.push({
+        text: ' ',
+        margin: [0, 8, 0, 2]
+      });
+    }
+
+    // Status
+    cellContent.push({
+      text: isApproved ? 'Approved' : 'Awaiting Approval',
+      bold: isApproved,
+      color: isApproved ? 'green' : 'gray',
+      italic: !isApproved,
+      alignment: 'center',
+      margin: [0, 0, 0, 1],
+      fontSize: 9
+    });
+
+    // Approver name
+    cellContent.push({
+      text: approverName ? approverName.toUpperCase() : (isApproved ? '—' : '___________________'),
+      alignment: 'center',
+      margin: [0, 0, 0, 1],
+      fontSize: 9,
+      bold: true
+    });
+
+    // Title
+    cellContent.push({
+      text: title,
+      alignment: 'center',
+      fontSize: 8,
+      color: 'gray',
+      margin: [0, 0, 0, 1]
+    });
+
+    // Date
+    if (approveDate) {
+      cellContent.push({
+        text: new Date(approveDate).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        }),
+        alignment: 'center',
+        fontSize: 8,
+        color: 'gray',
+        margin: [0, 0, 0, 0]
+      });
+    } else {
+      cellContent.push({
+        text: 'Date: ______________',
+        alignment: 'center',
+        fontSize: 8,
+        color: 'gray',
+        margin: [0, 0, 0, 0]
+      });
+    }
+
+    return {
+      stack: cellContent,
+      alignment: 'center',
+      margin: [0, 2, 0, 2]
+    };
+  };
+
+  // Helper function to create Meeting Scribe cell (no e-signature, just line)
+  const createMeetingScribeCell = () => {
+    const cellContent = [];
+
+    // Name placeholder
+    cellContent.push({
+      text: 'Signature Over Printed Name',
+      alignment: 'center',
+      margin: [0, 75, 0, 1],
+      fontSize: 9,
+      bold: true
+    });
+
+    // Title
+    cellContent.push({
+      text: 'Meeting Scribe',
+      alignment: 'center',
+      fontSize: 8,
+      color: 'gray',
+      margin: [0, 0, 0, 0]
+    });
+
+    return {
+      stack: cellContent,
+      alignment: 'center',
+      margin: [0, 2, 0, 2]
+    };
+  };
+
+  // MERGED APPROVAL TABLE - Meeting Scribe, ComEx, and ASD
+  const mergedApprovalTable = {
     table: {
       headerRows: 1,
-      widths: ['50%', '50%'],
+      widths: ['33%', '33%', '34%'],
       body: [
         [
-          { text: 'ComEx', style: 'tableHeader', alignment: 'center' },
-          { text: 'Academic Services Director', style: 'tableHeader', alignment: 'center' }
+          { text: 'Prepared By:', style: 'tableHeader', alignment: 'center' },
+          { text: 'Reviewed By:', style: 'tableHeader', alignment: 'center' },
+          { text: 'Noted By:', style: 'tableHeader', alignment: 'center' }
         ],
         [
-          // ComEx cell
-          {
-            stack: [
-              f?.commex_approved_by 
-                ? { text: 'Approved', bold: true, color: 'green', margin: [0, 0, 0, 5] }
-                : { text: 'Awaiting Approval', italic: true, color: 'gray' },
-              f?.commex_approved_by 
-                ? { 
-                    text: `${f?.commex_approver?.firstname || ''} ${f?.commex_approver?.lastname || ''}`.trim() || '—',
-                    margin: [0, 0, 0, 3]
-                  }
-                : '',
-              f?.commex_approve_date 
-                ? { 
-                    text: new Date(f.commex_approve_date).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    }),
-                    fontSize: 9,
-                    color: 'gray'
-                  }
-                : ''
-            ],
-            alignment: 'center',
-            margin: [0, 20, 0, 0]
-          },
-          // ASD cell
-          {
-            stack: [
-              f?.asd_approved_by 
-                ? { text: 'Approved', bold: true, color: 'green', margin: [0, 0, 0, 5] }
-                : { text: 'Awaiting Approval', italic: true, color: 'gray' },
-              f?.asd_approved_by 
-                ? { 
-                    text: `${f?.asd_approver?.firstname || ''} ${f?.asd_approver?.lastname || ''}`.trim() || '—',
-                    margin: [0, 0, 0, 3]
-                  }
-                : '',
-              f?.asd_approve_date 
-                ? { 
-                    text: new Date(f.asd_approve_date).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    }),
-                    fontSize: 9,
-                    color: 'gray'
-                  }
-                : ''
-            ],
-            alignment: 'center',
-            margin: [0, 20, 0, 0]
-          }
+          // Meeting Scribe cell (Prepared By)
+          createMeetingScribeCell(),
+          // ComEx cell (Reviewed By)
+          createApprovalCell(
+            f?.commex_approved_by,
+            f?.commex_approver,
+            f?.commex_approve_date,
+            'ComEx Coordinator'
+          ),
+          // ASD cell (Noted By)
+          createApprovalCell(
+            f?.asd_approved_by,
+            f?.asd_approver,
+            f?.asd_approve_date,
+            'Academic Services Director'
+          )
         ]
-      ]
+      ],
+      heights: [15, 80]
     },
     layout: {
       hLineWidth: function(i, node) { return 1; },
       vLineWidth: function(i, node) { return 1; },
       hLineColor: function(i, node) { return 'black'; },
       vLineColor: function(i, node) { return 'black'; },
-      paddingLeft: function(i, node) { return 4; },
-      paddingRight: function(i, node) { return 4; },
-      paddingTop: function(i, node) { return 10; },
-      paddingBottom: function(i, node) { return 10; },
+      paddingLeft: function(i, node) { return 1; },
+      paddingRight: function(i, node) { return 1; },
+      paddingTop: function(i, node) { return 0; },
+      paddingBottom: function(i, node) { return 0; },
     },
-    margin: [0, 0, 0, 20]
+    margin: [0, 0, 0, 0]
   };
 
-  content.push(consentTable);
-
-      content.push({
-    stack: [
-      { 
-        text: "____________________",
-        margin: [0, 0, 0, 5]
-      }
-    ],
-    margin: [0, 0, 0, 0]
-  });
-
-  content.push({
-    stack: [
-      { 
-        text: "Meeting Scribe",
-        margin: [0, 0, 0, 5]
-      }
-    ],
-    margin: [0, 0, 0, 20]
-  });
+  content.push(mergedApprovalTable);
 
   const docDefinition = {
     content,
     styles: {
       tableHeader: {
+        fontSize: 10,
         bold: true,
-        fontSize: 11,
-        margin: [0, 5, 0, 5]
+        margin: [0, 3, 0, 3]
       }
     },
     defaultStyle: { 
