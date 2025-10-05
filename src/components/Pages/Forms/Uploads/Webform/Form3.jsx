@@ -12,7 +12,7 @@ import { toast } from "react-toastify";
 import { useUserStore } from '@_src/store/auth';
 import { DecryptString } from "@_src/utils/helpers";
 import { createForm3, updateForm3 } from "@_src/services/formservice";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const defaultValues = {
     description: "",
@@ -55,6 +55,7 @@ const TW_BTN = "px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 act
 export const Form3 = ({ onSubmit }) => {
     const queryClient = useQueryClient()
     const location = useLocation()
+    const navigate = useNavigate();
     const { event, formdata } = location.state || {}
     const { token } = useUserStore((state) => ({ token: state.token }));
     const decryptedToken = token && DecryptString(token)
@@ -65,6 +66,7 @@ export const Form3 = ({ onSubmit }) => {
             queryClient.invalidateQueries({ queryKey: ['outreach'] });
             toast(data.message, { type: "success" })
             reset(defaultValues)
+            navigate("/event/view");
             }, 
         onError: (error) => {
             toast(error?.response?.data?.message, { type: "warning" })
@@ -76,6 +78,7 @@ export const Form3 = ({ onSubmit }) => {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['outreach'] });
             toast(data.message, { type: "success" })
+            navigate("/event/view");
             }, 
         onError: (error) => {
             toast(error?.response?.data?.message, { type: "warning" })

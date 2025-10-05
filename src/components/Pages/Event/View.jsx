@@ -18,7 +18,7 @@ import { PiNotePencil, PiListMagnifyingGlass, PiCertificate } from "react-icons/
 import { VscLayoutActivitybarLeft } from "react-icons/vsc";
 import { RiIndeterminateCircleLine } from "react-icons/ri";
 import { MdOutlinePostAdd } from "react-icons/md";
-import { FaSearch, FaWpforms, FaTrash } from "react-icons/fa";
+import { FaSearch, FaWpforms, FaTrash, FaBullhorn } from "react-icons/fa";
 import { useCertificatePreview } from "@_src/utils/useCertificatePreview";
 
 export const View = () => {
@@ -222,6 +222,10 @@ export const View = () => {
               className={`w-7 h-7 ${eventRow?.is_posted ? "text-gray-200" : "text-[#364190]"}`}
             />
           </button>
+          <button onClick={() => navigate("/event/announcement", { state: { event_id: eventRow.id } })}>
+          <Tooltip target=".announcement" content="Announcements" position="right" />
+          <FaBullhorn className="announcement w-7 h-7 text-[#364190]" />
+        </button>
           <button disabled={eventTerminateLoading} onClick={() => handleTerminate(eventRow)}>
             <Tooltip target=".terminate" content="Terminate" position="right" />
             <RiIndeterminateCircleLine className="terminate w-7 h-7 text-[#364190]" />
@@ -239,6 +243,7 @@ export const View = () => {
             <Tooltip target=".remove" content="remove" position="right" />
             <FaTrash className="remove w-7 h-7 text-[#364190]" />
           </button>
+          
         </div>
       );
     }
@@ -276,6 +281,11 @@ export const View = () => {
           <Tooltip target=".form" content="Form" position="right" />
           <FaWpforms className="form w-7 h-7 text-[#364190]" />
         </button>
+        <button onClick={() => navigate("/event/announcement", { state: { event_id: eventRow.id } })}>
+          <Tooltip target=".announcement" content="Announcements" position="right" />
+          <FaBullhorn className="announcement w-7 h-7 text-[#364190]" />
+        </button>
+
         <button
           disabled={removeEventLoading}
           onClick={() => removeEvent({ token: decryptedToken, id: eventRow?.id })}

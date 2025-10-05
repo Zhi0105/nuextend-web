@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 import { useUserStore } from '@_src/store/auth';
 import { DecryptString } from "@_src/utils/helpers";
 import { createForm2, updateForm2 } from "@_src/services/formservice";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Err = ({ message }) =>
   message ? <small className="p-error block mt-1">{message}</small> : null;
@@ -37,8 +37,9 @@ const num = (v) => (v === null || v === undefined || v === "" ? null : Number(v)
 
 
 export const Form2 = () => {
-  const queryClient = useQueryClient()
-  const location = useLocation()
+  const queryClient = useQueryClient();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { event, formdata } = location.state
   const { token } = useUserStore((state) => ({ token: state.token }));
   const decryptedToken = token && DecryptString(token)
@@ -49,6 +50,7 @@ export const Form2 = () => {
             queryClient.invalidateQueries({ queryKey: ['project'] });
             toast(data.message, { type: "success" })
             reset()
+            navigate("/event/view");
             }, 
         onError: (error) => {
             toast(error?.response.data.message, { type: "warning" })
@@ -61,6 +63,7 @@ export const Form2 = () => {
       onSuccess: (data) => {
           queryClient.invalidateQueries({ queryKey: ['project'] });
           toast(data.message, { type: "success" })
+          navigate("/event/view");
           }, 
       onError: (error) => {
           toast(error?.response.data.message, { type: "warning" })

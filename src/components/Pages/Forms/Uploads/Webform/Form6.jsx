@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 import { useUserStore } from "@_src/store/auth";
 import { DecryptString } from "@_src/utils/helpers";
 import { createForm6, updateForm6 } from "@_src/services/formservice";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const defaultValues = {
   designation: "",
@@ -31,6 +31,7 @@ const TW_BTN =
 export const Form6 = ({ onSubmit }) => {
   const queryClient = useQueryClient();
   const location = useLocation();
+  const navigate = useNavigate();
   const { event, formdata } = location.state || {};
 
   const { token } = useUserStore((s) => ({ token: s.token }));
@@ -58,6 +59,7 @@ export const Form6 = ({ onSubmit }) => {
       queryClient.invalidateQueries({ queryKey: ["form6"] });
       toast(data?.message || "Form6 created", { type: "success" });
       reset(defaultValues);
+      navigate("/event/view");
     },
     onError: (err) => {
       toast(err?.response?.data?.message || "Error creating Form6", {
@@ -71,6 +73,7 @@ export const Form6 = ({ onSubmit }) => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["form6"] });
       toast(data?.message || "Form6 updated", { type: "success" });
+      navigate("/event/view");
     },
     onError: (err) => {
       toast(err?.response?.data?.message || "Error updating Form6", {
