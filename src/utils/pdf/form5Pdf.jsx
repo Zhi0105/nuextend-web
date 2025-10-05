@@ -9,19 +9,6 @@ if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
 }
 
 export const downloadForm5Pdf = (formData, checklist, roleId, owner) => {
-  // Get approver names and dates
-  const comexName = formData?.commex_approver ? 
-    `${formData.commex_approver.firstname} ${formData.commex_approver.lastname}` : 
-    '___________________';
-  
-  const asdName = formData?.asd_approver ? 
-    `${formData.asd_approver.firstname} ${formData.asd_approver.lastname}` : 
-    '___________________';
-  
-  const deanName = formData?.dean_approver ? 
-    `${formData.dean_approver.firstname} ${formData.dean_approver.lastname}` : 
-    '___________________';
-
   // Get program coordinator name
   const coordinatorName = owner ? 
     `${owner.firstname} ${owner.middlename || ''} ${owner.lastname}`.trim() : 
@@ -41,6 +28,153 @@ export const downloadForm5Pdf = (formData, checklist, roleId, owner) => {
   const isChecked = (key) => {
     const v = formData?.[key];
     return v === true || v === "true" || v === 1 || v === "1";
+  };
+
+  // Helper function to create approval cell with LARGE e-signatures
+  const createApprovalCell = (approved, approver, approveDate, title) => {
+    const isApproved = !!approved;
+    const approverName = approver ? `${approver.firstname || ''} ${approver.lastname || ''}`.trim() : '';
+    const signatureBase64 = approver?.esign;
+    
+    const cellContent = [];
+
+    // Add signature image - LARGE but with minimal spacing
+    if (isApproved && signatureBase64) {
+      cellContent.push({
+        image: signatureBase64,
+        width: 220,  // Large signature
+        height: 100,  // Large signature
+        alignment: 'center',
+        margin: [0, -20, 0, -20] // Minimal margin below signature
+      });
+    } else if (isApproved) {
+      cellContent.push({
+        canvas: [
+          {
+            type: 'line',
+            x1: 0, y1: 0,
+            x2: 140, y2: 0, // Long line
+            lineWidth: 1,
+            lineColor: 'black'
+          }
+        ],
+        margin: [0, 8, 0, 2]
+      });
+    } else {
+      cellContent.push({
+        text: ' ',
+        margin: [0, 8, 0, 2]
+      });
+    }
+
+    // Status below signature - very compact
+    cellContent.push({
+      text: isApproved ? 'Approved' : 'Awaiting Approval',
+      bold: isApproved,
+      color: isApproved ? 'green' : 'gray',
+      italic: !isApproved,
+      alignment: 'center',
+      margin: [0, 0, 0, 1], // Minimal margin
+      fontSize: 9
+    });
+
+    // Approver name - CAPITAL LETTERS and compact
+    cellContent.push({
+      text: approverName ? approverName.toUpperCase() : (isApproved ? '—' : '___________________'),
+      alignment: 'center',
+      margin: [0, 0, 0, 1], // Minimal margin
+      fontSize: 10,
+      bold: true
+    });
+
+    // Title - very compact
+    cellContent.push({
+      text: title,
+      alignment: 'center',
+      fontSize: 8,
+      color: 'gray',
+      margin: [0, 0, 0, 1] // Minimal margin
+    });
+
+    // Date - very compact
+    if (approveDate) {
+      cellContent.push({
+        text: formatDate(approveDate),
+        alignment: 'center',
+        fontSize: 8,
+        color: 'gray',
+        margin: [0, 0, 0, 0] // No margin
+      });
+    } else {
+      cellContent.push({
+        text: 'Date: ______________',
+        alignment: 'center',
+        fontSize: 8,
+        color: 'gray',
+        margin: [0, 0, 0, 0] // No margin
+      });
+    }
+
+    return {
+      stack: cellContent,
+      alignment: 'center',
+      margin: [0, 2, 0, 2] // Very compact margins around entire cell
+    };
+  };
+
+  // Helper function to create assessed by cell WITH E-SIGNATURE
+  const createAssessedByCell = (name, title, owner) => {
+    const signatureBase64 = owner?.esign;
+    
+    const cellContent = [];
+
+    // Add signature image for Assessed By
+    if (signatureBase64) {
+      cellContent.push({
+        image: signatureBase64,
+        width: 220,  // Same size as other signatures
+        height: 100,  // Same size as other signatures
+        alignment: 'center',
+        margin: [0, -7, 0, -20] // Minimal margin below signature
+      });
+    } else {
+      cellContent.push({
+        canvas: [
+          {
+            type: 'line',
+            x1: 0, y1: 0,
+            x2: 140, y2: 0, // Same line length as other signatures
+            lineWidth: 1,
+            lineColor: 'black'
+          }
+        ],
+        margin: [0, 8, 0, 2]
+      });
+    }
+
+    // Name - CAPITAL LETTERS
+    cellContent.push({
+      text: name ? name.toUpperCase() : '___________________',
+      alignment: 'center',
+      bold: true,
+      fontSize: 10,
+      margin: [0, 0, 0, 1]
+    });
+
+    // Title
+    cellContent.push({
+      text: title,
+      alignment: 'center',
+      fontSize: 8,
+      color: 'gray',
+      margin: [0, 0, 0, 0]
+    });
+
+    return {
+      stack: cellContent,
+      alignment: 'center',
+      margin: [0, 2, 0, 2] // Same margins as other cells
+    };
   };
 
   // Checklist table rows for Form5
@@ -95,14 +229,14 @@ export const downloadForm5Pdf = (formData, checklist, roleId, owner) => {
 
   const docDefinition = {
     pageSize: 'A4',
-    pageMargins: [40, 60, 40, 60],
+    pageMargins: [40, 40, 40, 40],
     content: [
       // Title
       {
         text: 'CHECKLIST OF CRITERIA FOR PROJECT PROPOSAL',
         style: 'header',
         alignment: 'center',
-        margin: [0, 0, 0, 20]
+        margin: [0, 0, 0, 15]
       },
       
       // Checklist Table
@@ -117,95 +251,53 @@ export const downloadForm5Pdf = (formData, checklist, roleId, owner) => {
           vLineWidth: function(i, node) { return 1; },
           hLineColor: function(i, node) { return 'black'; },
           vLineColor: function(i, node) { return 'black'; },
-        }
+        },
+        margin: [0, 0, 0, 0]
       },
       
-      // Spacing
-      { text: '', margin: [0, 30, 0, 0] },
-      
-      // Consent Section
-      {
-        text: 'Consent',
-        style: 'header',
-        alignment: 'center',
-        margin: [0, 0, 0, 20]
-      },
-      
+      // MERGED APPROVAL TABLE WITH ASSESSED BY
       {
         table: {
           headerRows: 1,
-          widths: ['*', '*'],
+          widths: ['33%', '33%', '34%'], // Three columns: ComEx, ASD/Dean, Assessed By
           body: [
             [
               { text: 'ComEx', style: 'tableHeader', alignment: 'center' },
-              { text: 'Academic Services Director / Dean', style: 'tableHeader', alignment: 'center' }
+              { text: [1, 4].includes(roleId) ? 'Academic Services Director' : 'Dean', style: 'tableHeader', alignment: 'center' },
+              { text: 'Assessed By', style: 'tableHeader', alignment: 'center' }
             ],
             [
-              {
-                stack: [
-                  { text: formData?.commex_approved_by ? 'Approved' : 'Awaiting Approval', style: formData?.commex_approved_by ? 'approvedText' : 'awaitingText', alignment: 'center' },
-                  { text: comexName, style: 'nameText', alignment: 'center', margin: [0, 5, 0, 0] },
-                  { text: formatDate(formData?.commex_approve_date), style: 'dateText', alignment: 'center', margin: [0, 5, 0, 0] }
-                ],
-                alignment: 'center'
-              },
-              {
-                stack: [
-                  { 
-                    text: ([1, 4].includes(roleId) ? formData?.asd_approved_by : (formData?.asd_approved_by || formData?.dean_approved_by)) ? 'Approved' : 'Awaiting Approval', 
-                    style: ([1, 4].includes(roleId) ? formData?.asd_approved_by : (formData?.asd_approved_by || formData?.dean_approved_by)) ? 'approvedText' : 'awaitingText', 
-                    alignment: 'center' 
-                  },
-                  { 
-                    text: [1, 4].includes(roleId) ? asdName : (formData?.asd_approved_by ? asdName : deanName), 
-                    style: 'nameText', 
-                    alignment: 'center', 
-                    margin: [0, 5, 0, 0] 
-                  },
-                  { 
-                    text: formatDate([1, 4].includes(roleId) ? formData?.asd_approve_date : (formData?.asd_approve_date || formData?.dean_approve_date)), 
-                    style: 'dateText', 
-                    alignment: 'center', 
-                    margin: [0, 5, 0, 0] 
-                  }
-                ],
-                alignment: 'center'
-              }
+              // ComEx cell
+              createApprovalCell(
+                formData?.commex_approved_by,
+                formData?.commex_approver,
+                formData?.commex_approve_date,
+                'ComEx Coordinator'
+              ),
+              // ASD/Dean cell
+              createApprovalCell(
+                [1, 4].includes(roleId) ? formData?.asd_approved_by : formData?.dean_approved_by,
+                [1, 4].includes(roleId) ? formData?.asd_approver : formData?.dean_approver,
+                [1, 4].includes(roleId) ? formData?.asd_approve_date : formData?.dean_approve_date,
+                [1, 4].includes(roleId) ? 'Academic Services Director' : 'Dean'
+              ),
+              // Assessed By cell WITH E-SIGNATURE
+              createAssessedByCell(coordinatorName, 'Program Coordinator', owner)
             ]
-          ]
+          ],
+          heights: [15, 80] // Compact fixed heights
         },
         layout: {
           hLineWidth: function(i, node) { return 1; },
           vLineWidth: function(i, node) { return 1; },
           hLineColor: function(i, node) { return 'black'; },
           vLineColor: function(i, node) { return 'black'; },
+          paddingLeft: function(i, node) { return 1; },
+          paddingRight: function(i, node) { return 1; },
+          paddingTop: function(i, node) { return 0; },
+          paddingBottom: function(i, node) { return 0; },
         },
-        margin: [0, 0, 0, 30]
-      },
-      
-      // Assessed By Section
-      {
-        table: {
-          headerRows: 1,
-          widths: ['*'],
-          body: [
-            [
-              { text: 'Assessed By:', style: 'tableHeader', alignment: 'center' }
-            ],
-            [
-              { text: coordinatorName, style: 'nameText', alignment: 'center' }
-            ],
-            [
-              { text: 'Program Coordinator', style: 'roleText', alignment: 'center' }
-            ]
-          ]
-        },
-        layout: {
-          hLineWidth: function(i, node) { return 1; },
-          vLineWidth: function(i, node) { return 1; },
-          hLineColor: function(i, node) { return 'black'; },
-          vLineColor: function(i, node) { return 'black'; },
-        }
+        margin: [0, 0, 0, 20]
       }
     ],
     
@@ -215,10 +307,9 @@ export const downloadForm5Pdf = (formData, checklist, roleId, owner) => {
         bold: true
       },
       tableHeader: {
-        fillColor: '#f0f0f0',
-        fontSize: 11,
+        fontSize: 10,
         bold: true,
-        margin: [4, 4, 4, 4]
+        margin: [0, 3, 0, 3]
       },
       categoryHeader: {
         fillColor: '#e0e0e0',
@@ -229,29 +320,11 @@ export const downloadForm5Pdf = (formData, checklist, roleId, owner) => {
       criteriaText: {
         fontSize: 9,
         margin: [4, 3, 4, 3]
-      },
-      approvedText: {
-        fontSize: 11,
-        bold: true,
-        color: 'green'
-      },
-      awaitingText: {
-        fontSize: 11,
-        italic: true,
-        color: '#666666'
-      },
-      nameText: {
-        fontSize: 11,
-        bold: true
-      },
-      dateText: {
-        fontSize: 10,
-        color: '#666666'
-      },
-      roleText: {
-        fontSize: 10,
-        italic: true
       }
+    },
+    defaultStyle: { 
+      fontSize: 11, 
+      lineHeight: 1.15 
     }
   };
 

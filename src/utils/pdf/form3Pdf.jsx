@@ -1,4 +1,4 @@
-// utils/pdfGenerator.js
+// src/utils/pdf/form3Pdf.jsx
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 
@@ -8,7 +8,7 @@ if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
 } else if (pdfFonts && pdfFonts.vfs) {
   pdfMake.vfs = pdfFonts.vfs;
 }
-// utils/pdfGenerator.js - Add this function for Form3
+
 export const downloadForm3Pdf = (form3, event, owner, roleId) => {
   console.log("downloadForm3Pdf called", { form3, event, owner, roleId });
 
@@ -22,6 +22,14 @@ export const downloadForm3Pdf = (form3, event, owner, roleId) => {
   const eventName = event?.eventName || event?.title || f?.title || "—";
 
   const content = [];
+  
+  content.push({
+    text: "OUTREACH PROJECT PROPOSAL",
+    bold: true,
+    fontSize: 16,
+    alignment: 'center',
+    margin: [0, 0, 0, 10],
+  });
 
   // TITLE
   content.push({
@@ -290,7 +298,12 @@ export const downloadForm3Pdf = (form3, event, owner, roleId) => {
     margin: [0, 0, 0, 20]
   });
 
-  // CONSENT SECTION - Same as Form1 and Form2
+  content.push({ 
+    text: '', 
+    pageBreak: 'before'  // This forces a new page
+  });
+
+  // CONSENT SECTION - With E-Signatures
   content.push({ 
     text: "Consent", 
     bold: true, 
@@ -299,222 +312,216 @@ export const downloadForm3Pdf = (form3, event, owner, roleId) => {
     alignment: 'center'
   });
 
-  // Use the roleId to conditionally show Dean column (roleId 2 = Dean)
-  const showDeanColumn = roleId === 2;
-
-  // First table: Conditionally show Dean and ComEx
-  const firstApprovalHeaders = [];
-  const firstApprovalBody = [];
-
-  if (showDeanColumn) {
-    firstApprovalHeaders.push(
-      { text: 'Dean', style: 'tableHeader', alignment: 'center' },
-      { text: 'ComEx', style: 'tableHeader', alignment: 'center' }
-    );
+  // Helper function to create approval cell with VERY LARGE e-signatures but compact layout
+  const createApprovalCell = (approved, approver, approveDate, title) => {
+    const isApproved = !!approved;
+    const approverName = approver ? `${approver.firstname || ''} ${approver.lastname || ''}`.trim() : '';
+    const signatureBase64 = approver?.esign;
     
-    firstApprovalBody.push([
-      // Dean cell
-      {
-        stack: [
-          f?.dean_approved_by 
-            ? { text: 'Approved', bold: true, color: 'green', margin: [0, 0, 0, 5] }
-            : { text: 'Awaiting Approval', italic: true, color: 'gray' },
-          f?.dean_approved_by 
-            ? { 
-                text: `${f?.dean_approver?.firstname || ''} ${f?.dean_approver?.lastname || ''}`.trim() || '—',
-                margin: [0, 0, 0, 3]
-              }
-            : '',
-          f?.dean_approve_date 
-            ? { 
-                text: new Date(f.dean_approve_date).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                }),
-                fontSize: 9,
-                color: 'gray'
-              }
-            : ''
-        ],
-        alignment: 'center',
-        margin: [0, 20, 0, 0]
-      },
-      // ComEx cell
-      {
-        stack: [
-          f?.commex_approved_by 
-            ? { text: 'Approved', bold: true, color: 'green', margin: [0, 0, 0, 5] }
-            : { text: 'Awaiting Approval', italic: true, color: 'gray' },
-          f?.commex_approved_by 
-            ? { 
-                text: `${f?.commex_approver?.firstname || ''} ${f?.commex_approver?.lastname || ''}`.trim() || '—',
-                margin: [0, 0, 0, 3]
-              }
-            : '',
-          f?.commex_approve_date 
-            ? { 
-                text: new Date(f.commex_approve_date).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                }),
-                fontSize: 9,
-                color: 'gray'
-              }
-            : ''
-        ],
-        alignment: 'center',
-        margin: [0, 20, 0, 0]
-      }
-    ]);
-  } else {
-    // Only ComEx column
-    firstApprovalHeaders.push(
-      { text: 'ComEx', style: 'tableHeader', alignment: 'center' }
-    );
-    
-    firstApprovalBody.push([
-      // ComEx cell only
-      {
-        stack: [
-          f?.commex_approved_by 
-            ? { text: 'Approved', bold: true, color: 'green', margin: [0, 0, 0, 5] }
-            : { text: 'Awaiting Approval', italic: true, color: 'gray' },
-          f?.commex_approved_by 
-            ? { 
-                text: `${f?.commex_approver?.firstname || ''} ${f?.commex_approver?.lastname || ''}`.trim() || '—',
-                margin: [0, 0, 0, 3]
-              }
-            : '',
-          f?.commex_approve_date 
-            ? { 
-                text: new Date(f.commex_approve_date).toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                }),
-                fontSize: 9,
-                color: 'gray'
-              }
-            : ''
-        ],
-        alignment: 'center',
-        margin: [0, 20, 0, 0]
-      }
-    ]);
-  }
+    const cellContent = [];
 
-  const firstApprovalTable = {
-    table: {
-      headerRows: 1,
-      widths: showDeanColumn ? ['50%', '50%'] : ['100%'],
-      body: [firstApprovalHeaders, ...firstApprovalBody]
-    },
-    layout: {
-      hLineWidth: function(i, node) { return 1; },
-      vLineWidth: function(i, node) { return 1; },
-      hLineColor: function(i, node) { return 'black'; },
-      vLineColor: function(i, node) { return 'black'; },
-      paddingLeft: function(i, node) { return 4; },
-      paddingRight: function(i, node) { return 4; },
-      paddingTop: function(i, node) { return 10; },
-      paddingBottom: function(i, node) { return 10; },
-    },
-    margin: [0, 0, 0, 10]
+    // Add signature image - VERY LARGE but with minimal spacing
+    if (isApproved && signatureBase64) {
+      cellContent.push({
+        image: signatureBase64,
+        width: 220,  // Large signature
+        height: 100,  // Large signature
+        alignment: 'center',
+        margin: [0, -30, 0, -30] // Minimal margin below signature
+      });
+    } else if (isApproved) {
+      cellContent.push({
+        canvas: [
+          {
+            type: 'line',
+            x1: 0, y1: 0,
+            x2: 160, y2: 0, // Long line
+            lineWidth: 1,
+            lineColor: 'black'
+          }
+        ],
+        margin: [0, 8, 0, 1]
+      });
+    } else {
+      cellContent.push({
+        text: ' ',
+        margin: [0, 8, 0, 1]
+      });
+    }
+
+    // Status below signature - very compact
+    cellContent.push({
+      text: isApproved ? 'Approved' : 'Awaiting Approval',
+      bold: isApproved,
+      color: isApproved ? 'green' : 'gray',
+      italic: !isApproved,
+      alignment: 'center',
+      margin: [0, 0, 0, 0], // No margin
+      fontSize: 9
+    });
+
+    // Approver name - bold and prominent but compact
+    cellContent.push({
+      text: approverName ? approverName.toUpperCase() : (isApproved ? '—' : ''), // Convert to uppercase
+      alignment: 'center',
+      margin: [0, 0, 0, 0], // NO MARGIN
+      fontSize: 9,
+      bold: true
+    });
+
+    // Title - very compact
+    cellContent.push({
+      text: title,
+      alignment: 'center',
+      fontSize: 8,
+      color: 'gray',
+      margin: [0, 0, 0, 0] // No margin
+    });
+
+    // Date - very compact
+    if (approveDate) {
+      cellContent.push({
+        text: new Date(approveDate).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        }),
+        alignment: 'center',
+        fontSize: 8,
+        color: 'gray',
+        margin: [0, 0, 0, 0] // No margin
+      });
+    } else {
+      cellContent.push({
+        text: 'Date: ______________',
+        alignment: 'center',
+        fontSize: 8,
+        color: 'gray',
+        margin: [0, 0, 0, 0] // No margin
+      });
+    }
+
+    return {
+      stack: cellContent,
+      alignment: 'center',
+      margin: [0, 0, 0, 0] // No margin around entire cell
+    };
   };
 
-  content.push(firstApprovalTable);
-
-  // Second table: ASD and AD (always show both)
-  const secondApprovalTable = {
-    table: {
-      headerRows: 1,
-      widths: ['50%', '50%'],
+  // Check if Dean has approved to conditionally show the column
+  const hasDeanApproval = !!f?.dean_approved_by;
+  
+  // Define table structure based on whether Dean approval exists
+  let approvalTableConfig;
+  
+  if (hasDeanApproval) {
+    // Show all 4 columns: ComEx, ASD, AD, and Dean
+    approvalTableConfig = {
+      widths: ['25%', '25%', '25%', '25%'],
       body: [
         [
+          { text: 'ComEx', style: 'tableHeader', alignment: 'center' },
+          { text: 'Academic Services Director', style: 'tableHeader', alignment: 'center' },
+          { text: 'Academic Director', style: 'tableHeader', alignment: 'center' },
+          { text: 'Dean', style: 'tableHeader', alignment: 'center' }
+        ],
+        [
+          // ComEx cell
+          createApprovalCell(
+            f?.commex_approved_by,
+            f?.commex_approver,
+            f?.commex_approve_date,
+            'ComEx Coordinator'
+          ),
+          // ASD cell
+          createApprovalCell(
+            f?.asd_approved_by,
+            f?.asd_approver,
+            f?.asd_approve_date,
+            'Academic Services Director'
+          ),
+          // AD cell
+          createApprovalCell(
+            f?.ad_approved_by,
+            f?.ad_approver,
+            f?.ad_approve_date,
+            'Academic Director'
+          ),
+          // Dean cell
+          createApprovalCell(
+            f?.dean_approved_by,
+            f?.dean_approver,
+            f?.dean_approve_date,
+            'Dean'
+          )
+        ]
+      ]
+    };
+  } else {
+    // Show only 3 columns: ComEx, ASD, AD
+    approvalTableConfig = {
+      widths: ['33%', '33%', '34%'],
+      body: [
+        [
+          { text: 'ComEx', style: 'tableHeader', alignment: 'center' },
           { text: 'Academic Services Director', style: 'tableHeader', alignment: 'center' },
           { text: 'Academic Director', style: 'tableHeader', alignment: 'center' }
         ],
         [
+          // ComEx cell
+          createApprovalCell(
+            f?.commex_approved_by,
+            f?.commex_approver,
+            f?.commex_approve_date,
+            'ComEx Coordinator'
+          ),
           // ASD cell
-          {
-            stack: [
-              f?.asd_approved_by 
-                ? { text: 'Approved', bold: true, color: 'green', margin: [0, 0, 0, 5] }
-                : { text: 'Awaiting Approval', italic: true, color: 'gray' },
-              f?.asd_approved_by 
-                ? { 
-                    text: `${f?.asd_approver?.firstname || ''} ${f?.asd_approver?.lastname || ''}`.trim() || '—',
-                    margin: [0, 0, 0, 3]
-                  }
-                : '',
-              f?.asd_approve_date 
-                ? { 
-                    text: new Date(f.asd_approve_date).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    }),
-                    fontSize: 9,
-                    color: 'gray'
-                  }
-                : ''
-            ],
-            alignment: 'center',
-            margin: [0, 20, 0, 0]
-          },
+          createApprovalCell(
+            f?.asd_approved_by,
+            f?.asd_approver,
+            f?.asd_approve_date,
+            'Academic Services Director'
+          ),
           // AD cell
-          {
-            stack: [
-              f?.ad_approved_by 
-                ? { text: 'Approved', bold: true, color: 'green', margin: [0, 0, 0, 5] }
-                : { text: 'Awaiting Approval', italic: true, color: 'gray' },
-              f?.ad_approved_by 
-                ? { 
-                    text: `${f?.ad_approver?.firstname || ''} ${f?.ad_approver?.lastname || ''}`.trim() || '—',
-                    margin: [0, 0, 0, 3]
-                  }
-                : '',
-              f?.ad_approve_date 
-                ? { 
-                    text: new Date(f.ad_approve_date).toLocaleDateString('en-US', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                    }),
-                    fontSize: 9,
-                    color: 'gray'
-                  }
-                : ''
-            ],
-            alignment: 'center',
-            margin: [0, 20, 0, 0]
-          }
+          createApprovalCell(
+            f?.ad_approved_by,
+            f?.ad_approver,
+            f?.ad_approve_date,
+            'Academic Director'
+          )
         ]
       ]
+    };
+  }
+
+  // MERGED APPROVAL TABLE - Conditionally shows 3 or 4 columns
+  const mergedApprovalTable = {
+    table: {
+      headerRows: 1,
+      ...approvalTableConfig,
+      heights: [15, 70] // Compact fixed heights
     },
     layout: {
       hLineWidth: function(i, node) { return 1; },
       vLineWidth: function(i, node) { return 1; },
       hLineColor: function(i, node) { return 'black'; },
       vLineColor: function(i, node) { return 'black'; },
-      paddingLeft: function(i, node) { return 4; },
-      paddingRight: function(i, node) { return 4; },
-      paddingTop: function(i, node) { return 10; },
-      paddingBottom: function(i, node) { return 10; },
+      paddingLeft: function(i, node) { return 1; },
+      paddingRight: function(i, node) { return 1; },
+      paddingTop: function(i, node) { return 0; },
+      paddingBottom: function(i, node) { return 0; },
     },
     margin: [0, 0, 0, 20]
   };
 
-  content.push(secondApprovalTable);
+  content.push(mergedApprovalTable);
 
   // RECEIVED BY SECTION - at the very bottom
   content.push({ 
     text: "Received By:", 
     bold: true, 
     fontSize: 13, 
-    margin: [0, 30, 0, 10] 
+    margin: [0, 25, 0, 8] 
   });
 
   const receivedByTable = {
@@ -528,7 +535,7 @@ export const downloadForm3Pdf = (form3, event, owner, roleId) => {
             text: 'Community Extension Office', 
             alignment: 'center',
             bold: true,
-            margin: [0, 8, 0, 8]
+            margin: [0, 6, 0, 6]
           }
         ],
         // Second row: Signature and Date/Time
@@ -538,15 +545,15 @@ export const downloadForm3Pdf = (form3, event, owner, roleId) => {
               {
                 width: '60%',
                 stack: [
-                  { text: ' ', margin: [0, 15, 0, 0] },
-                  { text: 'Signature Over Printed Name', margin: [0, 20, 0, 5] }
+                  { text: ' ', margin: [0, 12, 0, 0] },
+                  { text: 'Signature Over Printed Name', margin: [0, 15, 0, 4] }
                 ]
               },
               {
                 width: '40%',
                 stack: [
-                  { text: 'Date: ________________', margin: [0, 20, 0, 5] },
-                  { text: 'Time: ________________', margin: [0, 15, 0, 0] }
+                  { text: 'Date: ________________', margin: [0, 15, 0, 4] },
+                  { text: 'Time: ________________', margin: [0, 12, 0, 0] }
                 ]
               }
             ]
@@ -557,7 +564,7 @@ export const downloadForm3Pdf = (form3, event, owner, roleId) => {
           { 
             text: 'ComEx Coordinator', 
             alignment: 'center',
-            margin: [0, 8, 0, 8]
+            margin: [0, 6, 0, 6]
           }
         ]
       ]
@@ -567,12 +574,12 @@ export const downloadForm3Pdf = (form3, event, owner, roleId) => {
       vLineWidth: function(i, node) { return 1; },
       hLineColor: function(i, node) { return 'black'; },
       vLineColor: function(i, node) { return 'black'; },
-      paddingLeft: function(i, node) { return 8; },
-      paddingRight: function(i, node) { return 8; },
-      paddingTop: function(i, node) { return 8; },
-      paddingBottom: function(i, node) { return 8; },
+      paddingLeft: function(i, node) { return 6; },
+      paddingRight: function(i, node) { return 6; },
+      paddingTop: function(i, node) { return 6; },
+      paddingBottom: function(i, node) { return 6; },
     },
-    margin: [0, 0, 0, 20]
+    margin: [0, 0, 0, 15]
   };
 
   content.push(receivedByTable);
@@ -582,8 +589,8 @@ export const downloadForm3Pdf = (form3, event, owner, roleId) => {
     styles: {
       tableHeader: {
         bold: true,
-        fontSize: 11,
-        margin: [0, 5, 0, 5]
+        fontSize: 10,
+        margin: [0, 3, 0, 3]
       }
     },
     defaultStyle: { 
