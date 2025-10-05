@@ -9,7 +9,7 @@ import { toast } from "react-toastify";
 import { useUserStore } from "@_src/store/auth";
 import { DecryptString } from "@_src/utils/helpers";
 import { createForm4, updateForm4 } from "@_src/services/formservice";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const defaultValues = {
   a: false, b: false, c: false,
@@ -29,6 +29,7 @@ const TW_BTN = "px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 act
 export const Form4 = ({ onSubmit }) => {
   const queryClient = useQueryClient();
   const location = useLocation();
+  const navigate = useNavigate();
   const { event, formdata } = location.state;
   const { token } = useUserStore((state) => ({ token: state.token }));
   const decryptedToken = token && DecryptString(token);
@@ -39,6 +40,7 @@ export const Form4 = ({ onSubmit }) => {
       queryClient.invalidateQueries({ queryKey: ["form4"] });
       toast(data.message, { type: "success" });
       reset();
+      navigate("/event/view");
     },
     onError: (error) => {
       toast(error?.response?.data?.message || "Error creating form", { type: "error" });
@@ -50,6 +52,7 @@ export const Form4 = ({ onSubmit }) => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["form4"] });
       toast(data.message, { type: "success" });
+      navigate("/event/view");
     },
     onError: (error) => {
       toast(error?.response?.data?.message || "Error updating form", { type: "error" });

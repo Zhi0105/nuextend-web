@@ -11,7 +11,7 @@ import { toast } from "react-toastify";
 import { useUserStore } from "@_src/store/auth";
 import { DecryptString } from "@_src/utils/helpers";
 import { createForm12, updateForm12 } from "@_src/services/formservice";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { getPrograms } from "@_src/services/program";
 import { getDepartments } from "@_src/services/department";
 
@@ -45,6 +45,7 @@ const req = (label) => ({
 export const Form12 = ({ onSubmit }) => {
   const queryClient = useQueryClient();
   const location = useLocation();
+  const navigate = useNavigate();
   const { event, formdata } = location.state || {};
 
   const { token } = useUserStore((s) => ({ token: s.token }));
@@ -109,6 +110,7 @@ export const Form12 = ({ onSubmit }) => {
       reset(defaultValues);
       replaceAttendees(defaultValues.attendees);
       replaceNewItems(defaultValues.new_items);
+      navigate("/event/view");
     },
     onError: (err) => {
       toast(err?.response?.data?.message || "Error creating Form12", {
@@ -122,6 +124,7 @@ export const Form12 = ({ onSubmit }) => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["form12"] });
       toast(data?.message || "Form12 updated", { type: "success" });
+      navigate("/event/view");
     },
     onError: (err) => {
       toast(err?.response?.data?.message || "Error updating Form12", {

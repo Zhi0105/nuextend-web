@@ -189,7 +189,7 @@ export const UpdatedProject = () => {
             {/* ADD THIS BUTTON RIGHT AFTER THE HEADER DIV */}
             <div className="flex justify-end p-4 bg-gray-50 border-b">
                 <Button
-                    label="Upload Other Attachments"
+                    label="Other Attachments"
                     className="bg-[#2211cc] text-white font-bold rounded-lg px-4 py-2"
                     onClick={handleNavigateToAttachments}
                 />

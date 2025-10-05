@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 import { useUserStore } from '@_src/store/auth';
 import { DecryptString } from "@_src/utils/helpers";
 import { createForm1, updateForm1 } from "@_src/services/formservice";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 /** Utils **/
 const toYMD = (d) => {
@@ -214,6 +214,7 @@ export const Form1 = () => {
   const queryClient = useQueryClient();
   const location = useLocation();
   const {  formdata } = location.state || {};
+  const navigate = useNavigate();
   const { token } = useUserStore((state) => ({ token: state.token }));
   const decryptedToken = token && DecryptString(token);
 
@@ -223,6 +224,7 @@ export const Form1 = () => {
       queryClient.invalidateQueries({ queryKey: ['program'] });
       toast(data.message, { type: "success" });
       reset();
+      navigate("/event/view");
     },
     onError: (error) => {
       toast(error?.response?.data?.message ?? 'Something went wrong', { type: "warning" });
@@ -235,6 +237,7 @@ export const Form1 = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['program'] });
       toast(data.message, { type: "success" });
+      navigate("/event/view");
     },
     onError: (error) => {
       toast(error?.response?.data?.message ?? 'Something went wrong', { type: "warning" });

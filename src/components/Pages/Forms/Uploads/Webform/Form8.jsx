@@ -10,7 +10,7 @@ import { toast } from "react-toastify";
 import { useUserStore } from "@_src/store/auth";
 import { DecryptString } from "@_src/utils/helpers";
 import { createForm8, updateForm8 } from "@_src/services/formservice";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const defaultValues = {
   proposed_title: "",
@@ -29,6 +29,7 @@ const TW_BTN =
 export const Form8 = ({ onSubmit }) => {
   const queryClient = useQueryClient();
   const location = useLocation();
+  const navigate = useNavigate();
   const { event, formdata } = location.state || {};
 
   const { token } = useUserStore((s) => ({ token: s.token }));
@@ -85,6 +86,7 @@ export const Form8 = ({ onSubmit }) => {
       queryClient.invalidateQueries({ queryKey: ["form8"] });
       toast(data?.message || "Form8 created", { type: "success" });
       reset(defaultValues);
+      navigate("/event/view");
     },
     onError: (err) => {
       toast(err?.response?.data?.message || "Error creating Form8", { type: "error" });
@@ -96,6 +98,7 @@ export const Form8 = ({ onSubmit }) => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["form8"] });
       toast(data?.message || "Form8 updated", { type: "success" });
+      navigate("/event/view");
     },
     onError: (err) => {
       toast(err?.response?.data?.message || "Error updating Form8", { type: "error" });

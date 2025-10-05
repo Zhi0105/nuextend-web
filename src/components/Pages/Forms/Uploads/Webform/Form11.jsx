@@ -10,7 +10,7 @@ import { toast } from "react-toastify";
 import { useUserStore } from "@_src/store/auth";
 import { DecryptString } from "@_src/utils/helpers";
 import { createForm11, updateForm11 } from "@_src/services/formservice";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const TW_CARD = "shadow-sm rounded-2xl border border-gray-200";
 const TW_BTN =
@@ -42,6 +42,7 @@ const req = (label) => ({
 export const Form11 = ({ onSubmit }) => {
   const queryClient = useQueryClient();
   const location = useLocation();
+  const navigate = useNavigate();
   const { event, formdata } = location.state || {};
 
   const { token } = useUserStore((s) => ({ token: s.token }));
@@ -99,6 +100,7 @@ export const Form11 = ({ onSubmit }) => {
       toast(data?.message || "Form11 created", { type: "success" });
       reset(defaultValues);
       replace(defaultValues.travelDetails);
+      navigate("/event/view");
     },
     onError: (err) => {
       toast(err?.response?.data?.message || "Error creating Form11", {
@@ -112,6 +114,7 @@ export const Form11 = ({ onSubmit }) => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["form11"] });
       toast(data?.message || "Form11 updated", { type: "success" });
+      navigate("/event/view");
     },
     onError: (err) => {
       toast(err?.response?.data?.message || "Error updating Form11", {
