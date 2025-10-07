@@ -104,7 +104,7 @@ const canDownloadPdf = useMemo(() => {
 
   // Revise
   const [showRevise, setShowRevise] = useState(false);
-  const remarksKeyByRole = { 1: "commex_remarks", 9: "dean_remarks", 10: "asd_remarks", 11: "ad_remarks" };
+
   const {
     handleSubmit,
     control,
@@ -124,13 +124,53 @@ const canDownloadPdf = useMemo(() => {
 
   const onSubmitRevise = ({ remarks }) => {
     if (!form2 || !canAction) return;
-    const key = remarksKeyByRole[roleId];
-    if (!key) return;
-    doReject({ token: decryptedToken, id: form2[0].id, role_id: roleId, [key]: remarks });
+    
+    doReject({ 
+      token: decryptedToken, 
+      id: form2[0].id, 
+      role_id: roleId,  
+      remark: remarks  // ✅ Unified 'remark' field
+    });
     setShowRevise(false);
   };
 
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;
+  const [remarksModal, setRemarksModal] = useState({
+    show: false,
+    remarks: '',
+    approver: ''
+  });
+  const handleViewRemarks = () => {
+    if (!event?.form_remarks) {
+      toast("No remarks found", { type: "info" });
+      return;
+    }
+
+    // Filter remarks for this specific form2 and sort by newest first
+    const form2Remarks = event.form_remarks
+      .filter(remark => 
+        remark.form_type === 'form2' && // Use your actual form2 table name
+        remark.form_id === form2[0]?.id
+      )
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    setRemarksModal({ 
+      show: true, 
+      remarks: form2Remarks,
+      approver: 'All Remarks' 
+    });
+  };
+
+  // Add getRoleName function
+  const getRoleName = (roleId) => {
+    const roleMap = {
+      1: 'ComEx',
+      9: 'Dean', 
+      10: 'Academic Services Director',
+      11: 'Academic Director'
+    };
+    return roleMap[roleId] || 'Unknown Role';
+  };
 
  
   if (!form2) return null;
@@ -395,133 +435,183 @@ const canDownloadPdf = useMemo(() => {
       </div>
 
       {/* Consent Section */}
-      <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">Consent</h2>
+<div className="w-full max-w-5xl mt-6">
+  <table className="w-full border border-collapse">
+    <thead>
+      <tr>
+        {owner?.role_id === 3 && <th className="border p-2 text-center">Dean</th>}
+        <th className="border p-2 text-center">ComEx</th>
+        <th className="border p-2 text-center">Academic Services Director</th>
+        <th className="border p-2 text-center">Academic Director</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        {/* Dean Column */}
+        {owner?.role_id === 3 && (
+          <td className="border p-6 text-center align-bottom h-32">
+            {formData?.dean_approved_by ? (
+              <div className="flex flex-col justify-end h-full">
+                <p className="font-semibold text-green-600 mb-2">Approved</p>
+                <p className="font-medium">
+                  {formData?.dean_approver?.firstname}{" "}
+                  {formData?.dean_approver?.lastname}
+                </p>
+                <p className="text-sm text-gray-600 mt-1">
+                  {new Date(formData?.dean_approve_date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </p>
+                {formData?.dean_remarks && (
+                  <button
+                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs font-medium mt-2"
+                    onClick={() => setRemarksModal({ show: true, remarks: formData.dean_remarks, approver: 'Dean' })}
+                  >
+                    View Remarks
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full">
+                <p className="italic text-gray-500 mb-2">Awaiting Approval</p>
+                {formData?.dean_remarks && (
+                  <button
+                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-medium"
+                    onClick={() => setRemarksModal({ show: true, remarks: formData.dean_remarks, approver: 'Dean' })}
+                  >
+                    View Remarks
+                  </button>
+                )}
+              </div>
+            )}
+          </td>
+        )}
 
-      <div className="w-full max-w-5xl mt-6">
-        <table className="w-full border border-collapse">
-          <thead>
-            <tr>
-              {roleId === 2 && <th className="border p-2 text-center">Dean</th>}
-              <th className="border p-2 text-center">ComEx</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              {/* Dean Column */}
-              {roleId === 2 && (
-                <td className="border p-6 text-center align-bottom h-32">
-                  {formData?.dean_approved_by ? (
-                    <div className="flex flex-col justify-end h-full">
-                      <p className="font-semibold text-green-600 mb-2">Approved</p>
-                      <p className="font-medium">
-                        {formData?.dean_approver?.firstname}{" "}
-                        {formData?.dean_approver?.lastname}
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {new Date(formData?.dean_approve_date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <p className="italic text-gray-500">Awaiting Approval</p>
-                    </div>
-                  )}
-                </td>
+        {/* ComEx Column */}
+        <td className="border p-6 text-center align-bottom h-32">
+          {formData?.commex_approved_by ? (
+            <div className="flex flex-col justify-end h-full">
+              <p className="font-semibold text-green-600 mb-2">Approved</p>
+              <p className="font-medium">
+                {formData?.commex_approver?.firstname}{" "}
+                {formData?.commex_approver?.lastname}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                {new Date(formData?.commex_approve_date).toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric', 
+                  year: 'numeric' 
+                })}
+              </p>
+              {formData?.commex_remarks && (
+                <button
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs font-medium mt-2"
+                  onClick={() => setRemarksModal({ show: true, remarks: formData.commex_remarks, approver: 'ComEx' })}
+                >
+                  View Remarks
+                </button>
               )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full">
+              <p className="italic text-gray-500 mb-2">Awaiting Approval</p>
+              {formData?.commex_remarks && (
+                <button
+                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-medium"
+                  onClick={() => setRemarksModal({ show: true, remarks: formData.commex_remarks, approver: 'ComEx' })}
+                >
+                  View Remarks
+                </button>
+              )}
+            </div>
+          )}
+        </td>
 
-              {/* ComEx Column */}
-              <td className="border p-6 text-center align-bottom h-32">
-                {formData?.commex_approved_by ? (
-                  <div className="flex flex-col justify-end h-full">
-                    <p className="font-semibold text-green-600 mb-2">Approved</p>
-                    <p className="font-medium">
-                      {formData?.commex_approver?.firstname}{" "}
-                      {formData?.commex_approver?.lastname}
-                    </p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {new Date(formData?.commex_approve_date).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: 'numeric' 
-                      })}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="italic text-gray-500">Awaiting Approval</p>
-                  </div>
-                )}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        {/* ASD Column */}
+        <td className="border p-6 text-center align-bottom h-32">
+          {formData?.asd_approved_by ? (
+            <div className="flex flex-col justify-end h-full">
+              <p className="font-semibold text-green-600 mb-2">Approved</p>
+              <p className="font-medium">
+                {formData?.asd_approver?.firstname}{" "}
+                {formData?.asd_approver?.lastname}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                {new Date(formData?.asd_approve_date).toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric', 
+                  year: 'numeric' 
+                })}
+              </p>
+              {formData?.asd_remarks && (
+                <button
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs font-medium mt-2"
+                  onClick={() => setRemarksModal({ show: true, remarks: formData.asd_remarks, approver: 'Academic Services Director' })}
+                >
+                  View Remarks
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full">
+              <p className="italic text-gray-500 mb-2">Awaiting Approval</p>
+              {formData?.asd_remarks && (
+                <button
+                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-medium"
+                  onClick={() => setRemarksModal({ show: true, remarks: formData.asd_remarks, approver: 'Academic Services Director' })}
+                >
+                  View Remarks
+                </button>
+              )}
+            </div>
+          )}
+        </td>
 
-      <div className="w-full max-w-5xl mt-6">
-        <table className="w-full border border-collapse">
-          <thead>
-            <tr>
-              <th className="border p-2 text-center">Academic Services Director</th>
-              <th className="border p-2 text-center">Academic Director</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              {/* ASD Column */}
-              <td className="border p-6 text-center align-bottom h-32">
-                {formData?.asd_approved_by ? (
-                  <div className="flex flex-col justify-end h-full">
-                    <p className="font-semibold text-green-600 mb-2">Approved</p>
-                    <p className="font-medium">
-                      {formData?.asd_approver?.firstname}{" "}
-                      {formData?.asd_approver?.lastname}
-                    </p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {new Date(formData?.asd_approve_date).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: 'numeric' 
-                      })}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="italic text-gray-500">Awaiting Approval</p>
-                  </div>
-                )}
-              </td>
-
-              {/* AD Column */}
-              <td className="border p-6 text-center align-bottom h-32">
-                {formData?.ad_approved_by ? (
-                  <div className="flex flex-col justify-end h-full">
-                    <p className="font-semibold text-green-600 mb-2">Approved</p>
-                    <p className="font-medium">
-                      {formData?.ad_approver?.firstname}{" "}
-                      {formData?.ad_approver?.lastname}
-                    </p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {new Date(formData?.ad_approve_date).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: 'numeric' 
-                      })}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="italic text-gray-500">Awaiting Approval</p>
-                  </div>
-                )}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        {/* AD Column */}
+        <td className="border p-6 text-center align-bottom h-32">
+          {formData?.ad_approved_by ? (
+            <div className="flex flex-col justify-end h-full">
+              <p className="font-semibold text-green-600 mb-2">Approved</p>
+              <p className="font-medium">
+                {formData?.ad_approver?.firstname}{" "}
+                {formData?.ad_approver?.lastname}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                {new Date(formData?.ad_approve_date).toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric', 
+                  year: 'numeric' 
+                })}
+              </p>
+              {formData?.ad_remarks && (
+                <button
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs font-medium mt-2"
+                  onClick={() => setRemarksModal({ show: true, remarks: formData.ad_remarks, approver: 'Academic Director' })}
+                >
+                  View Remarks
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full">
+              <p className="italic text-gray-500 mb-2">Awaiting Approval</p>
+              {formData?.ad_remarks && (
+                <button
+                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-medium"
+                  onClick={() => setRemarksModal({ show: true, remarks: formData.ad_remarks, approver: 'Academic Director' })}
+                >
+                  View Remarks
+                </button>
+              )}
+            </div>
+          )}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
       {/* Buttons */}
       <div className="flex gap-2 mt-4">
@@ -558,6 +648,11 @@ const canDownloadPdf = useMemo(() => {
             Download PDF
           </Button>
         )}
+          <Button
+            onClick={handleViewRemarks}
+            className="bg-blue-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label="View Remarks"
+          />
       </div>
 
       {/* Revise Dialog */}
@@ -594,6 +689,53 @@ const canDownloadPdf = useMemo(() => {
             label={rejectLoading ? "Submitting…" : "Submit"}
           />
         </form>
+      </Dialog>
+      {/* ✅ ADD THIS NEW MODAL */}
+      <Dialog
+        header="All Remarks"
+        visible={remarksModal.show}
+        style={{ width: "60vw", maxWidth: "800px" }}
+        onHide={() => setRemarksModal({ show: false, remarks: [], approver: '' })}
+      >
+        <div className="p-4">
+          {remarksModal.remarks && remarksModal.remarks.length > 0 ? (
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {remarksModal.remarks.map((remark, index) => (
+                <div key={index} className="border-b pb-3 last:border-b-0">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="font-semibold text-gray-800 capitalize">
+                      {getRoleName(remark.user?.role_id)}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      {new Date(remark.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                  <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-3 rounded-md">
+                    {remark.remark}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    - {remark.user?.firstname} {remark.user?.lastname}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-4">No remarks found</p>
+          )}
+          <div className="flex justify-end mt-4">
+            <Button
+              label="Close"
+              className="p-button-text"
+              onClick={() => setRemarksModal({ show: false, remarks: [], approver: '' })}
+            />
+          </div>
+        </div>
       </Dialog>
     </div>
   );

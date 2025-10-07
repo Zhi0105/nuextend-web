@@ -269,20 +269,11 @@ export const downloadForm3Pdf = (form3, event, owner, roleId) => {
           width: 'auto',
           stack: [
             { 
-              text: roleId === 4 ? "☒ Faculty Member" : "☐ Faculty Member", 
+              text: roleId === 4 ? "☒ Faculty Member" : "☒ Student", 
               margin: [0, 0, 20, 0] 
             }
           ]
         },
-        {
-          width: 'auto',
-          stack: [
-            { 
-              text: roleId === 3 ? "☒ Student" : "☐ Student", 
-              margin: [0, 0, 0, 0] 
-            }
-          ]
-        }
       ],
       margin: [0, 0, 0, 15]
     });
@@ -301,15 +292,6 @@ export const downloadForm3Pdf = (form3, event, owner, roleId) => {
   content.push({ 
     text: '', 
     pageBreak: 'before'  // This forces a new page
-  });
-
-  // CONSENT SECTION - With E-Signatures
-  content.push({ 
-    text: "Consent", 
-    bold: true, 
-    fontSize: 16, 
-    margin: [0, 20, 0, 15],
-    alignment: 'center'
   });
 
   // Helper function to create approval cell with VERY LARGE e-signatures but compact layout

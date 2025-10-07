@@ -234,15 +234,6 @@ export const downloadForm1Pdf = (form1, event, owner, roleId) => {
             }
           ]
         },
-        {
-          width: 'auto',
-          stack: [
-            { 
-              text: roleId === 3 ? "☒ Student" : "☐ Student", 
-              margin: [0, 0, 0, 0] 
-            }
-          ]
-        }
       ],
       margin: [0, 0, 0, 15]
     });

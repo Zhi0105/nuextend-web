@@ -27,8 +27,7 @@ export const ViewReport = () => {
   const [currentReport, setCurrentReport] = useState(report);
   const [loading, setLoading] = useState(false);
 
-  // Try different possible locations for form14 data
-  const form14Data = 
+    const form14Data =
     activity?.[0]?.form14?.[0] || 
     activity?.[0]?.fromid?.[0] || 
     activity?.[0] ||
@@ -52,7 +51,7 @@ export const ViewReport = () => {
 
   const isCreator = currentUserId === creator_id;
 
-  const canDownloadPdf = !!(form14Data?.is_commex && form14Data?.is_asd);
+  const canDownloadPdf = !!(form14Data?.is_commex && form14Data?.is_asd && isCreator);
 
   // Redirect if no report
   useEffect(() => {
@@ -134,11 +133,6 @@ export const ViewReport = () => {
     setShowReviseDialog(true);
   };
 
-  const handleViewRemarks = (remarks) => {
-    setRemarksText(remarks);
-    setShowRemarksDialog(true);
-  };
-
   const submitRevision = async () => {
     if (!revisionRemarks.trim()) {
       toast.info("Remarks are required.");
@@ -165,64 +159,81 @@ export const ViewReport = () => {
     }
   };
 
+  const [remarksModal, setRemarksModal] = useState({
+    show: false,
+    remarks: [], // Change from string to array
+    approver: ''
+  });
+
+  // Add getRoleName function
+  const getRoleName = (roleId) => {
+    const roleMap = {
+      1: 'ComEx',
+      10: 'Academic Services Director'
+    };
+    return roleMap[roleId] || 'Unknown Role';
+  };
+
+const handleViewRemarks = () => {
+  // Use activity.form_remarks from location.state
+  const formRemarks = location.state?.activity?.form_remarks || [];
+
+  console.log('Raw form remarks from activity:', formRemarks);
+  console.log('form14Data:', form14Data);
+  console.log('form14Data id:', form14Data?.id);
+
+  if (!formRemarks || formRemarks.length === 0) {
+    toast("No remarks found", { type: "info" });
+    return;
+  }
+
+  // First, let's find the correct form14 ID
+  let form14Id = form14Data?.id;
+  
+  // If form14Data.id is undefined, try alternative ways to get the ID
+  if (!form14Id) {
+    // Try to get ID from different possible locations
+    form14Id = 
+      location.state?.activity?.activity?.[0]?.form14?.[0]?.id ||
+      location.state?.activity?.activity?.[0]?.fromid?.[0]?.id ||
+      location.state?.report?.id ||
+      location.state?.report?.form14_id;
+  }
+
+  console.log('Using form14Id for filtering:', form14Id);
+
+  // If we still don't have an ID, show all form14 remarks
+  let form14Remarks;
+  if (!form14Id) {
+    form14Remarks = formRemarks
+      .filter(remark => remark.form_type === 'form14')
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    console.log('Showing ALL form14 remarks (no ID filter):', form14Remarks);
+  } else {
+    form14Remarks = formRemarks
+      .filter(remark => 
+        remark.form_type === 'form14' && 
+        remark.form_id === form14Id
+      )
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    console.log('Filtered form14 remarks with ID:', form14Remarks);
+  }
+
+  if (form14Remarks.length === 0) {
+    toast("No remarks found for this report", { type: "info" });
+    return;
+  }
+
+  setRemarksModal({ 
+    show: true, 
+    remarks: form14Remarks,
+    approver: 'All Remarks' 
+  });
+};
   return (
     <div className="project-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
       <div className="w-full max-w-5xl bg-white shadow rounded-lg p-6 my-6">
         <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">POST-ACTIVITY REPORT</h2>
-
-        {/* 🔹 Dynamic Approval Status Panel */}
-        <div className="w-full mb-6 p-4 border rounded bg-gray-50">
-          <h2 className="font-bold mb-2">Approval Status</h2>
-
-          {/* Commex Status */}
-          <div className="flex items-center justify-between mb-2">
-            <span>
-              Commex:{" "}
-              {form14Data?.is_commex ? (
-                <span className="text-green-600 font-medium">✅ Approved</span>
-              ) : form14Data?.commex_remarks ? (
-                <span className="text-red-600 font-medium">✏️ Sent for Revision</span>
-              ) : (
-                <span className="text-gray-600">⏳ Pending</span>
-              )}
-            </span>
-
-            {form14Data?.commex_remarks && (
-              <Button
-                label="View Remarks"
-                size="small"
-                className="bg-blue-600 text-white px-2 py-1 rounded text-xs"
-                onClick={() => handleViewRemarks(form14Data.commex_remarks)}
-              />
-            )}
-          </div>
-
-          {/* ASD Status */}
-          <div className="flex items-center justify-between">
-            <span>
-              ASD:{" "}
-              {form14Data?.is_asd ? (
-                <span className="text-green-600 font-medium">✅ Approved</span>
-              ) : form14Data?.asd_remarks ? (
-                <span className="text-red-600 font-medium">✏️ Sent for Revision</span>
-              ) : !form14Data?.is_commex ? (
-                <span className="text-gray-600">⏳ Pending Commex approval...</span>
-              ) : (
-                <span className="text-gray-600">⏳ Pending ASD review</span>
-              )}
-            </span>
-
-            {form14Data?.asd_remarks && (
-              <Button
-                label="View Remarks"
-                size="small"
-                className="bg-blue-600 text-white px-2 py-1 rounded text-xs"
-                onClick={() => handleViewRemarks(form14Data.asd_remarks)}
-              />
-            )}
-          </div>
-        </div>
-
         {/* Report Details */}
         <div className="space-y-6">
           <div className="mb-6">
@@ -338,8 +349,8 @@ export const ViewReport = () => {
                     </p>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="italic text-gray-500">Awaiting Approval</p>
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <p className="italic text-gray-500 mb-2">Awaiting Approval</p>
                   </div>
                 )}
               </td>
@@ -362,8 +373,10 @@ export const ViewReport = () => {
                     </p>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="italic text-gray-500">Awaiting Approval</p>
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <p className="italic text-gray-500 mb-2">
+                      {!form14Data?.is_commex ? "Pending Commex approval..." : "Awaiting Approval"}
+                    </p>
                   </div>
                 )}
               </td>
@@ -380,8 +393,20 @@ export const ViewReport = () => {
           label="Back"
         />
 
-        {/* Submit button */}
-        {canSubmitOrPullBack && isCreator && ![4, 6, 9].includes(eventStatusId) && !isApprovedByAny && (
+       {/* Submit button - FIXED CONDITION */}
+        {console.log('Debug Submit Button:', {
+          eventStatusId,
+          canSubmitOrPullBack,
+          isCreator,
+          isFullyApproved,
+          isApprovedByAny,
+          condition1: [8, 5].includes(eventStatusId) && !isFullyApproved,
+          condition2: ![4, 6, 9].includes(eventStatusId) && !isApprovedByAny
+        })}
+
+        {canSubmitOrPullBack && isCreator && 
+          (([8, 5].includes(eventStatusId) && !isFullyApproved) || 
+          (![4, 6, 9].includes(eventStatusId) && !isApprovedByAny)) && (
           <Button
             onClick={handleSubmit}
             disabled={loading}
@@ -389,6 +414,7 @@ export const ViewReport = () => {
             label={loading ? ([8, 5].includes(eventStatusId) ? "Resubmitting…" : "Submitting…") : ([8, 5].includes(eventStatusId) ? "Resubmit" : "Submit")}
           />
         )}
+
 
         {/* Pull-back button */}
         {canSubmitOrPullBack && isCreator && [9, 4].includes(eventStatusId) && !isFullyApproved && (
@@ -473,19 +499,64 @@ export const ViewReport = () => {
             Download PDF
           </Button>
         )}
+        <Button
+          onClick={handleViewRemarks}
+          className="bg-blue-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+          label="View Remarks"
+        />
       </div>
 
-      {/* Remarks Dialog */}
-      <Dialog
-        header="Remarks"
-        visible={showRemarksDialog}
-        style={{ width: "40vw" }}
-        modal
-        onHide={() => setShowRemarksDialog(false)}
-      >
-        <p className="whitespace-pre-line">{remarksText}</p>
-      </Dialog>
-
+      {/* ✅ Replace current remarks modal with this unified modal */}
+<Dialog
+  header="All Remarks"
+  visible={remarksModal.show}
+  style={{ width: "60vw", maxWidth: "800px" }}
+  onHide={() => setRemarksModal({ show: false, remarks: [], approver: '' })}
+>
+  <div className="p-4">
+    {remarksModal.remarks && remarksModal.remarks.length > 0 ? (
+      <div className="space-y-4 max-h-96 overflow-y-auto">
+        {remarksModal.remarks.map((remark, index) => (
+          <div key={index} className="border-b pb-3 last:border-b-0">
+            <div className="flex justify-between items-start mb-2">
+              <span className="font-semibold text-gray-800 capitalize">
+                {getRoleName(remark.user?.role_id)}
+              </span>
+              <span className="text-sm text-gray-500">
+                {new Date(remark.created_at).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
+            </div>
+            
+            {/* Try different possible remark text fields */}
+            <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-3 rounded-md">
+              {remark.remark || remark.remarks || remark.comment || remark.description || 'No remark text available'}
+            </p>
+            
+            <p className="text-sm text-gray-600 mt-1">
+              - {remark.user?.firstname} {remark.user?.lastname}
+            </p>
+            
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p className="text-gray-500 text-center py-4">No remarks found</p>
+    )}
+    <div className="flex justify-end mt-4">
+      <Button
+        label="Close"
+        className="p-button-text"
+        onClick={() => setRemarksModal({ show: false, remarks: [], approver: '' })}
+      />
+    </div>
+  </div>
+</Dialog>
       {/* Revise Dialog */}
       <Dialog
         header="Revise Report"

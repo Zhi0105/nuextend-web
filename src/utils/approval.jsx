@@ -184,7 +184,7 @@ export const getFormStatus = (form, formNumber, isAdminOwner = false) => {
 
   // ✅ Rule 2: all required approved → done
   if (approvedCount === totalApprovers) {
-    return <h1 className="text-green-500">done</h1>;
+    return <h1 className="text-green-500">Approved</h1>;
   }
 
   // ✅ Otherwise → pending with progress

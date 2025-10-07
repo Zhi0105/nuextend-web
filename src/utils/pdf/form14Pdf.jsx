@@ -371,15 +371,6 @@ export const downloadForm14Pdf = (form14, event, owner, roleId, approvalData) =>
     pageBreak: 'after'
   });
 
-  // MERGED APPROVAL TABLE - Prepared By, ComEx, and ASD with E-SIGNATURES
-  content.push({ 
-    text: "APPROVALS", 
-    bold: true, 
-    fontSize: 16, 
-    margin: [0, 20, 0, 15],
-    alignment: 'center'
-  });
-
   const mergedApprovalTable = {
     table: {
       headerRows: 1,
