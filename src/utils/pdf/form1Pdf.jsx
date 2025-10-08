@@ -9,8 +9,28 @@ if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
   pdfMake.vfs = pdfFonts.vfs;
 }
 
-export const downloadForm1Pdf = (form1, event, owner, roleId) => {
+function getBase64ImageFromURL(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.setAttribute('crossOrigin', 'anonymous');
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const dataURL = canvas.toDataURL('image/png');
+      resolve(dataURL);
+    };
+    img.onerror = error => reject(error);
+    img.src = url;
+  });
+}
+
+export const downloadForm1Pdf = async  (form1, event, owner, roleId) => {
+  
   console.log("downloadForm1Pdf called", { form1, event, owner, roleId });
+  const logo = await getBase64ImageFromURL('/LogoHeader.png');
 
   if (!form1) {
     console.warn("downloadForm1Pdf: no form1 provided");
@@ -20,7 +40,62 @@ export const downloadForm1Pdf = (form1, event, owner, roleId) => {
   // support either an array [obj] or a direct object
   const f = Array.isArray(form1) ? form1[0] || {} : form1 || {};
 
-  const content = [];
+  const headerContent = [{
+      columns: [
+        // Image on the left
+        {
+          width: 'auto',
+          image: logo,
+          width: 250,
+          margin: [20, -20, 0, 0]
+        },
+        // Text on the right
+        {
+          width: '*',
+          stack: [
+            {
+              text: 'Program Proposal Format',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: 'NUB – ACD – CMX – F – 001',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: '2025',
+              fontSize: 10,
+              bold: true
+            }
+          ],
+          alignment: 'right'
+        }
+      ],
+      margin: [0, 20, 30, 0]
+    },
+  ];
+
+  const content = [
+    {
+      text: event?.organization?.name || "Comex",
+      bold: true,
+      alignment: 'center',
+      fontSize: 14,
+      margin: [0, 10, 0, 5],
+    },
+    {
+      text: "PROGRAM PROPOSAL",
+      bold: true,
+      alignment: 'center',
+      fontSize: 16,
+      color: '#0000FF',
+      margin: [0, 0, 0, 10],
+    },
+  ];
+
 
   // I. PROGRAM DESCRIPTION header
   content.push({
@@ -229,20 +304,11 @@ export const downloadForm1Pdf = (form1, event, owner, roleId) => {
           width: 'auto',
           stack: [
             { 
-              text: roleId === 4 ? "☒ Faculty Member" : "☐ Faculty Member", 
+              text: roleId === 4 ? "☒ Faculty Member" : "☐ Student", 
               margin: [0, 0, 20, 0] 
             }
           ]
         },
-        {
-          width: 'auto',
-          stack: [
-            { 
-              text: roleId === 3 ? "☒ Student" : "☐ Student", 
-              margin: [0, 0, 0, 0] 
-            }
-          ]
-        }
       ],
       margin: [0, 0, 0, 15]
     });
@@ -262,15 +328,6 @@ export const downloadForm1Pdf = (form1, event, owner, roleId) => {
   content.push({ 
     text: '', 
     pageBreak: 'before'  // This forces a new page for the consent section
-  });
-
-  // CONSENT SECTION - With E-Signatures
-  content.push({ 
-    text: "Consent", 
-    bold: true, 
-    fontSize: 16, 
-    margin: [0, 20, 0, 15],
-    alignment: 'center'
   });
 
   // Helper function to create approval cell with VERY LARGE e-signatures but compact layout
@@ -546,20 +603,21 @@ export const downloadForm1Pdf = (form1, event, owner, roleId) => {
   content.push(receivedByTable);
 
   const docDefinition = {
-    content,
-    styles: {
-      tableHeader: {
-        bold: true,
-        fontSize: 10,
-        margin: [0, 3, 0, 3]
-      }
-    },
-    defaultStyle: { 
-      fontSize: 11, 
-      lineHeight: 1.15 
-    },
-    pageMargins: [40, 40, 40, 40],
-  };
+  header: headerContent, // This will appear on every page
+  content: content,
+  styles: {
+    tableHeader: {
+      bold: true,
+      fontSize: 10,
+      margin: [0, 3, 0, 3]
+    }
+  },
+  defaultStyle: { 
+    fontSize: 11, 
+    lineHeight: 1.15 
+  },
+  pageMargins: [40, 80, 40, 40], // Increased top margin to accommodate header
+};
 
   pdfMake.createPdf(docDefinition).download("form1-proposal.pdf");
 };

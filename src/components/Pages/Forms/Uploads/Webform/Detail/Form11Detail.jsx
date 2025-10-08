@@ -107,13 +107,6 @@ export const Form11Detail = () => {
   // ✅ Revise
   const [showRevise, setShowRevise] = useState(false);
 
-  const remarksKeyByRole = {
-    1: "commex_remarks",
-    9: "dean_remarks",
-    10: "asd_remarks",
-    11: "ad_remarks",
-  };
-
   const {
     handleSubmit,
     control,
@@ -134,19 +127,55 @@ export const Form11Detail = () => {
 
   const onSubmitRevise = ({ remarks }) => {
     if (!form11 || !canAction) return;
-    const key = remarksKeyByRole[roleId];
-    if (!key) return;
-    doReject({
-      token: decryptedToken,
-      id: form11[0]?.id ?? form11.id,
-      role_id: roleId,
-      [key]: remarks,
+    
+    doReject({ 
+      token: decryptedToken, 
+      id: form11[0]?.id ?? form11.id, 
+      role_id: roleId,  
+      remark: remarks  // ✅ Unified 'remark' field
     });
     setShowRevise(false);
   };
 
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;
 
+  const [remarksModal, setRemarksModal] = useState({
+    show: false,
+    remarks: [], // ✅ Change from '' to []
+    approver: ''
+  });
+
+  // Add getRoleName function
+  const getRoleName = (roleId) => {
+    const roleMap = {
+      1: 'ComEx',
+      9: 'Dean', 
+      10: 'Academic Services Director',
+      11: 'Academic Director'
+    };
+    return roleMap[roleId] || 'Unknown Role';
+  };
+
+  const handleViewRemarks = () => {
+    if (!event?.form_remarks) {
+      toast("No remarks found", { type: "info" });
+      return;
+    }
+
+    // Filter remarks for this specific form11 and sort by newest first
+    const form11Remarks = event.form_remarks
+      .filter(remark => 
+        remark.form_type === 'form11' && // ✅ Use 'form11' as form_type
+        remark.form_id === formData?.id
+      )
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    setRemarksModal({ 
+      show: true, 
+      remarks: form11Remarks,
+      approver: 'All Remarks' 
+    });
+  };
   if (!form11) return null;
 
   const formData = form11[0] || form11;
@@ -253,8 +282,8 @@ export const Form11Detail = () => {
                     </p>
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="italic text-gray-500">Awaiting Approval</p>
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <p className="italic text-gray-500 mb-2">Awaiting Approval</p>
                   </div>
                 )}
               </td>
@@ -275,10 +304,11 @@ export const Form11Detail = () => {
                         year: 'numeric' 
                       })}
                     </p>
+
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="italic text-gray-500">Awaiting Approval</p>
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <p className="italic text-gray-500 mb-2">Awaiting Approval</p>
                   </div>
                 )}
               </td>
@@ -322,7 +352,61 @@ export const Form11Detail = () => {
             Download PDF
           </Button>
         )}
+
+        <Button
+          onClick={handleViewRemarks}
+          className="bg-blue-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+          label="View Remarks"
+        />
       </div>
+
+      {/* ✅ ADD THIS NEW MODAL */}
+      <Dialog
+        header="All Remarks"
+        visible={remarksModal.show}
+        style={{ width: "60vw", maxWidth: "800px" }}
+        onHide={() => setRemarksModal({ show: false, remarks: [], approver: '' })}
+      >
+        <div className="p-4">
+          {remarksModal.remarks && remarksModal.remarks.length > 0 ? (
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {remarksModal.remarks.map((remark, index) => (
+                <div key={index} className="border-b pb-3 last:border-b-0">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="font-semibold text-gray-800 capitalize">
+                      {getRoleName(remark.user?.role_id)}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      {new Date(remark.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                  <p className="text-gray-700 whitespace-pre-wrap bg-gray-50 p-3 rounded-md">
+                    {remark.remark}
+                  </p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    - {remark.user?.firstname} {remark.user?.lastname}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-4">No remarks found</p>
+          )}
+          <div className="flex justify-end mt-4">
+            <Button
+              label="Close"
+              className="p-button-text"
+              onClick={() => setRemarksModal({ show: false, remarks: [], approver: '' })}
+            />
+          </div>
+        </div>
+      </Dialog>
 
       {/* Revise Dialog */}
       <Dialog

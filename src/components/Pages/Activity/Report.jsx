@@ -21,67 +21,73 @@ export const Report = () => {
   const currentRoleId = decryptedUser?.role_id;
 
   const [reports, setReports] = useState([]);
-  const [ setEventStatuses ] = useState([]);
+  const [eventStatuses, setEventStatuses] = useState([]); // Fixed this line
   const [loading, setLoading] = useState(false);
-  const [creatorId] = useState(creator_id || null); // store creator ID from state
+  const [creatorId] = useState(creator_id || null);
 
   // Check if view button should be shown
-const shouldShowViewButton = (rowData) => {
-  const isCreator = creatorId === currentUserId;
-  const isCommex = currentRoleId === 1;
-  const isAsd = currentRoleId === 10;
-  const isRole11 = currentRoleId === 0; // Add first additional role
-  const isRole12 = currentRoleId === 11;
-  
-  const hiddenStatuses = [3, 5, 6, 8]; // Statuses to hide
-  
-  // If user is creator, show ALL reports regardless of status
-  if (isCreator) {
-    return true;
-  }
-  
-  // If user is commex (role_id 1), hide only for hidden statuses
-  if (isCommex) {
-    return !hiddenStatuses.includes(rowData.event_status_id);
-  }
-  
-  // If user is ASD (role_id 10) or other users, hide for hidden statuses
-  if (isAsd || isRole11 || isRole12) { // For ASD and all other users
-    return !hiddenStatuses.includes(rowData.event_status_id);
-  }
-  
-  return false;
-};
+  const shouldShowViewButton = (rowData) => {
+    const isCreator = creatorId === currentUserId;
+    const isCommex = currentRoleId === 1;
+    const isAsd = currentRoleId === 10;
+    const isRole11 = currentRoleId === 0;
+    const isRole12 = currentRoleId === 11;
+    
+    const hiddenStatuses = [3, 5, 6, 8];
+    
+    if (isCreator) {
+      return true;
+    }
+    
+    if (isCommex) {
+      return !hiddenStatuses.includes(rowData.event_status_id);
+    }
+    
+    if (isAsd || isRole11 || isRole12) {
+      return !hiddenStatuses.includes(rowData.event_status_id);
+    }
+    
+    return false;
+  };
 
   // Load reports
   useEffect(() => {
-    if (!activities_id || !decryptedToken) return;
+    if (!activities_id || !decryptedToken) {
+      console.log("Missing activities_id or token:", { activities_id, hasToken: !!decryptedToken });
+      return;
+    }
 
     setLoading(true);
     getReportsByActivity({ token: decryptedToken, activities_id })
-      .then((res) => setReports(res || []))
-      .catch((err) => toast.error(err?.response?.data?.message || "Failed to fetch reports"))
+      .then((res) => {
+        console.log("Reports fetched:", res);
+        setReports(res || []);
+      })
+      .catch((err) => {
+        console.error("Error fetching reports:", err);
+        toast.error(err?.response?.data?.message || "Failed to fetch reports");
+      })
       .finally(() => setLoading(false));
   }, [activities_id, decryptedToken]);
 
-  // Load event_status list (optional if needed for something else)
+  // Load event_status list
   useEffect(() => {
     if (!decryptedToken) return;
 
     getEventStatuses({ token: decryptedToken })
       .then((res) => setEventStatuses(res || []))
-      .catch(() => toast.error("Failed to fetch event statuses"));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [decryptedToken]);
+      .catch((err) => {
+        console.error("Error fetching event statuses:", err);
+        toast.error("Failed to fetch event statuses");
+      });
+  }, [decryptedToken]); // Removed the eslint disable comment
 
   // Generate status text based on partial/full approval or revision
   const getStatusName = (report) => {
     const { event_status_id, is_commex, is_asd } = report;
 
-    // ✅ Fully approved
     if (is_commex && is_asd) return "✅ Approved";
 
-    // 🔹 Status mapping
     const statusMap = {
       6: "✏️ Sent for Revision",
       4: "Submitted",
@@ -98,32 +104,39 @@ const shouldShowViewButton = (rowData) => {
   const dateTemplate = (rowData) => dayjs(rowData.created_at).format("MMM D, YYYY HH:mm");
 
   // Navigate to view report
-// Navigate to view report - UPDATED WITH EYE ICON
-const actionTemplate = (rowData) => {
-  if (!shouldShowViewButton(rowData)) {
-    return null;
-  }
+  const actionTemplate = (rowData) => {
+    if (!shouldShowViewButton(rowData)) {
+      return null;
+    }
 
-  return (
-    <div className="relative group flex justify-center">
-      <Button
-        className="p-button-sm p-button-info p-button-outlined flex items-center justify-center w-8 h-8"
-        onClick={() => navigate("/view-report", { state: { activity: data, report: rowData, creator_id: creatorId } })}
-      >
-        <LuEye size={30} />
-      </Button>
-      {/* Tooltip on hover - positioned closer */}
-      <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-10">
-        View
+    return (
+      <div className="relative group flex justify-center">
+        <Button
+          className="p-button-sm p-button-info p-button-outlined flex items-center justify-center w-8 h-8"
+          onClick={() => {
+            if (!rowData.form14_id) {
+              toast.error("Report data is incomplete");
+              return;
+            }
+            navigate("/view-report", { 
+              state: { 
+                activity: data, 
+                report: rowData, 
+                creator_id: creatorId 
+              } 
+            });
+          }}
+        >
+          <LuEye size={30} />
+        </Button>
+        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none z-10">
+          View
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
-  // Determine if current user is the creator
   const isCreator = creatorId === currentUserId;
-
-  // Compute total cost for all reports
   const grandTotalCost = reports.reduce((total, report) => {
     const reportCost = report.budget_summaries
       ? report.budget_summaries.reduce((sum, b) => sum + Number(b.cost || 0), 0)
