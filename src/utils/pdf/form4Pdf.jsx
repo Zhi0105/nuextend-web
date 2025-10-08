@@ -9,8 +9,27 @@ if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
   pdfMake.vfs = pdfFonts.vfs;
 }
 
-export const downloadForm4Pdf = (formData, checklist, roleId, owner) => {
+function getBase64ImageFromURL(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.setAttribute('crossOrigin', 'anonymous');
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const dataURL = canvas.toDataURL('image/png');
+      resolve(dataURL);
+    };
+    img.onerror = error => reject(error);
+    img.src = url;
+  });
+}
+
+export const downloadForm4Pdf = async (formData, checklist, roleId, owner) => {
   // Get program coordinator name
+  const logo = await getBase64ImageFromURL('/LogoHeader.png');
   const coordinatorName = owner ? 
     `${owner.firstname} ${owner.middlename || ''} ${owner.lastname}`.trim() : 
     '___________________';
@@ -30,6 +49,123 @@ export const downloadForm4Pdf = (formData, checklist, roleId, owner) => {
     const v = formData?.[key];
     return v === true || v === "true" || v === 1 || v === "1";
   };
+
+  // === HEADER CONTENT (appears on every page) ===
+  const headerContent = [{
+    columns: [
+      // Image on the left
+      {
+        width: 'auto',
+        image: logo,
+        width: 250,
+        margin: [20, -20, 0, 0]
+      },
+      // Text on the right
+      {
+        width: '*',
+        stack: [
+          {
+            text: 'Program Proposal Format',
+            fontSize: 10,
+            bold: true,
+            margin: [0, 0, 0, 0]
+          },
+          {
+            text: 'NUB – ACD – CMX – F – 001',
+            fontSize: 10,
+            bold: true,
+            margin: [0, 0, 0, 0]
+          },
+          {
+            text: '2025',
+            fontSize: 10,
+            bold: true
+          }
+        ],
+        alignment: 'right'
+      }
+    ],
+    margin: [0, 20, 30, 0]
+  }];
+
+  // === MAIN CONTENT ===
+  const content = [
+    // Organization name and title
+    {
+      text: formData?.organization?.name || "Comex",
+      bold: true,
+      alignment: 'center',
+      fontSize: 14,
+      margin: [0, 40, 0, 5],
+    },
+    {
+      text: "CHECKLIST OF CRITERIA FOR EXTENSION PROGRAM PROPOSAL",
+      bold: true,
+      alignment: 'center',
+      fontSize: 16,
+      color: '#0000FF',
+      margin: [0, 0, 0, 20],
+    },
+
+    // Checklist Table
+    {
+      table: {
+        headerRows: 1,
+        widths: ['*', 'auto', 'auto'],
+        body: [
+          // Header row
+          [
+            { text: 'Criteria', style: 'tableHeader', bold: true },
+            { text: 'Yes', style: 'tableHeader', bold: true, alignment: 'center' },
+            { text: 'No', style: 'tableHeader', bold: true, alignment: 'center' }
+          ],
+          
+          // Categories and criteria...
+          [{ text: 'I. Relevance to Academic and Research Programs', colSpan: 3, style: 'categoryHeader', bold: true }, {}, {}],
+          ...['a', 'b', 'c'].map(key => [
+            { text: checklist.find(i => i.key === key)?.label || '', style: 'criteriaText' },
+            { text: isChecked(key) ? '/' : '', alignment: 'center' },
+            { text: !isChecked(key) ? '/' : '', alignment: 'center' }
+          ]),
+          
+          [{ text: 'II. Collaborative and Participatory', colSpan: 3, style: 'categoryHeader', bold: true }, {}, {}],
+          ...['d', 'e', 'f', 'g'].map(key => [
+            { text: checklist.find(i => i.key === key)?.label || '', style: 'criteriaText' },
+            { text: isChecked(key) ? '/' : '', alignment: 'center' },
+            { text: !isChecked(key) ? '/' : '', alignment: 'center' }
+          ]),
+          
+          [{ text: 'III. Values Oriented', colSpan: 3, style: 'categoryHeader', bold: true }, {}, {}],
+          ...['h'].map(key => [
+            { text: checklist.find(i => i.key === key)?.label || '', style: 'criteriaText' },
+            { text: isChecked(key) ? '/' : '', alignment: 'center' },
+            { text: !isChecked(key) ? '/' : '', alignment: 'center' }
+          ]),
+          
+          [{ text: 'IV. Financing and Sustainability', colSpan: 3, style: 'categoryHeader', bold: true }, {}, {}],
+          ...['i', 'j', 'k', 'l', 'm'].map(key => [
+            { text: checklist.find(i => i.key === key)?.label || '', style: 'criteriaText' },
+            { text: isChecked(key) ? '/' : '', alignment: 'center' },
+            { text: !isChecked(key) ? '/' : '', alignment: 'center' }
+          ]),
+          
+          [{ text: 'V. Evidence-Based Need and Significance', colSpan: 3, style: 'categoryHeader', bold: true }, {}, {}],
+          ...['n', 'o', 'p'].map(key => [
+            { text: checklist.find(i => i.key === key)?.label || '', style: 'criteriaText' },
+            { text: isChecked(key) ? '/' : '', alignment: 'center' },
+            { text: !isChecked(key) ? '/' : '', alignment: 'center' }
+          ])
+        ]
+      },
+      layout: {
+        hLineWidth: function(i, node) { return 1; },
+        vLineWidth: function(i, node) { return 1; },
+        hLineColor: function(i, node) { return 'black'; },
+        vLineColor: function(i, node) { return 'black'; },
+      },
+      margin: [0, 0, 0, 20]
+    }
+  ];
 
   // Helper function to create approval cell with LARGE e-signatures
   const createApprovalCell = (approved, approver, approveDate, title) => {
@@ -178,134 +314,58 @@ export const downloadForm4Pdf = (formData, checklist, roleId, owner) => {
     };
   };
 
-  // Checklist table rows
-  const checklistRows = [
-    // Header row
-    [
-      { text: 'Criteria', style: 'tableHeader', bold: true },
-      { text: 'Yes', style: 'tableHeader', bold: true, alignment: 'center' },
-      { text: 'No', style: 'tableHeader', bold: true, alignment: 'center' }
-    ],
-    
-    // Categories and criteria...
-    [{ text: 'I. Relevance to Academic and Research Programs', colSpan: 3, style: 'categoryHeader', bold: true }, {}, {}],
-    ...['a', 'b', 'c'].map(key => [
-      { text: checklist.find(i => i.key === key)?.label || '', style: 'criteriaText' },
-      { text: isChecked(key) ? '/' : '', alignment: 'center' },
-      { text: !isChecked(key) ? '/' : '', alignment: 'center' }
-    ]),
-    
-    [{ text: 'II. Collaborative and Participatory', colSpan: 3, style: 'categoryHeader', bold: true }, {}, {}],
-    ...['d', 'e', 'f', 'g'].map(key => [
-      { text: checklist.find(i => i.key === key)?.label || '', style: 'criteriaText' },
-      { text: isChecked(key) ? '/' : '', alignment: 'center' },
-      { text: !isChecked(key) ? '/' : '', alignment: 'center' }
-    ]),
-    
-    [{ text: 'III. Values Oriented', colSpan: 3, style: 'categoryHeader', bold: true }, {}, {}],
-    ...['h'].map(key => [
-      { text: checklist.find(i => i.key === key)?.label || '', style: 'criteriaText' },
-      { text: isChecked(key) ? '/' : '', alignment: 'center' },
-      { text: !isChecked(key) ? '/' : '', alignment: 'center' }
-    ]),
-    
-    [{ text: 'IV. Financing and Sustainability', colSpan: 3, style: 'categoryHeader', bold: true }, {}, {}],
-    ...['i', 'j', 'k', 'l', 'm'].map(key => [
-      { text: checklist.find(i => i.key === key)?.label || '', style: 'criteriaText' },
-      { text: isChecked(key) ? '/' : '', alignment: 'center' },
-      { text: !isChecked(key) ? '/' : '', alignment: 'center' }
-    ]),
-    
-    [{ text: 'V. Evidence-Based Need and Significance', colSpan: 3, style: 'categoryHeader', bold: true }, {}, {}],
-    ...['n', 'o', 'p'].map(key => [
-      { text: checklist.find(i => i.key === key)?.label || '', style: 'criteriaText' },
-      { text: isChecked(key) ? '/' : '', alignment: 'center' },
-      { text: !isChecked(key) ? '/' : '', alignment: 'center' }
-    ])
-  ];
+  // MERGED APPROVAL TABLE WITH ASSESSED BY
+  content.push({
+    table: {
+      headerRows: 1,
+      widths: ['33%', '33%', '34%'], // Three columns: ComEx, ASD/Dean, Assessed By
+      body: [
+        [
+          { text: 'ComEx', style: 'tableHeader', alignment: 'center' },
+          { text: [1, 4].includes(roleId) ? 'Academic Services Director' : 'Dean', style: 'tableHeader', alignment: 'center' },
+          { text: 'Assessed By', style: 'tableHeader', alignment: 'center' }
+        ],
+        [
+          // ComEx cell
+          createApprovalCell(
+            formData?.commex_approved_by,
+            formData?.commex_approver,
+            formData?.commex_approve_date,
+            'ComEx Coordinator'
+          ),
+          // ASD/Dean cell
+          createApprovalCell(
+            [1, 4].includes(roleId) ? formData?.asd_approved_by : formData?.dean_approved_by,
+            [1, 4].includes(roleId) ? formData?.asd_approver : formData?.dean_approver,
+            [1, 4].includes(roleId) ? formData?.asd_approve_date : formData?.dean_approve_date,
+            [1, 4].includes(roleId) ? 'Academic Services Director' : 'Dean'
+          ),
+          // Assessed By cell WITH E-SIGNATURE
+          createAssessedByCell(coordinatorName, 'Program Coordinator', owner)
+        ]
+      ],
+      heights: [15, 80] // Compact fixed heights
+    },
+    layout: {
+      hLineWidth: function(i, node) { return 1; },
+      vLineWidth: function(i, node) { return 1; },
+      hLineColor: function(i, node) { return 'black'; },
+      vLineColor: function(i, node) { return 'black'; },
+      paddingLeft: function(i, node) { return 1; },
+      paddingRight: function(i, node) { return 1; },
+      paddingTop: function(i, node) { return 0; },
+      paddingBottom: function(i, node) { return 0; },
+    },
+    margin: [0, 0, 0, 20]
+  });
 
   const docDefinition = {
-    pageSize: 'A4',
-    pageMargins: [40, 40, 40, 40],
-    content: [
-      // Title
-      {
-        text: 'CHECKLIST OF CRITERIA FOR EXTENSION PROGRAM PROPOSAL',
-        style: 'header',
-        alignment: 'center',
-        margin: [0, 0, 0, 15]
-      },
-      
-      // Checklist Table
-      {
-        table: {
-          headerRows: 1,
-          widths: ['*', 'auto', 'auto'],
-          body: checklistRows
-        },
-        layout: {
-          hLineWidth: function(i, node) { return 1; },
-          vLineWidth: function(i, node) { return 1; },
-          hLineColor: function(i, node) { return 'black'; },
-          vLineColor: function(i, node) { return 'black'; },
-        },
-        margin: [0, 0, 0, 0]
-      },
-      
-      // MERGED APPROVAL TABLE WITH ASSESSED BY
-      {
-        table: {
-          headerRows: 1,
-          widths: ['33%', '33%', '34%'], // Three columns: ComEx, ASD/Dean, Assessed By
-          body: [
-            [
-              { text: 'ComEx', style: 'tableHeader', alignment: 'center' },
-              { text: [1, 4].includes(roleId) ? 'Academic Services Director' : 'Dean', style: 'tableHeader', alignment: 'center' },
-              { text: 'Assessed By', style: 'tableHeader', alignment: 'center' }
-            ],
-            [
-              // ComEx cell
-              createApprovalCell(
-                formData?.commex_approved_by,
-                formData?.commex_approver,
-                formData?.commex_approve_date,
-                'ComEx Coordinator'
-              ),
-              // ASD/Dean cell
-              createApprovalCell(
-                [1, 4].includes(roleId) ? formData?.asd_approved_by : formData?.dean_approved_by,
-                [1, 4].includes(roleId) ? formData?.asd_approver : formData?.dean_approver,
-                [1, 4].includes(roleId) ? formData?.asd_approve_date : formData?.dean_approve_date,
-                [1, 4].includes(roleId) ? 'Academic Services Director' : 'Dean'
-              ),
-              // Assessed By cell WITH E-SIGNATURE
-              createAssessedByCell(coordinatorName, 'Program Coordinator', owner)
-            ]
-          ],
-          heights: [15, 80] // Compact fixed heights
-        },
-        layout: {
-          hLineWidth: function(i, node) { return 1; },
-          vLineWidth: function(i, node) { return 1; },
-          hLineColor: function(i, node) { return 'black'; },
-          vLineColor: function(i, node) { return 'black'; },
-          paddingLeft: function(i, node) { return 1; },
-          paddingRight: function(i, node) { return 1; },
-          paddingTop: function(i, node) { return 0; },
-          paddingBottom: function(i, node) { return 0; },
-        },
-        margin: [0, 0, 0, 20]
-      }
-    ],
-    
+    header: headerContent, // This will appear on every page
+    content: content,
     styles: {
-      header: {
-        fontSize: 16,
-        bold: true
-      },
       tableHeader: {
-        fontSize: 10,
         bold: true,
+        fontSize: 10,
         margin: [0, 3, 0, 3]
       },
       categoryHeader: {
@@ -322,7 +382,8 @@ export const downloadForm4Pdf = (formData, checklist, roleId, owner) => {
     defaultStyle: { 
       fontSize: 11, 
       lineHeight: 1.15 
-    }
+    },
+    pageMargins: [40, 80, 40, 40], // Increased top margin to accommodate header
   };
 
   pdfMake.createPdf(docDefinition).download(`Form4_Checklist_${new Date().toISOString().split('T')[0]}.pdf`);

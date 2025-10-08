@@ -8,9 +8,28 @@ if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
 } else if (pdfFonts && pdfFonts.vfs) {
   pdfMake.vfs = pdfFonts.vfs;
 }
+  function getBase64ImageFromURL(url) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.setAttribute('crossOrigin', 'anonymous');
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const dataURL = canvas.toDataURL('image/png');
+        resolve(dataURL);
+      };
+      img.onerror = error => reject(error);
+      img.src = url;
+    });
+  }
 
-export const downloadForm2Pdf = (form2, event, owner, roleId) => {
+
+export const downloadForm2Pdf = async (form2, event, owner, roleId) => {
   console.log("downloadForm2Pdf called", { form2, event, owner, roleId });
+  const logo = await getBase64ImageFromURL('/LogoHeader.png');
 
   if (!form2) {
     console.warn("downloadForm2Pdf: no form2 provided");
@@ -21,7 +40,61 @@ export const downloadForm2Pdf = (form2, event, owner, roleId) => {
   const f = Array.isArray(form2) ? form2[0] || {} : form2 || {};
   const eventName = event?.eventName || event?.title || f?.title || "—";
 
-  const content = [];
+  const headerContent = [{
+      columns: [
+        // Image on the left
+        {
+          width: 'auto',
+          image: logo,
+          width: 250,
+          margin: [20, -20, 0, 0]
+        },
+        // Text on the right
+        {
+          width: '*',
+          stack: [
+            {
+              text: 'Project Proposal Format',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: 'NUB – ACD – CMX – F – 002',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: '2025',
+              fontSize: 10,
+              bold: true
+            }
+          ],
+          alignment: 'right'
+        }
+      ],
+      margin: [0, 20, 30, 0]
+    },
+  ];
+
+  const content = [
+    {
+      text: event?.organization?.name || "walang laman",
+      bold: true,
+      alignment: 'center',
+      fontSize: 14,
+      margin: [0, 10, 0, 5],
+    },
+    {
+      text: "PROJECT PROPOSAL",
+      bold: true,
+      alignment: 'center',
+      fontSize: 16,
+      color: '#0000FF',
+      margin: [0, 0, 0, 10],
+    },
+  ];
 
   // I. PROJECT DESCRIPTION header
   content.push({
@@ -611,8 +684,9 @@ export const downloadForm2Pdf = (form2, event, owner, roleId) => {
 
   content.push(receivedByTable);
 
-  const docDefinition = {
-    content,
+   const docDefinition = {
+    header: headerContent, // This will appear on every page
+    content: content,
     styles: {
       tableHeader: {
         bold: true,
@@ -624,7 +698,7 @@ export const downloadForm2Pdf = (form2, event, owner, roleId) => {
       fontSize: 11, 
       lineHeight: 1.15 
     },
-    pageMargins: [40, 40, 40, 40],
+    pageMargins: [40, 80, 40, 40], // Increased top margin to accommodate header
   };
 
   pdfMake.createPdf(docDefinition).download("form2-project-proposal.pdf");

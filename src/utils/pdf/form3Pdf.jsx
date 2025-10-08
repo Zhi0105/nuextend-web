@@ -9,8 +9,27 @@ if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
   pdfMake.vfs = pdfFonts.vfs;
 }
 
-export const downloadForm3Pdf = (form3, event, owner, roleId) => {
+  function getBase64ImageFromURL(url) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.setAttribute('crossOrigin', 'anonymous');
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const dataURL = canvas.toDataURL('image/png');
+        resolve(dataURL);
+      };
+      img.onerror = error => reject(error);
+      img.src = url;
+    });
+  }
+
+export const downloadForm3Pdf = async (form3, event, owner, roleId) => {
   console.log("downloadForm3Pdf called", { form3, event, owner, roleId });
+  const logo = await getBase64ImageFromURL('/LogoHeader.png');
 
   if (!form3) {
     console.warn("downloadForm3Pdf: no form3 provided");
@@ -21,15 +40,61 @@ export const downloadForm3Pdf = (form3, event, owner, roleId) => {
   const f = Array.isArray(form3) ? form3[0] || {} : form3 || {};
   const eventName = event?.eventName || event?.title || f?.title || "—";
 
-  const content = [];
-  
-  content.push({
-    text: "OUTREACH PROJECT PROPOSAL",
-    bold: true,
-    fontSize: 16,
-    alignment: 'center',
-    margin: [0, 0, 0, 10],
-  });
+  const headerContent = [{
+      columns: [
+        // Image on the left
+        {
+          width: 'auto',
+          image: logo,
+          width: 250,
+          margin: [20, -20, 0, 0]
+        },
+        // Text on the right
+        {
+          width: '*',
+          stack: [
+            {
+              text: 'Outreach Project Proposal Format',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: 'NUB – ACD – CMX – F – 003',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: '2025',
+              fontSize: 10,
+              bold: true
+            }
+          ],
+          alignment: 'right'
+        }
+      ],
+      margin: [0, 20, 30, 0]
+    },
+  ];
+
+  const content = [
+    {
+      text: event?.organization?.name || "Comex",
+      bold: true,
+      alignment: 'center',
+      fontSize: 14,
+      margin: [0, 10, 0, 5],
+    },
+    {
+      text: "OUTREACH PROJECT PROPOSAL",
+      bold: true,
+      alignment: 'center',
+      fontSize: 16,
+      color: '#0000FF',
+      margin: [0, 0, 0, 10],
+    },
+  ];
 
   // TITLE
   content.push({
@@ -567,20 +632,21 @@ export const downloadForm3Pdf = (form3, event, owner, roleId) => {
   content.push(receivedByTable);
 
   const docDefinition = {
-    content,
-    styles: {
-      tableHeader: {
-        bold: true,
-        fontSize: 10,
-        margin: [0, 3, 0, 3]
-      }
-    },
-    defaultStyle: { 
-      fontSize: 11, 
-      lineHeight: 1.15 
-    },
-    pageMargins: [40, 40, 40, 40],
-  };
+  header: headerContent, // This will appear on every page
+  content: content,
+  styles: {
+    tableHeader: {
+      bold: true,
+      fontSize: 10,
+      margin: [0, 3, 0, 3]
+    }
+  },
+  defaultStyle: { 
+    fontSize: 11, 
+    lineHeight: 1.15 
+  },
+  pageMargins: [40, 80, 40, 40], // Increased top margin to accommodate header
+};
 
   pdfMake.createPdf(docDefinition).download("form3-outreach-proposal.pdf");
 };
