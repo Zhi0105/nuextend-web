@@ -134,13 +134,17 @@ export const getFormStatus = (form, formNumber, isAdminOwner = false) => {
   }
 
   const { 
-    is_ad, is_asd, is_commex, is_dean, 
-    ad_remarks, asd_remarks, commex_remarks, dean_remarks 
+    is_ad, is_asd, is_commex, is_dean,
+    is_revised, is_updated
   } = form[0];
 
   // ✅ Rule 1: any remarks = sent for revised
-  if (ad_remarks || asd_remarks || commex_remarks || dean_remarks) {
+  if (is_revised) {
     return <h1 className="text-red-400">sent for revised</h1>;
+  }
+
+  if (is_updated) {
+    return <h1 className="text-blue-400">updated</h1>;
   }
 
   // ✅ Determine required approvers for this form
