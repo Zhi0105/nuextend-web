@@ -298,14 +298,24 @@ export const View = () => {
   };
 
   
-const pesoFormat = (value) => {
-    if (value == null) return "—";
-    return new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency: "PHP",
-        minimumFractionDigits: 2,
-    }).format(value);
-};
+  const pesoFormat = (value) => {
+      if (value == null) return "—";
+      return new Intl.NumberFormat("en-PH", {
+          style: "currency",
+          currency: "PHP",
+          minimumFractionDigits: 2,
+      }).format(value);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
 
   // cell renderers
@@ -325,6 +335,8 @@ const pesoFormat = (value) => {
   const roleBody = (row) => _.get(row, "user.role.name") || "—";
   const organizationBody = (row) => _.get(row, "organization.name") || "—";
   const budgetProposalBody = (row) => pesoFormat(row?.budget_proposal);
+  const createdAtBody = (row) => formatDate(row?.created_at);
+
   if (eventLoading || userEventLoading || eventRefetchLoading || userEventRefetchLoading) {
     return (
       <div className="view-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px]">
@@ -332,6 +344,8 @@ const pesoFormat = (value) => {
       </div>
     );
   }
+
+  console.log(mergedEvents)
 
   return (
     <div className="view-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
@@ -378,6 +392,7 @@ const pesoFormat = (value) => {
           />
         </div>
       </div>
+
     
       <div className="w-full overflow-x-auto">
         <DataTable
@@ -456,6 +471,14 @@ const pesoFormat = (value) => {
               header="Organization"
               body={organizationBody}
               sortable
+          />
+
+          <Column
+            headerClassName="bg-[#364190] text-white text-sm"
+            header="Date"
+            body={createdAtBody}
+            field="created_at"
+            sortable
           />
 
           <Column headerClassName="bg-[#FCA712] text-white text-sm" body={actionBodyTemplateForActivity} header="Action" />
