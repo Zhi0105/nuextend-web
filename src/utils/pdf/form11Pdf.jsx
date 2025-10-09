@@ -9,9 +9,28 @@ if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
   pdfMake.vfs = pdfFonts.vfs;
 }
 
+function getBase64ImageFromURL(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.setAttribute('crossOrigin', 'anonymous');
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const dataURL = canvas.toDataURL('image/png');
+      resolve(dataURL);
+    };
+    img.onerror = error => reject(error);
+    img.src = url;
+  });
+}
+
 // utils/pdfGenerator.js - Add this function for Form11
-export const downloadForm11Pdf = (form11, event, owner, roleId) => {
+export const downloadForm11Pdf = async (form11, event, owner, roleId) => {
   console.log("downloadForm11Pdf called", { form11, event, owner, roleId });
+  const logo = await getBase64ImageFromURL('/LogoHeader.png');
 
   if (!form11) {
     console.warn("downloadForm11Pdf: no form11 provided");
@@ -26,6 +45,50 @@ export const downloadForm11Pdf = (form11, event, owner, roleId) => {
   const transportationMedium = f?.transportation_medium || "—";
   const driver = f?.driver || "—";
   const travelDetails = f?.travel_details || [];
+
+  const headerContent = [{
+      columns: [
+        // Image on the left
+        {
+          width: 'auto',
+          image: logo,
+          width: 250,
+          margin: [20, -20, 0, 0]
+        },
+        // Text on the right
+        {
+          width: '*',
+          stack: [
+            {
+              text: 'Extension Program and Project',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: 'Itinerary of Travel Format',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: 'NUB – ACD – CMX – F – 011',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: '2025',
+              fontSize: 10,
+              bold: true
+            }
+          ],
+          alignment: 'right'
+        }
+      ],
+      margin: [0, 20, 30, 0]
+    },
+  ];
 
   const content = [];
 
@@ -346,11 +409,10 @@ export const downloadForm11Pdf = (form11, event, owner, roleId) => {
     margin: [0, 0, 0, 0]
   };
 
-  // Add conditional page break - only if the table would be cut off
-  // In landscape mode, we'll let pdfMake handle automatic page breaks naturally
   content.push(mergedApprovalTable);
 
   const docDefinition = {
+    header: headerContent, // This will appear on every page
     content,
     styles: {
       tableHeader: {
@@ -363,7 +425,7 @@ export const downloadForm11Pdf = (form11, event, owner, roleId) => {
       fontSize: 11, 
       lineHeight: 1.15 
     },
-    pageMargins: [40, 40, 40, 40],
+    pageMargins: [40, 80, 40, 40], // Increased top margin to accommodate header
     pageOrientation: 'landscape' // Use landscape for better table display
   };
 

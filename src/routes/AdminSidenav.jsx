@@ -65,7 +65,7 @@ export const AdminSidenav = () => {
                                 height={5}
                                 className='text-xl text-gray-500'
                             />
-                            <span>Dean Account</span>
+                            <span>Signatories</span>
                         </Link>
                     </li>
                 )}

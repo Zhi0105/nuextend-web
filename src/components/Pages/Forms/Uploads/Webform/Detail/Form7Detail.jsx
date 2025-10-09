@@ -79,6 +79,7 @@ export const Form7Detail = () => {
   const onApprove = () => {
     if (!formData || !canAction) return;
     doApprove({ token: decryptedToken, id: formData.id, role_id: roleId });
+    navigate("/event/view");
   };
 
   // ✅ Revise
@@ -111,6 +112,7 @@ export const Form7Detail = () => {
       remark: remarks  // ✅ Unified 'remark' field (not role-specific keys)
     });
     setShowRevise(false);
+    navigate("/event/view");
   };
 
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;

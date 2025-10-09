@@ -99,6 +99,7 @@ const canDownloadPdf = useMemo(() => {
   const onApprove = () => {
     if (!form1 || !canAction) return;
     doApprove({ token: decryptedToken, id: form1[0].id, role_id: roleId });
+    navigate("/event/view");
   };
 
   // Revise
@@ -131,6 +132,7 @@ const canDownloadPdf = useMemo(() => {
       remark: remarks  // ✅ Unified 'remark' field
     });
     setShowRevise(false);
+    navigate("/event/view");
   };
 
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;

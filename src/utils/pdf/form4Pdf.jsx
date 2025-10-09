@@ -65,13 +65,13 @@ export const downloadForm4Pdf = async (formData, checklist, roleId, owner) => {
         width: '*',
         stack: [
           {
-            text: 'Program Proposal Format',
+            text: 'Checklist of Criteria for Extension Program Proposal',
             fontSize: 10,
             bold: true,
             margin: [0, 0, 0, 0]
           },
           {
-            text: 'NUB – ACD – CMX – F – 001',
+            text: 'NUB – ACD – CMX – F – 004',
             fontSize: 10,
             bold: true,
             margin: [0, 0, 0, 0]
@@ -92,19 +92,12 @@ export const downloadForm4Pdf = async (formData, checklist, roleId, owner) => {
   const content = [
     // Organization name and title
     {
-      text: formData?.organization?.name || "Comex",
-      bold: true,
-      alignment: 'center',
-      fontSize: 14,
-      margin: [0, 40, 0, 5],
-    },
-    {
       text: "CHECKLIST OF CRITERIA FOR EXTENSION PROGRAM PROPOSAL",
       bold: true,
       alignment: 'center',
       fontSize: 16,
       color: '#0000FF',
-      margin: [0, 0, 0, 20],
+      margin: [0, 0, 0, 0],
     },
 
     // Checklist Table
@@ -163,7 +156,7 @@ export const downloadForm4Pdf = async (formData, checklist, roleId, owner) => {
         hLineColor: function(i, node) { return 'black'; },
         vLineColor: function(i, node) { return 'black'; },
       },
-      margin: [0, 0, 0, 20]
+      margin: [0, 0, 0, 0]
     }
   ];
 

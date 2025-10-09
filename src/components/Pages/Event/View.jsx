@@ -101,7 +101,7 @@ export const View = () => {
 
   const statusOptions = [
     { label: "All statuses", value: null },
-    { label: "Active", value: "Active" },
+    { label: "Pending ", value: "Active" },
     { label: "Completed", value: "Completed" },
   ];
   const createdByAdminOptions = [
