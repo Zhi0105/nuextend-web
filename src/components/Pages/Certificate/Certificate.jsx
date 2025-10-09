@@ -11,7 +11,6 @@ export const Certificate = () => {
   useEffect(() => {
     let certData = [];
 
-    // Extract from state or decode from query params
     if (state?.names?.length) {
       certData = state.names.map((name) => ({
         name,
@@ -39,9 +38,7 @@ export const Certificate = () => {
 
     setCertificates(certData);
 
-    const timer = setTimeout(() => {
-      window.print();
-    }, 600);
+    const timer = setTimeout(() => window.print(), 700);
     return () => clearTimeout(timer);
   }, []);
 
@@ -54,104 +51,119 @@ export const Certificate = () => {
 
   return (
     <div className="p-6 print:p-0 bg-gray-100 min-h-screen">
-      <h2 className="text-2xl font-bold mb-4 hidden print:block text-center">
-        NU Baliwag Community Extension Certificate
-      </h2>
-
       {certificates.map((cert, index) => (
-        <div key={index} className="mb-10 break-after-page print:break-after-page">
+        <div
+          key={index}
+          ref={(el) => (previewRefs.current[index] = el)}
+          className="relative w-[1280px] h-[900px] mx-auto mb-10 shadow-lg print:break-after-page bg-white"
+          style={{
+            backgroundImage: `url("/cert.webp")`,
+            backgroundRepeat: "no-repeat",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            pageBreakAfter: "always",
+          }}
+        >
+          {/* Recipient Name */}
           <div
-            ref={(el) => (previewRefs.current[index] = el)}
-            className="relative w-[1200px] h-[850px] mx-auto bg-white shadow-xl"
+            className="absolute text-center font-bold text-3xl text-[#000]"
             style={{
-              backgroundImage: `url("/cert.webp")`,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
+              top: "330px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "80%",
             }}
           >
-            {/* Recipient Name */}
-            <div
-              className="absolute text-black text-2xl font-bold text-center"
-              style={{
-                top: "320px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: "80%",
-              }}
-            >
-              <h1 className="capitalize">{cert.name}</h1>
+            <p className="capitalize">{cert.name}</p>
+          </div>
+
+          {/* Certificate Body */}
+          <div
+            className="absolute text-center text-black text-base leading-7"
+            style={{
+              top: "390px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: "85%",
+            }}
+          >
+            <p>
+              in recognition for his/her active participation in the{" "}
+              <strong>Community Extension Program or Project</strong> entitled:
+            </p>
+            <p className="italic font-semibold mt-2">
+              {cert.programTitle}
+            </p>
+            <p className="mt-2">
+              Implemented on{" "}
+              <strong>{formatDate(cert.date)}</strong>, at{" "}
+              <strong>{cert.location}</strong>. Issued this{" "}
+              <strong>{formatDate(new Date())}</strong>,{" "}
+              <strong>{cert.term}</strong>.
+            </p>
+            <p className="mt-2">
+              Thank you very much for the immeasurably valuable work you have
+              done as <strong>{cert.role}</strong>. Your dedication is essential
+              to the mission and vision of the Community Extension Office.
+            </p>
+            <p className="italic text-right text-sm mt-3 pr-10">
+              Hours Rendered: {cert.hours}
+            </p>
+          </div>
+
+          {/* Signatories */}
+          <div
+            className="absolute text-sm text-center"
+            style={{
+              bottom: "110px",
+              width: "100%",
+            }}
+          >
+            <div className="grid grid-cols-4 gap-4 w-[90%] mx-auto">
+              {[
+                "Community Extension Coordinator",
+                "Academic Services Director",
+                "Academic Director",
+                "Executive Director",
+              ].map((title, i) => (
+                <div key={i}>
+                  <div className="border-t border-black w-[80%] mx-auto"></div>
+                  <p>{title}</p>
+                </div>
+              ))}
             </div>
 
-            {/* Body Text */}
-            <div
-              className="absolute text-black text-base leading-7 text-center px-16"
-              style={{
-                top: "370px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: "80%",
-              }}
-            >
-              <p>
-                in recognition for his/her active participation in the{" "}
-                <strong>Community Extension Program or Project</strong> entitled:
-              </p>
-              <p className="font-semibold italic mt-2">
-                {cert.programTitle}
-              </p>
-              <p className="mt-2">
-                Implemented on <strong>{formatDate(cert.date)}</strong>, at{" "}
-                <strong>{cert.location}</strong>. Issued this{" "}
-                <strong>{formatDate(new Date())}</strong>,{" "}
-                <strong>{cert.term}</strong>.
-              </p>
-              <p className="mt-2">
-                Thank you very much for the immeasurably valuable work you have
-                done as <strong>{cert.role}</strong>. Your dedication is
-                essential to the mission and vision of the Community Extension
-                Office.
-              </p>
-              <p className="text-right italic text-sm mt-3">
-                Hours Rendered: {cert.hours}
-              </p>
-            </div>
-
-            {/* Signatories */}
-            <div
-              className="absolute w-full text-sm text-center"
-              style={{ bottom: "100px" }}
-            >
-              <div className="grid grid-cols-4 gap-6 w-[90%] mx-auto">
-                <div>
-                  <div className="border-t border-black w-[80%] mx-auto"></div>
-                  <p>Community Extension Coordinator</p>
-                </div>
-                <div>
-                  <div className="border-t border-black w-[80%] mx-auto"></div>
-                  <p>Academic Services Director</p>
-                </div>
-                <div>
-                  <div className="border-t border-black w-[80%] mx-auto"></div>
-                  <p>Academic Director</p>
-                </div>
-                <div>
-                  <div className="border-t border-black w-[80%] mx-auto"></div>
-                  <p>Executive Director</p>
-                </div>
-              </div>
-
-              <p className="text-xs mt-6 italic">
-                <strong>ComEx CARES</strong> through the activities that adhere
-                to the principles of{" "}
-                <span className="text-red-600 font-semibold">
-                  Collaboration, Accountability, Relevance, Empowerment, and
-                  Sustainability.
-                </span>
-              </p>
-            </div>
+            <p className="text-xs mt-5 italic">
+              <strong>ComEx CARES</strong> through the activities that adhere to
+              the principles of{" "}
+              <span className="text-red-600 font-semibold">
+                Collaboration, Accountability, Relevance, Empowerment, and
+                Sustainability.
+              </span>
+            </p>
           </div>
         </div>
       ))}
+
+      {/* Force landscape printing */}
+      <style>
+        {`
+          @page {
+            size: A4 landscape;
+            margin: 0;
+          }
+
+          @media print {
+            body {
+              -webkit-print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+            .certificate-bg {
+              print-color-adjust: exact;
+            }
+          }
+        `}
+      </style>
     </div>
   );
 };
