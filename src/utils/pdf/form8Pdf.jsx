@@ -8,8 +8,27 @@ if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
   pdfMake.vfs = pdfFonts.vfs;
 }
 
-export const downloadForm8Pdf = (form8, event, owner, roleId) => {
+function getBase64ImageFromURL(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.setAttribute('crossOrigin', 'anonymous');
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const dataURL = canvas.toDataURL('image/png');
+      resolve(dataURL);
+    };
+    img.onerror = error => reject(error);
+    img.src = url;
+  });
+}
+
+export const downloadForm8Pdf = async (form8, event, owner, roleId) => {
   console.log("downloadForm8Pdf called", { form8, event, owner, roleId });
+  const logo = await getBase64ImageFromURL('/LogoHeader.png');
 
   if (!form8) {
     console.warn("downloadForm8Pdf: no form8 provided");
@@ -30,6 +49,44 @@ export const downloadForm8Pdf = (form8, event, owner, roleId) => {
   const findingsDiscussion = f?.findings_discussion || "—";
   const implicationIntervention = f?.implication_intervention || "—";
   const references = f?.references || [];
+
+  const headerContent = [{
+      columns: [
+        // Image on the left
+        {
+          width: 'auto',
+          image: logo,
+          width: 250,
+          margin: [20, -20, 0, 0]
+        },
+        // Text on the right
+        {
+          width: '*',
+          stack: [
+            {
+              text: 'Target Group Needs Diagnosis Report Format',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: 'NUB – ACD – CMX – F – 008',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: '2025',
+              fontSize: 10,
+              bold: true
+            }
+          ],
+          alignment: 'right'
+        }
+      ],
+      margin: [0, 20, 30, 0]
+    },
+  ];
 
   const content = [];
 
@@ -175,12 +232,13 @@ export const downloadForm8Pdf = (form8, event, owner, roleId) => {
   }
 
   const docDefinition = {
-    content,
+    header: headerContent, // This will appear on every page
+    content: content,
     defaultStyle: { 
       fontSize: 11, 
       lineHeight: 1.15 
     },
-    pageMargins: [40, 40, 40, 40],
+    pageMargins: [40, 80, 40, 40], // Increased top margin to accommodate header
   };
 
   pdfMake.createPdf(docDefinition).download("form8-needs-assessment-report.pdf");

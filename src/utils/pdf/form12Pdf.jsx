@@ -9,9 +9,28 @@ if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
   pdfMake.vfs = pdfFonts.vfs;
 }
 
+function getBase64ImageFromURL(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.setAttribute('crossOrigin', 'anonymous');
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const dataURL = canvas.toDataURL('image/png');
+      resolve(dataURL);
+    };
+    img.onerror = error => reject(error);
+    img.src = url;
+  });
+}
+
 // utils/pdfGenerator.js - Add this function for Form12
-export const downloadForm12Pdf = (form12, event, owner, roleId) => {
+export const downloadForm12Pdf = async (form12, event, owner, roleId) => {
   console.log("downloadForm12Pdf called", { form12, event, owner, roleId });
+  const logo = await getBase64ImageFromURL('/LogoHeader.png');
 
   if (!form12) {
     console.warn("downloadForm12Pdf: no form12 provided");
@@ -29,6 +48,44 @@ export const downloadForm12Pdf = (form12, event, owner, roleId) => {
   const otherMatters = f?.other_matters || "—";
   const adjournment = f?.adjournment;
   const documentation = f?.documentation || "—";
+
+  const headerContent = [{
+      columns: [
+        // Image on the left
+        {
+          width: 'auto',
+          image: logo,
+          width: 250,
+          margin: [20, -20, 0, 0]
+        },
+        // Text on the right
+        {
+          width: '*',
+          stack: [
+            {
+              text: 'Meeting Minutes Format',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: 'NUB – ACD – CMX – F – 012',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: '2025',
+              fontSize: 10,
+              bold: true
+            }
+          ],
+          alignment: 'right'
+        }
+      ],
+      margin: [0, 20, 30, 0]
+    },
+  ];
 
   const content = [];
 
@@ -374,6 +431,7 @@ export const downloadForm12Pdf = (form12, event, owner, roleId) => {
   content.push(mergedApprovalTable);
 
   const docDefinition = {
+    header: headerContent, // This will appear on every page
     content,
     styles: {
       tableHeader: {
@@ -386,7 +444,7 @@ export const downloadForm12Pdf = (form12, event, owner, roleId) => {
       fontSize: 11, 
       lineHeight: 1.15 
     },
-    pageMargins: [40, 40, 40, 40],
+    pageMargins: [40, 80, 40, 40], // Increased top margin to accommodate header
   };
 
   pdfMake.createPdf(docDefinition).download("form12-meeting-minutes.pdf");

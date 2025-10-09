@@ -133,6 +133,7 @@ export const createEvent = (payload) => {
         event_status_id,
         target_group,
         term,
+        implement_date,
         name,
         description,
         budget_proposal,
@@ -154,6 +155,7 @@ export const createEvent = (payload) => {
         target_group,
         name,
         term,
+        implement_date,
         description,
         budget_proposal,
         skills: [...skills],
@@ -182,6 +184,7 @@ export const updateEvent = (payload) => {
         name,
         target_group,
         term,
+        implement_date,
         budget_proposal,
         description,
 
@@ -221,6 +224,7 @@ export const updateEvent = (payload) => {
         target_group,
         description,
         term,
+        implement_date,
         budget_proposal,
     });
 

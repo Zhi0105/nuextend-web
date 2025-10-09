@@ -8,10 +8,76 @@ if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
   pdfMake.vfs = pdfFonts.vfs;
 }
 
-export const downloadForm7Pdf = (formData, owner) => {
+function getBase64ImageFromURL(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.setAttribute('crossOrigin', 'anonymous');
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const dataURL = canvas.toDataURL('image/png');
+      resolve(dataURL);
+    };
+    img.onerror = error => reject(error);
+    img.src = url;
+  });
+}
+
+export const downloadForm7Pdf = async (formData, owner) => {
+  // Get logo for header
+  const logo = await getBase64ImageFromURL('/LogoHeader.png');
+
+  // === HEADER CONTENT (appears on every page) ===
+  const headerContent = [{
+    columns: [
+      // Image on the left
+      {
+        width: 'auto',
+        image: logo,
+        width: 250,
+        margin: [20, -20, 0, 0]
+      },
+      // Text on the right
+      {
+        width: '*',
+        stack: [
+          {
+            text: 'Manifestation of Consent and Cooperation',
+            fontSize: 10,
+            bold: true,
+            margin: [0, 0, 0, 0]
+          },
+          {
+            text: 'for the Outreach Project',
+            fontSize: 10,
+            bold: true,
+            margin: [0, 0, 0, 0]
+          },
+          {
+            text: 'NUB – ACD – CMX – F – 007',
+            fontSize: 10,
+            bold: true,
+            margin: [0, 0, 0, 0]
+          },
+          {
+            text: '2025',
+            fontSize: 10,
+            bold: true
+          }
+        ],
+        alignment: 'right'
+      }
+    ],
+    margin: [0, 20, 30, 0]
+  }];
+
   const docDefinition = {
     pageSize: 'A4',
-    pageMargins: [40, 60, 40, 60],
+    pageMargins: [40, 80, 40, 60], // Increased top margin to accommodate header
+    header: headerContent, // Add header here
     content: [
       // Title
       {

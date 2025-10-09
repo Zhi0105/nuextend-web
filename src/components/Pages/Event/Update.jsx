@@ -18,6 +18,7 @@ import { InputNumber } from "primereact/inputnumber";
 import { DecryptString, DecryptUser, SetTermValue } from "@_src/utils/helpers";
 import { getMembers } from "@_src/services/organization";
 import { Activity } from "@_src/components/Partial/Activity";
+import { Calendar } from 'primereact/calendar';
 import dayjs from "dayjs";
 import _ from "lodash";
 
@@ -38,6 +39,7 @@ export const Update = () => {
   const { data: orgData, isLoading: orgLoading } = getOrganizations();
 
   const setFormatDate = (date) => dayjs(new Date(date)).format("MM-DD-YYYY");
+  const setFormatDate1 = (date) => dayjs(new Date(date)).format("YYYY-MM-DD");
 
   const setOrganizationList = (organizations) => _.filter(organizations, (org) => [6, 7].includes(org.pivot?.role_id));
 
@@ -59,6 +61,7 @@ export const Update = () => {
       unsdgs: [],
       skills: [],
       name: "",
+      implement_date: null,
       target_group: "",
       budget_proposal: 0,
       // Activities mirrors Create component
@@ -152,6 +155,7 @@ export const Update = () => {
       name: event.name || event.activityName || "",
       target_group: event.target_group || "",
       budget_proposal: event.budget_proposal || 0,
+      implement_date: event.implement_date ? new Date(event.implement_date) : null,
       activities: seedActivities,
     });
   }, [event, modelData, typeData, unsdgData, skillData, orgData, replace, reset]);
@@ -165,7 +169,7 @@ export const Update = () => {
   }, [modelId, activitiesValues.length, handleAddActivity]);
 
     const onSubmit = (data) => {
-    const { members, organization, model, event_type, name, term, target_group, budget_proposal, skills, unsdgs, activities } = data;
+    const { members, organization, model, event_type, name, term, implement_date, target_group, budget_proposal, skills, unsdgs, activities } = data;
 
     // Map to service shape: each activity has { id?, name, description, address, start_date, end_date }
     const activitiesPayload = (activities || []).map((a) => ({
@@ -188,6 +192,7 @@ export const Update = () => {
         name,
         target_group,
         term,
+        implement_date: implement_date ? setFormatDate1(implement_date) : undefined,
         budget_proposal,
         skills: _.map(skills, 'id'),
         unsdgs: _.map(unsdgs, 'id'),
@@ -423,6 +428,33 @@ export const Update = () => {
                   name="budget_proposal"
                 />
                 {errors.budget_proposal && <p className="text-sm italic mt-1 text-red-400 indent-2">budget is required.*</p>}
+              </div>
+              {/* Add Calendar Picker for implement_date */}
+              <div className="implement_date">
+                  <label htmlFor="implement_date" className="block text-sm font-medium text-gray-700 mb-1">
+                      Implementation Date
+                  </label>
+                  <Controller
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field: { onChange, value } }) => (
+                      <Calendar
+                        id="implement_date"
+                        value={value} // Already a Date object or null
+                        onChange={(e) => onChange(e.value)} // Just pass the Date object directly
+                        dateFormat="yy-mm-dd"
+                        placeholder="Select implementation date"
+                        className={`w-full ${errors.implement_date && 'border border-red-500'}`}
+                        showIcon
+                      />
+                    )}
+                    name="implement_date"
+                  />
+                  {errors.implement_date && (
+                      <p className="text-sm italic mt-1 text-red-400 indent-2">
+                          Implementation date is required.*
+                      </p>
+                  )}
               </div>
 
               <div className="flex pt-4 justify-between px-4">

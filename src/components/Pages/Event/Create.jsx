@@ -17,6 +17,7 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { DecryptString, DecryptUser, SetTermValue } from "@_src/utils/helpers";
 import { getMembers } from "@_src/services/organization";
 import { Activity } from "@_src/components/Partial/Activity";
+import { Calendar } from 'primereact/calendar';
 import dayjs from 'dayjs';
 import _ from "lodash";
 
@@ -49,6 +50,7 @@ export const Create = () => {
             unsdgs: [],
             skills: [],
             activities: [],
+            implement_date: null,
             members: [] // <-- Add this
         },
     });
@@ -83,7 +85,7 @@ export const Create = () => {
     };
 
     const onSubmit = (data) => {
-        const { members, target_group, organization, model, event_type, name, term, description, activities, budget_proposal, skills, unsdgs } = data
+        const { members, target_group, organization, model, event_type, name, term, implement_date,description, activities, budget_proposal, skills, unsdgs } = data
         const updatedActivities = _.map(activities, (activity) => ({
             name: activity.name,
             description: activity.description,
@@ -102,6 +104,7 @@ export const Create = () => {
             target_group,
             name,
             term,
+            implement_date,
             description,
             budget_proposal,
             skills: _.map(skills, 'id'),
@@ -123,6 +126,8 @@ export const Create = () => {
                         model:getValues("model"),
                         event_type: "",
                         term: getValues("term"),
+                        implement_date: null,
+                        description: "",
                         target_group: "",
                         name: "",
                         budget_proposal: 0,
@@ -442,6 +447,44 @@ export const Create = () => {
                                 {errors.budget_proposal && (
                                     <p className="text-sm italic mt-1 text-red-400 indent-2">
                                         budget is required.*
+                                    </p>
+                                )}
+                            </div>
+                            {/* Add Calendar Picker for implement_date */}
+                            <div className="implement_date">
+                                <label htmlFor="implement_date" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Implementation Date
+                                </label>
+                                <Controller
+                                    control={control}
+                                    rules={{
+                                        required: true,
+                                    }}
+                                    render={({ field: { onChange, value } }) => (
+                                        <Calendar
+                                            id="implement_date"
+                                            value={value ? new Date(value) : null}
+                                            onChange={(e) => {
+                                                // Format the date to YYYY-MM-DD before sending to form
+                                                if (e.value) {
+                                                    const date = new Date(e.value);
+                                                    const formattedDate = date.toISOString().split('T')[0];
+                                                    onChange(formattedDate);
+                                                } else {
+                                                    onChange(null);
+                                                }
+                                            }}
+                                            dateFormat="yy-mm-dd"
+                                            placeholder="Select implementation date"
+                                            className={`w-full ${errors.implement_date && 'border border-red-500'}`}
+                                            showIcon
+                                        />
+                                    )}
+                                    name="implement_date"
+                                />
+                                {errors.implement_date && (
+                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
+                                        Implementation date is required.*
                                     </p>
                                 )}
                             </div>

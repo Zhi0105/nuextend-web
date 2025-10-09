@@ -1,5 +1,35 @@
-export const downloadForm14Pdf = (form14, event, owner, roleId, approvalData) => {
+// utils/pdfGenerator.js
+import pdfMake from "pdfmake/build/pdfmake";
+import pdfFonts from "pdfmake/build/vfs_fonts";
+
+// make vfs assignment robust across pdfmake builds:
+if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
+  pdfMake.vfs = pdfFonts.pdfMake.vfs;
+} else if (pdfFonts && pdfFonts.vfs) {
+  pdfMake.vfs = pdfFonts.vfs;
+}
+
+function getBase64ImageFromURL(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.setAttribute('crossOrigin', 'anonymous');
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const dataURL = canvas.toDataURL('image/png');
+      resolve(dataURL);
+    };
+    img.onerror = error => reject(error);
+    img.src = url;
+  });
+}
+
+export const downloadForm14Pdf = async (form14, event, owner, roleId, approvalData) => {
   console.log("downloadForm14Pdf called", { form14, event, owner, roleId, approvalData });
+  const logo = await getBase64ImageFromURL('/LogoHeader.png');
 
   if (!form14) {
     console.warn("downloadForm14Pdf: no form14 provided");
@@ -32,160 +62,43 @@ export const downloadForm14Pdf = (form14, event, owner, roleId, approvalData) =>
   const schoolName = owner?.department?.name || "—";
   const departmentName = owner?.program?.name || "—";
 
-  // Helper function to create approval cell with LARGE e-signatures (from Form12 reference)
-  const createApprovalCell = (approved, approver, approveDate, title) => {
-    const isApproved = !!approved;
-    const approverName = approver ? `${approver.firstname || ''} ${approver.lastname || ''}`.trim() : '';
-    const signatureBase64 = approver?.esign;
-    
-    const cellContent = [];
-
-    // Add signature image - LARGE but with minimal spacing
-    if (isApproved && signatureBase64) {
-      cellContent.push({
-        image: signatureBase64,
-        width: 220,  // Large signature
-        height: 100,  // Large signature
-        alignment: 'center',
-        margin: [0, -20, 0, -20] // Minimal margin below signature
-      });
-    } else if (isApproved) {
-      cellContent.push({
-        canvas: [
-          {
-            type: 'line',
-            x1: 0, y1: 0,
-            x2: 140, y2: 0, // Long line
-            lineWidth: 1,
-            lineColor: 'black'
-          }
-        ],
-        margin: [0, 8, 0, 2]
-      });
-    } else {
-      cellContent.push({
-        text: ' ',
-        margin: [0, 8, 0, 2]
-      });
-    }
-
-    // Status below signature - very compact
-    cellContent.push({
-      text: isApproved ? 'Approved' : 'Awaiting Approval',
-      bold: isApproved,
-      color: isApproved ? 'green' : 'gray',
-      italic: !isApproved,
-      alignment: 'center',
-      margin: [0, 0, 0, 1], // Minimal margin
-      fontSize: 9
-    });
-
-    // Approver name - CAPITAL LETTERS and compact
-    cellContent.push({
-      text: approverName ? approverName.toUpperCase() : (isApproved ? '—' : '___________________'),
-      alignment: 'center',
-      margin: [0, 0, 0, 1], // Minimal margin
-      fontSize: 10,
-      bold: true
-    });
-
-    // Title - very compact
-    cellContent.push({
-      text: title,
-      alignment: 'center',
-      fontSize: 8,
-      color: 'gray',
-      margin: [0, 0, 0, 1] // Minimal margin
-    });
-
-    // Date - very compact
-    if (approveDate) {
-      cellContent.push({
-        text: new Date(approveDate).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        }),
-        alignment: 'center',
-        fontSize: 8,
-        color: 'gray',
-        margin: [0, 0, 0, 0] // No margin
-      });
-    } else {
-      cellContent.push({
-        text: 'Date: ______________',
-        alignment: 'center',
-        fontSize: 8,
-        color: 'gray',
-        margin: [0, 0, 0, 0] // No margin
-      });
-    }
-
-    return {
-      stack: cellContent,
-      alignment: 'center',
-      margin: [0, 2, 0, 2] // Very compact margins around entire cell
-    };
-  };
-
-  // Helper function to create Prepared By cell WITH E-SIGNATURE
-  const createPreparedByCell = (owner) => {
-    const coordinatorFirstName = owner?.firstname || "";
-    const coordinatorMiddleName = owner?.middlename || "";
-    const coordinatorLastName = owner?.lastname || "";
-    const coordinatorFullName = `${coordinatorFirstName} ${coordinatorMiddleName} ${coordinatorLastName}`.trim();
-    const signatureBase64 = owner?.esign;
-    
-    const cellContent = [];
-
-    // Add signature image for Prepared By
-    if (signatureBase64) {
-      cellContent.push({
-        image: signatureBase64,
-        width: 220,  // Same size as other signatures
-        height: 100,  // Same size as other signatures
-        alignment: 'center',
-        margin: [0, -7, 0, -20] // Minimal margin below signature
-      });
-    } else {
-      cellContent.push({
-        canvas: [
-          {
-            type: 'line',
-            x1: 0, y1: 0,
-            x2: 140, y2: 0, // Same line length as other signatures
-            lineWidth: 1,
-            lineColor: 'black'
-          }
-        ],
-        margin: [0, 8, 0, 2]
-      });
-    }
-
-    // Name - CAPITAL LETTERS
-    cellContent.push({
-      text: coordinatorFullName ? coordinatorFullName.toUpperCase() : '___________________',
-      alignment: 'center',
-      bold: true,
-      fontSize: 10,
-      margin: [0, 0, 0, 1]
-    });
-
-    // Title
-    cellContent.push({
-      text: 'Program Coordinator',
-      alignment: 'center',
-      fontSize: 8,
-      color: 'gray',
-      margin: [0, 0, 0, 0]
-    });
-
-    return {
-      stack: cellContent,
-      alignment: 'center',
-      margin: [0, 2, 0, 2] // Same margins as other cells
-    };
-  };
+  const headerContent = [{
+      columns: [
+        // Image on the left
+        {
+          width: 'auto',
+          image: logo,
+          width: 250,
+          margin: [20, -20, 0, 0]
+        },
+        // Text on the right
+        {
+          width: '*',
+          stack: [
+            {
+              text: 'Post-Activity Report Format',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: 'NUB – ACD – CMX – F – 014',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: '2025',
+              fontSize: 10,
+              bold: true
+            }
+          ],
+          alignment: 'right'
+        }
+      ],
+      margin: [0, 20, 30, 0]
+    },
+  ];
 
   const content = [];
 
@@ -371,6 +284,161 @@ export const downloadForm14Pdf = (form14, event, owner, roleId, approvalData) =>
     pageBreak: 'after'
   });
 
+  // Helper function to create approval cell with LARGE e-signatures (from Form12 reference)
+  const createApprovalCell = (approved, approver, approveDate, title) => {
+    const isApproved = !!approved;
+    const approverName = approver ? `${approver.firstname || ''} ${approver.lastname || ''}`.trim() : '';
+    const signatureBase64 = approver?.esign;
+    
+    const cellContent = [];
+
+    // Add signature image - LARGE but with minimal spacing
+    if (isApproved && signatureBase64) {
+      cellContent.push({
+        image: signatureBase64,
+        width: 220,  // Large signature
+        height: 100,  // Large signature
+        alignment: 'center',
+        margin: [0, -20, 0, -20] // Minimal margin below signature
+      });
+    } else if (isApproved) {
+      cellContent.push({
+        canvas: [
+          {
+            type: 'line',
+            x1: 0, y1: 0,
+            x2: 140, y2: 0, // Long line
+            lineWidth: 1,
+            lineColor: 'black'
+          }
+        ],
+        margin: [0, 8, 0, 2]
+      });
+    } else {
+      cellContent.push({
+        text: ' ',
+        margin: [0, 8, 0, 2]
+      });
+    }
+
+    // Status below signature - very compact
+    cellContent.push({
+      text: isApproved ? 'Approved' : 'Awaiting Approval',
+      bold: isApproved,
+      color: isApproved ? 'green' : 'gray',
+      italic: !isApproved,
+      alignment: 'center',
+      margin: [0, 0, 0, 1], // Minimal margin
+      fontSize: 9
+    });
+
+    // Approver name - CAPITAL LETTERS and compact
+    cellContent.push({
+      text: approverName ? approverName.toUpperCase() : (isApproved ? '—' : '___________________'),
+      alignment: 'center',
+      margin: [0, 0, 0, 1], // Minimal margin
+      fontSize: 10,
+      bold: true
+    });
+
+    // Title - very compact
+    cellContent.push({
+      text: title,
+      alignment: 'center',
+      fontSize: 8,
+      color: 'gray',
+      margin: [0, 0, 0, 1] // Minimal margin
+    });
+
+    // Date - very compact
+    if (approveDate) {
+      cellContent.push({
+        text: new Date(approveDate).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        }),
+        alignment: 'center',
+        fontSize: 8,
+        color: 'gray',
+        margin: [0, 0, 0, 0] // No margin
+      });
+    } else {
+      cellContent.push({
+        text: 'Date: ______________',
+        alignment: 'center',
+        fontSize: 8,
+        color: 'gray',
+        margin: [0, 0, 0, 0] // No margin
+      });
+    }
+
+    return {
+      stack: cellContent,
+      alignment: 'center',
+      margin: [0, 2, 0, 2] // Very compact margins around entire cell
+    };
+  };
+
+  // Helper function to create Prepared By cell WITH E-SIGNATURE
+  const createPreparedByCell = (owner) => {
+    const coordinatorFirstName = owner?.firstname || "";
+    const coordinatorMiddleName = owner?.middlename || "";
+    const coordinatorLastName = owner?.lastname || "";
+    const coordinatorFullName = `${coordinatorFirstName} ${coordinatorMiddleName} ${coordinatorLastName}`.trim();
+    const signatureBase64 = owner?.esign;
+    
+    const cellContent = [];
+
+    // Add signature image for Prepared By
+    if (signatureBase64) {
+      cellContent.push({
+        image: signatureBase64,
+        width: 220,  // Same size as other signatures
+        height: 100,  // Same size as other signatures
+        alignment: 'center',
+        margin: [0, -7, 0, -20] // Minimal margin below signature
+      });
+    } else {
+      cellContent.push({
+        canvas: [
+          {
+            type: 'line',
+            x1: 0, y1: 0,
+            x2: 140, y2: 0, // Same line length as other signatures
+            lineWidth: 1,
+            lineColor: 'black'
+          }
+        ],
+        margin: [0, 8, 0, 2]
+      });
+    }
+
+    // Name - CAPITAL LETTERS
+    cellContent.push({
+      text: coordinatorFullName ? coordinatorFullName.toUpperCase() : '___________________',
+      alignment: 'center',
+      bold: true,
+      fontSize: 10,
+      margin: [0, 0, 0, 1]
+    });
+
+    // Title
+    cellContent.push({
+      text: 'Program Coordinator',
+      alignment: 'center',
+      fontSize: 8,
+      color: 'gray',
+      margin: [0, 0, 0, 0]
+    });
+
+    return {
+      stack: cellContent,
+      alignment: 'center',
+      margin: [0, 2, 0, 2] // Same margins as other cells
+    };
+  };
+
   const mergedApprovalTable = {
     table: {
       headerRows: 1,
@@ -418,6 +486,7 @@ export const downloadForm14Pdf = (form14, event, owner, roleId, approvalData) =>
   content.push(mergedApprovalTable);
 
   const docDefinition = {
+    header: headerContent, // This will appear on every page
     content,
     styles: {
       tableHeader: {
@@ -430,7 +499,7 @@ export const downloadForm14Pdf = (form14, event, owner, roleId, approvalData) =>
       fontSize: 11, 
       lineHeight: 1.15 
     },
-    pageMargins: [40, 40, 40, 40],
+    pageMargins: [40, 80, 40, 40], // Increased top margin to accommodate header
   };
 
   pdfMake.createPdf(docDefinition).download("form14-progress-report.pdf");

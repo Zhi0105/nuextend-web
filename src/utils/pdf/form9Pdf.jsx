@@ -1,4 +1,3 @@
-// utils/pdfGenerator.js
 import pdfMake from "pdfmake/build/pdfmake";
 import pdfFonts from "pdfmake/build/vfs_fonts";
 
@@ -9,9 +8,28 @@ if (pdfFonts && pdfFonts.pdfMake && pdfFonts.pdfMake.vfs) {
   pdfMake.vfs = pdfFonts.vfs;
 }
 
+function getBase64ImageFromURL(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.setAttribute('crossOrigin', 'anonymous');
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const dataURL = canvas.toDataURL('image/png');
+      resolve(dataURL);
+    };
+    img.onerror = error => reject(error);
+    img.src = url;
+  });
+}
+
 // utils/pdfGenerator.js - Add this function for Form9
-export const downloadForm9Pdf = (form9, event, owner, roleId) => {
+export const downloadForm9Pdf = async (form9, event, owner, roleId) => {
   console.log("downloadForm9Pdf called", { form9, event, owner, roleId });
+  const logo = await getBase64ImageFromURL('/LogoHeader.png');
 
   if (!form9) {
     console.warn("downloadForm9Pdf: no form9 provided");
@@ -35,6 +53,50 @@ export const downloadForm9Pdf = (form9, event, owner, roleId) => {
 
   // Get team leader from user data
   const teamLeader = event?.user ? `${event.user.firstname} ${event.user.middlename} ${event.user.lastname}` : "—";
+
+  const headerContent = [{
+      columns: [
+        // Image on the left
+        {
+          width: 'auto',
+          image: logo,
+          width: 250,
+          margin: [20, -20, 0, 0]
+        },
+        // Text on the right
+        {
+          width: '*',
+          stack: [
+            {
+              text: 'Extension Program Evaluation',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: 'and Terminal Report Format',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: 'NUB – ACD – CMX – F – 009',
+              fontSize: 10,
+              bold: true,
+              margin: [0, 0, 0, 0]
+            },
+            {
+              text: '2025',
+              fontSize: 10,
+              bold: true
+            }
+          ],
+          alignment: 'right'
+        }
+      ],
+      margin: [0, 20, 30, 0]
+    },
+  ];
 
   const content = [];
 
@@ -218,20 +280,11 @@ export const downloadForm9Pdf = (form9, event, owner, roleId) => {
           width: 'auto',
           stack: [
             { 
-              text: roleId === 4 ? "☒ Faculty Member" : "☐ Faculty Member", 
+              text: roleId === 4 ? "☒ Faculty Member" : "☒ Student", 
               margin: [0, 0, 20, 0] 
             }
           ]
         },
-        {
-          width: 'auto',
-          stack: [
-            { 
-              text: roleId === 3 ? "☒ Student" : "☐ Student", 
-              margin: [0, 0, 0, 0] 
-            }
-          ]
-        }
       ],
       margin: [0, 0, 0, 15]
     });
@@ -245,12 +298,6 @@ export const downloadForm9Pdf = (form9, event, owner, roleId) => {
       { text: `Email Address: ${coordinatorEmail}` }
     ],
     margin: [0, 0, 0, 20]
-  });
-
-  // ADD PAGE BREAK BEFORE CONSENT SECTION
-  content.push({ 
-    text: '', 
-    pageBreak: 'before'  // This forces a new page for the consent section
   });
 
   // CONSENT SECTION - With E-Signatures
@@ -535,7 +582,8 @@ export const downloadForm9Pdf = (form9, event, owner, roleId) => {
   content.push(receivedByTable);
 
   const docDefinition = {
-    content,
+    header: headerContent, // This will appear on every page
+    content: content,
     styles: {
       tableHeader: {
         bold: true,
@@ -547,7 +595,7 @@ export const downloadForm9Pdf = (form9, event, owner, roleId) => {
       fontSize: 11, 
       lineHeight: 1.15 
     },
-    pageMargins: [40, 40, 40, 40],
+    pageMargins: [40, 80, 40, 40], // Increased top margin to accommodate header
   };
 
   pdfMake.createPdf(docDefinition).download("form9-evaluation-terminal-report.pdf");

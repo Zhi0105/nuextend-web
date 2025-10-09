@@ -86,6 +86,7 @@ export const Form5Detail = () => {
   const onApprove = () => {
     if (!form5 || !canAction) return;
     doApprove({ token: decryptedToken, id: form5.id, role_id: roleId });
+    navigate("/event/view");
   };
 
   // Revise
@@ -118,6 +119,7 @@ export const Form5Detail = () => {
       remark: remarks  // ✅ Unified 'remark' field
     });
     setShowRevise(false);
+    navigate("/event/view");
   };
 
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;

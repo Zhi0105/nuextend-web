@@ -91,6 +91,7 @@ export const Form6Detail = () => {
   const onApprove = () => {
     if (!details || !canAction) return;
     doApprove({ token: decryptedToken, id: details.id, role_id: roleId });
+    navigate("/event/view");
   };
 
   // Revise
@@ -123,6 +124,7 @@ export const Form6Detail = () => {
       remark: remarks  // ✅ Unified 'remark' field
     });
     setShowRevise(false);
+    navigate("/event/view");
   };
 
   const canDownloadPdf = useMemo(() => {
