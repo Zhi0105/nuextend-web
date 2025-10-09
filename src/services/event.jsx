@@ -138,7 +138,8 @@ export const createEvent = (payload) => {
         budget_proposal,
         skills,
         unsdgs,
-        activities
+        activities,
+        members
     } = payload
 
     const headers = {
@@ -157,7 +158,8 @@ export const createEvent = (payload) => {
         budget_proposal,
         skills: [...skills],
         unsdgs: [...unsdgs],
-        activities: [...activities]
+        activities: [...activities],
+        members: [...members]
     };
 
     const result = apiClient.post('api/v1/event/create', data, {headers}).then(res => {
@@ -189,6 +191,7 @@ export const updateEvent = (payload) => {
 
         // nested activities (optional) - full upsert set
         activities,
+        members,
     } = payload;
 
     if (!id) {
@@ -242,6 +245,9 @@ export const updateEvent = (payload) => {
             end_date: a.end_date,
         })
         );
+    }
+    if(Array.isArray(members)) {
+        core.members = [...members]
     }
 
     // NOTE: Do NOT send event-level start_date/end_date/address/description here;

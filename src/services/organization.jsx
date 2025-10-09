@@ -47,22 +47,27 @@ export const userOrganizationAssign = (payload) => {
     return result
 }
 export const getMembers = (payload) => {
+    const { token, organization_id } = payload;
+
     return useQuery({
-        queryKey: ['members'],
-        queryFn: async() => {
-
-            const { token } = payload
-
+        queryKey: ['members', organization_id], // ✅ include org id in key
+        queryFn: async () => {
             const headers = {
                 Authorization: `Bearer ${token}`
-            }
-            const result = await apiClient.get(`api/v1/organization/${payload.organization_id}/members`, {headers})
-            return result?.data
+            };
+
+            const result = await apiClient.get(
+                `api/v1/organization/${organization_id}/members`,
+                { headers }
+            );
+
+            return result?.data;
         },
+        enabled: !!organization_id && !!token, // ✅ only run when both exist
         staleTime: 5 * 60000,
         refetchOnWindowFocus: true,
-    })
-}
+    });
+};
 export const getUserOrganizations = (payload) => {
     return useQuery({
         queryKey: ['organization'],
