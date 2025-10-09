@@ -15,6 +15,7 @@ import { StepperPanel } from 'primereact/stepperpanel';
 import { InputNumber } from "primereact/inputnumber";
 import { InputTextarea } from "primereact/inputtextarea";
 import { DecryptString, DecryptUser, SetTermValue } from "@_src/utils/helpers";
+import { getMembers } from "@_src/services/organization";
 import { Activity } from "@_src/components/Partial/Activity";
 import dayjs from 'dayjs';
 import _ from "lodash";
@@ -47,15 +48,28 @@ export const Create = () => {
             event_type: null,
             unsdgs: [],
             skills: [],
-            activities: []
+            activities: [],
+            members: [] // <-- Add this
         },
     });
     const { fields, append, remove } = useFieldArray({ control, name: "activities" });
+    
+    const { fields: memberFields, append: appendMember, remove: removeMember } = useFieldArray({
+    control,
+    name: "members",
+    });
+    const org = watch("organization");
+
+    const { data: membersData, isLoading: membersLoading } = getMembers({
+        token: decryptedToken,
+        organization_id: org?.id, // ✅ now safe
+    });
+
 
     const activitiesValues = watch("activities") || [];
     const modelId = watch("model.id");
 
-    const handleAddActivity = useCallback(() => {
+    const handleAddActivity = useCallback(() => {   
         append({ name: "", address: "" , description: "", duration: null  })
     }, [append])
     const handleRemoveActivity = useCallback((index) => {
@@ -69,7 +83,7 @@ export const Create = () => {
     };
 
     const onSubmit = (data) => {
-        const { target_group, organization, model, event_type, name, term, description, activities, budget_proposal, skills, unsdgs } = data
+        const { members, target_group, organization, model, event_type, name, term, description, activities, budget_proposal, skills, unsdgs } = data
         const updatedActivities = _.map(activities, (activity) => ({
             name: activity.name,
             description: activity.description,
@@ -93,6 +107,10 @@ export const Create = () => {
             skills: _.map(skills, 'id'),
             unsdgs: _.map(unsdgs, 'id'),
             activities: [...updatedActivities],
+            members: members.map((m) => ({
+                user_id: m.member.id,
+                role: m.role
+            }))
         }
         createEvent(payload, {
             onSuccess: (data) => {
@@ -110,11 +128,13 @@ export const Create = () => {
                         budget_proposal: 0,
                         skills: [],
                         unsdgs: [],
-                        activities: []
+                        activities: [],
+                        members: []
                     })
                 }
             }
         })
+        
     };
 
     const setOrganizationList = (organizations) => {
@@ -156,6 +176,7 @@ export const Create = () => {
             </div>
         )
     }
+
 
     return (
         <div className="create-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] mt-[50px]">
@@ -444,6 +465,168 @@ export const Create = () => {
                             </div>
                         </div>
                     </StepperPanel> 
+                    <StepperPanel>
+                        <div>
+                            <div className="w-full capitalize flex flex-col gap-2">
+                            {membersLoading ? (
+                                <div className="text-center py-6">Loading members...</div>
+                            ) : (
+                                <>
+                                <label className="font-semibold text-lg mb-2">
+                                    Organization Members
+                                </label>
+
+                                {!watch("organization") ? (
+                                    <p className="italic text-gray-500">
+                                    Please select an organization first.
+                                    </p>
+                                ) : (
+                                    <>
+                                    {(() => {
+                                        const filteredMembers =
+                                        membersData?.data?.filter((m) => m?.pivot?.role_id === 8) || [];
+
+                                        // All currently selected member IDs
+                                        const selectedMemberIds =
+                                        watch("members")?.map((m) => m?.member?.id) || [];
+
+                                        return (
+                                        <>
+                                            {memberFields.map((field, index) => (
+                                            <div
+                                                key={field.id}
+                                                className="border border-gray-300 rounded-lg p-4 flex flex-col gap-2 bg-gray-50 relative"
+                                            >
+                                                {/* Member Dropdown */}
+                                                <Controller
+                                                control={control}
+                                                name={`members.${index}.member`}
+                                                defaultValue={null}
+                                                render={({ field: { onChange, value } }) => {
+                                                    // ✅ Use current field value here, not watch()
+                                                    const availableMembers = filteredMembers.filter(
+                                                    (m) =>
+                                                        !selectedMemberIds.includes(m.id) ||
+                                                        m.id === value?.id
+                                                    );
+
+                                                    return (
+                                                    <Dropdown
+                                                        value={value}
+                                                        onChange={(e) => onChange(e.value)}
+                                                        options={availableMembers}
+                                                        optionLabel="firstname"
+                                                        placeholder="Select member"
+                                                        className="w-full border border-gray-400 rounded-md"
+                                                        itemTemplate={(option) => (
+                                                        <div>
+                                                            {option.firstname} {option.lastname}
+                                                        </div>
+                                                        )}
+                                                        valueTemplate={(option) =>
+                                                        option ? (
+                                                            <div>
+                                                            {option.firstname} {option.lastname}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-gray-400">
+                                                            Select member
+                                                            </span>
+                                                        )
+                                                        }
+                                                    />
+                                                    );
+                                                }}
+                                                />
+
+                                                {/* Role input */}
+                                                <Controller
+                                                control={control}
+                                                name={`members.${index}.role`}
+                                                defaultValue=""
+                                                render={({ field: { onChange, value } }) => (
+                                                    <InputText
+                                                    value={value}
+                                                    onChange={onChange}
+                                                    placeholder="Enter role"
+                                                    className="border border-gray-400 rounded-md p-2 w-full"
+                                                    />
+                                                )}
+                                                />
+
+                                                {/* Remove Button */}
+                                                <span
+                                                className="absolute top-2 right-3 text-[22px] text-red-500 cursor-pointer"
+                                                onClick={() => removeMember(index)}
+                                                >
+                                                ×
+                                                </span>
+                                            </div>
+                                            ))}
+
+                                            {/* Add New Member Button */}
+                                            {filteredMembers.length > 0 &&
+                                            memberFields.length < filteredMembers.length && (
+                                                <span
+                                                className="text-[25px] text-[#5b9bd1] cursor-pointer mt-2 self-start"
+                                                onClick={() =>
+                                                    appendMember({ member: null, role: "" })
+                                                }
+                                                >
+                                                +
+                                                </span>
+                                            )}
+                                        </>
+                                        );
+                                    })()}
+                                    </>
+                                )}
+                                </>
+                            )}
+                            </div>
+
+                            {/* Navigation Buttons */}
+                            <div className="flex pt-4 justify-between">
+                            <Button
+                                className="bg-[#2211cc] text-[#c7c430] px-4 py-2"
+                                label="Back"
+                                severity="secondary"
+                                onClick={() => stepperRef.current.prevCallback()}
+                            />
+                            <Button
+                                className="bg-[#2211cc] text-[#c7c430] px-4 py-2"
+                                label="Next"
+                                iconPos="right"
+                                onClick={() => {
+                                trigger().then((valid) => {
+                                    if (valid) stepperRef.current.nextCallback();
+                                });
+                                }}
+                            />
+                            </div>
+                        </div>
+                    </StepperPanel>
+
+                    {/* <StepperPanel>
+                        <div className="flex pt-4 justify-between px-4">
+                                <Button
+                                className="bg-[#2211cc] text-[#c7c430] px-4 py-2"
+                                label="Back"
+                                severity="secondary"
+                                onClick={() => stepperRef.current.prevCallback()}
+                                />
+                                <Button
+                                className="bg-[#2211cc] text-[#c7c430] px-4 py-2"
+                                label="Next"
+                                iconPos="right"
+                                onClick={() => {
+                                    trigger().then((valid) => {
+                                    if (valid) stepperRef.current.nextCallback();
+                                    });
+                                }}
+                                />
+                        </div>
+                    </StepperPanel> */}
                     <StepperPanel>
                         <div>
                             <div className="w-full capitalize flex flex-col gap-2">
