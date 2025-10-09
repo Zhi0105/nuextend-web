@@ -211,6 +211,10 @@ export const View = () => {
     if ([1].includes(roleId)) {
       return (
         <div className="flex gap-8">
+          <button onClick={() => handleUpdateEventNavigation(eventRow)}>
+          <Tooltip target=".edit" content="Edit" position="right" />
+          <PiNotePencil className="edit w-7 h-7 text-[#364190]" />
+        </button>
           <button onClick={() => handleDetailEventNavigation(eventRow)}>
             <Tooltip target=".view" content="View" position="right" />
             <PiListMagnifyingGlass className="view w-7 h-7 text-[#364190]" />
