@@ -39,8 +39,9 @@ export const Update = () => {
   const { data: orgData, isLoading: orgLoading } = getOrganizations();
 
   const setFormatDate = (date) => dayjs(new Date(date)).format("MM-DD-YYYY");
-  const setFormatDate1 = (date) => dayjs(new Date(date)).format("YYYY-MM-DD");
-
+  const setImplementationDate = (date) => {
+    return dayjs(new Date(date)).format('YYYY-MM-DD')
+  }
   const setOrganizationList = (organizations) => _.filter(organizations, (org) => [6, 7].includes(org.pivot?.role_id));
 
   // Form
@@ -192,7 +193,7 @@ export const Update = () => {
         name,
         target_group,
         term,
-        implement_date: implement_date ? setFormatDate1(implement_date) : undefined,
+        implement_date: implement_date ? setImplementationDate(implement_date) : null,
         budget_proposal,
         skills: _.map(skills, 'id'),
         unsdgs: _.map(unsdgs, 'id'),

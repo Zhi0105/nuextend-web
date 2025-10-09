@@ -36,6 +36,9 @@ export const Create = () => {
     const setFormatDate = (date) => {
         return dayjs(new Date(date)).format('MM-DD-YYYY')
     }
+    const setImplementationDate = (date) => {
+        return dayjs(new Date(date)).format('YYYY-MM-DD')
+    }
 
     const { handleSubmit, control, trigger, watch, setValue, getValues, reset, formState: { errors }} = useForm({
         defaultValues: {
@@ -104,7 +107,7 @@ export const Create = () => {
             target_group,
             name,
             term,
-            implement_date,
+            implement_date: implement_date ? setImplementationDate(implement_date) : null,
             description,
             budget_proposal,
             skills: _.map(skills, 'id'),
@@ -458,36 +461,30 @@ export const Create = () => {
                                 <Controller
                                     control={control}
                                     rules={{
-                                        required: true,
+                                    required: true,
                                     }}
                                     render={({ field: { onChange, value } }) => (
-                                        <Calendar
-                                            id="implement_date"
-                                            value={value ? new Date(value) : null}
-                                            onChange={(e) => {
-                                                // Format the date to YYYY-MM-DD before sending to form
-                                                if (e.value) {
-                                                    const date = new Date(e.value);
-                                                    const formattedDate = date.toISOString().split('T')[0];
-                                                    onChange(formattedDate);
-                                                } else {
-                                                    onChange(null);
-                                                }
-                                            }}
-                                            dateFormat="yy-mm-dd"
-                                            placeholder="Select implementation date"
-                                            className={`w-full ${errors.implement_date && 'border border-red-500'}`}
-                                            showIcon
-                                        />
+                                    <Calendar
+                                        id="implement_date"
+                                        value={value} // ✅ Keep as Date object
+                                        onChange={(e) => {
+                                        onChange(e.value); // ✅ store Date object directly
+                                        }}
+                                        dateFormat="yy-mm-dd"
+                                        placeholder="Select implementation date"
+                                        className={`w-full ${errors.implement_date && 'border border-red-500'}`}
+                                        showIcon
+                                    />
                                     )}
                                     name="implement_date"
                                 />
                                 {errors.implement_date && (
                                     <p className="text-sm italic mt-1 text-red-400 indent-2">
-                                        Implementation date is required.*
+                                    Implementation date is required.*
                                     </p>
                                 )}
                             </div>
+
                             <div className="flex pt-4 justify-between px-4">
                                 <Button 
                                     className="bg-[#2211cc] text-[#c7c430] px-4 py-2" 

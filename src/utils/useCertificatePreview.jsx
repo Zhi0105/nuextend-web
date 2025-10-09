@@ -2,13 +2,11 @@
 import { useNavigate } from "react-router-dom";
 
 export const useCertificatePreview = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const previewCertificates = (namesArray) => {
-        navigate("/certificate-print", {
-        state: { names: namesArray }
-        });
-    };
+  const previewCertificates = (data) => {
+    navigate("/certificate-print", { state: data });
+  };
 
-    return previewCertificates;
+  return previewCertificates;
 };

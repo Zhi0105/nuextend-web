@@ -162,33 +162,43 @@ export const View = () => {
   };
 
   const handleGenerateCertificates = (eventData) => {
-    const participants = _.get(eventData, "participants", []);
+  console.log(eventData)
+  const participants = _.get(eventData, "participants", []);
+  const eventMembers = _.get(eventData, "eventmember", []);
+  const eventOwner = _.get(eventData, "user");
 
-    if (!participants.length) {
-      toast("No participants found for this event.", { type: "warning" });
-      return;
-    }
-
-    const fullnames = participants.map((p) => {
-      const user = p?.user;
-      if (!user) return null;
-
-      const lastname = user.lastname || "";
-      const firstname = user.firstname || "";
-      const middlename = user.middlename || "";
-
-      const name = `${lastname}, ${firstname}${middlename ? " " + middlename : ""}`.trim();
-      return name;
-    }).filter(Boolean);
-
-    if (!fullnames.length) {
-      toast("Unable to generate certificates: participant names missing.", { type: "error" });
-      return;
-    }
-
-    previewCertificates(fullnames);
+  // Helper to format full name
+  const formatName = (user) => {
+    if (!user) return null;
+    const lastname = user.lastname || "";
+    const firstname = user.firstname || "";
+    const middlename = user.middlename || "";
+    return `${lastname}, ${firstname}${middlename ? " " + middlename : ""}`.trim();
   };
 
+  // Collect all names
+  const participantNames = participants.map((p) => formatName(p.user)).filter(Boolean);
+  const memberNames = eventMembers.map((m) => formatName(m.user)).filter(Boolean);
+  const ownerName = formatName(eventOwner);
+
+  // Merge and deduplicate
+  const allNames = _.uniq([...participantNames, ...memberNames, ownerName].filter(Boolean));
+
+  if (!allNames.length) {
+    toast("Unable to generate certificates: no valid names found.", { type: "warning" });
+    return;
+  }
+
+  // Get implementation date (fallbacks in case of missing data)
+  const implementDate =
+    _.get(eventData, "implement_date") ||
+    _.get(eventData, "implementation_date") ||
+    _.get(eventData, "date") ||
+    _.get(eventData, "created_at") ||
+    null;
+
+  previewCertificates({ names: allNames, implementDate });
+  };
   const handleUpdateEventNavigation = (rowData) => {
     if (roleId === 1) navigate("/admin/event/update", { state: rowData });
     else navigate("/event/update", { state: rowData });
