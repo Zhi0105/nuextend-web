@@ -51,7 +51,7 @@ export const Certificate = () => {
                 >
                     <div
                         ref={(el) => (previewRefs.current[index] = el)}
-                        className="relative w-[1200px] h-[850px] mx-auto bg-white shadow-xl certificate-bg"
+                        className="relative w-[1200px] h-[800px] mx-auto bg-white shadow-xl certificate-bg"
                         style={{
                             backgroundImage: `url("/certificate.webp")`,
                             backgroundSize: "cover",
@@ -61,7 +61,7 @@ export const Certificate = () => {
                         <div
                             className="absolute text-black text-2xl font-bold"
                             style={{
-                                top: "320px",
+                                top: "300px",
                                 left: "51%",
                                 transform: "translateX(-50%)",
                             }}
