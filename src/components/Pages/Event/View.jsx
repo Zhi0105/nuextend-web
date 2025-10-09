@@ -161,16 +161,31 @@ export const View = () => {
     }
   };
 
-  const handleGenerateCertificates = (data) => {
-    const participants = data?.participants ?? [];
-    const fullnames = _.map(participants, (p) => {
-      const u = p?.user;
-      const lastname = u?.lastname || "";
-      const firstname = u?.firstname || "";
-      const middlename = u?.middlename || "";
-      const name = `${lastname}, ${firstname}${middlename ? " " + middlename : ""}`;
-      return name.trim();
-    });
+  const handleGenerateCertificates = (eventData) => {
+    const participants = _.get(eventData, "participants", []);
+
+    if (!participants.length) {
+      toast("No participants found for this event.", { type: "warning" });
+      return;
+    }
+
+    const fullnames = participants.map((p) => {
+      const user = p?.user;
+      if (!user) return null;
+
+      const lastname = user.lastname || "";
+      const firstname = user.firstname || "";
+      const middlename = user.middlename || "";
+
+      const name = `${lastname}, ${firstname}${middlename ? " " + middlename : ""}`.trim();
+      return name;
+    }).filter(Boolean);
+
+    if (!fullnames.length) {
+      toast("Unable to generate certificates: participant names missing.", { type: "error" });
+      return;
+    }
+
     previewCertificates(fullnames);
   };
 
@@ -229,7 +244,7 @@ export const View = () => {
           <button disabled={eventTerminateLoading} onClick={() => handleTerminate(eventRow)}>
             <Tooltip target=".terminate" content="Terminate" position="right" />
             <RiIndeterminateCircleLine className="terminate w-7 h-7 text-[#364190]" />
-          </button>
+          </button> 
           {eventRow?.event_status_id === 2 && (
             <button onClick={() => handleGenerateCertificates(eventRow)}>
               <Tooltip target=".generate" content="Generate Certifications" position="right" />
@@ -345,7 +360,6 @@ export const View = () => {
     );
   }
 
-  console.log(mergedEvents)
 
   return (
     <div className="view-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
