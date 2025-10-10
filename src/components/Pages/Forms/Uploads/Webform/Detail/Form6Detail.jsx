@@ -171,6 +171,13 @@ export const Form6Detail = () => {
     return roleMap[roleId] || 'Unknown Role';
   };
 
+  const isFullyApproved = useMemo(() => {
+  if (!details) return false;
+  
+  // For Form6, only need ComEx approval regardless of role
+  return details.commex_approved_by;
+}, [details]);
+
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === (routeState?.owner?.id ?? routeState?.owner);
   return (
     <div className="form6-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
@@ -232,7 +239,7 @@ export const Form6Detail = () => {
 
       <div className="flex gap-2 mt-6">
         {/* Update button (unchanged behavior) */}
-        {isEventOwner && (
+        {isEventOwner && !isFullyApproved &&  (
           <Button
             onClick={() => navigate("/event/form/006", { state: { formdata: details } })}
             className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"

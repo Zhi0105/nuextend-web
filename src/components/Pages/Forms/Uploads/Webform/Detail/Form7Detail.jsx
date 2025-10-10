@@ -171,9 +171,13 @@ export const Form7Detail = () => {
       day: "numeric",
     });
   };
-
- 
-
+  const isFullyApproved = useMemo(() => {
+    if (!formData) return false;
+    
+    // For Form7, only need ComEx approval regardless of role
+    return formData.commex_approved_by;
+  }, [formData]);
+  
   return (
     <div className="form7-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20 px-6">
       <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-4xl">
@@ -234,7 +238,7 @@ export const Form7Detail = () => {
 
       
       <div className="flex gap-2 my-6">
-        {isEventOwner && (
+        {isEventOwner && !isFullyApproved && (
           <Button
             onClick={() => navigate("/event/form/007", { state: { formdata: formData } })}
             className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"

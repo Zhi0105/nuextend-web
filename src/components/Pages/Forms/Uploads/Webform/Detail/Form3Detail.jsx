@@ -195,25 +195,25 @@ export const Form3Detail = () => {
       approver: ''
     });
     const isFullyApproved = useMemo(() => {
-  if (!formData) return false;
-  
-  // For role 3 (faculty), need dean + 3 other approvers
-  if (owner?.role_id === 3) {
-    return formData.dean_approved_by && 
-           formData.commex_approved_by && 
-           formData.asd_approved_by && 
-           formData.ad_approved_by;
-  }
-  
-  // For roles 1 and 4, need 3 approvers (excluding dean)
-  if ([1, 4].includes(owner?.role_id)) {
-    return formData.commex_approved_by && 
-           formData.asd_approved_by && 
-           formData.ad_approved_by;
-  }
-  
-  return false;
-}, [formData, owner?.role_id]);
+      if (!formData) return false;
+      
+      // For role 1 (ComEx), need 3 approvers (excluding dean)
+      if (owner?.role_id === 1) {
+        return formData.commex_approved_by && 
+              formData.asd_approved_by && 
+              formData.ad_approved_by;
+      }
+      
+      // For roles 3 (student) and 4 (faculty), need all 4 approvers
+      if ([3, 4].includes(owner?.role_id)) {
+        return formData.dean_approved_by && 
+              formData.commex_approved_by && 
+              formData.asd_approved_by && 
+              formData.ad_approved_by;
+      }
+      
+      return false;
+    }, [formData, owner?.role_id]);
   return (
     <div className="project-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
       <div className="w-full max-w-5xl bg-white shadow rounded-lg p-6 my-6">
@@ -365,7 +365,7 @@ export const Form3Detail = () => {
         <table className="w-full border border-collapse">
           <thead>
             <tr>
-              {owner?.role_id === 3 && <th className="border p-2 text-center">Dean</th>}
+              {(owner?.role_id === 3 || owner?.role_id === 4) && <th className="border p-2 text-center">Dean</th>}
               <th className="border p-2 text-center">ComEx</th>
               <th className="border p-2 text-center">Academic Services Director</th>
               <th className="border p-2 text-center">Academic Director</th>
@@ -374,7 +374,7 @@ export const Form3Detail = () => {
           <tbody>
             <tr>
               {/* Dean Column */}
-              {owner?.role_id === 3 && (
+              {(owner?.role_id === 3 || owner?.role_id === 4) && (
                 <td className="border p-6 text-center align-bottom h-32">
                   {formData?.dean_approved_by ? (
                     <div className="flex flex-col justify-end h-full">

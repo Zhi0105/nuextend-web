@@ -184,6 +184,14 @@ export const Form12Detail = () => {
       approver: 'All Remarks' 
     });
   };
+
+  const isFullyApproved = useMemo(() => {
+  if (!formData) return false;
+  
+  // For Form12, only need ComEx and ASD approval regardless of role
+  return formData.commex_approved_by && 
+         formData.asd_approved_by;
+}, [formData]);
   
 
   return (
@@ -362,7 +370,7 @@ export const Form12Detail = () => {
 
       {/* Buttons */}
       <div className="flex gap-2 mt-4">
-        {isEventOwner && (
+        {isEventOwner && !isFullyApproved && (
           <Button
             onClick={() => navigate("/event/form/012", { state: { formdata: form12 } })}
             className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"

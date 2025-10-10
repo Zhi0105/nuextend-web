@@ -178,9 +178,18 @@ export const Form11Detail = () => {
       approver: 'All Remarks' 
     });
   };
+
   if (!form11) return null;
 
   const formData = form11[0] || form11;
+
+    const isFullyApproved = useMemo(() => {
+      if (!formData) return false;
+      
+      // For Form11, only need ComEx and ASD approval regardless of role
+      return formData.commex_approved_by && 
+            formData.asd_approved_by;
+    }, [formData]);
 
   return (
     <div className="project-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
@@ -321,7 +330,7 @@ export const Form11Detail = () => {
 
       {/* Buttons */}
       <div className="flex gap-2 mt-4">
-        {isEventOwner && (
+        {isEventOwner && !isFullyApproved && (
           <Button
             onClick={() => navigate("/event/form/011", { state: { formdata: form11 } })}
             className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"

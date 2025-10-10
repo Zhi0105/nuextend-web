@@ -195,6 +195,24 @@ const getRoleName = (roleId) => {
   return roleMap[roleId] || 'Unknown Role';
 };
 
+const isFullyApproved = useMemo(() => {
+  if (!form5) return false;
+  
+  // For role 1 (ComEx), need ComEx + ASD approvals
+  if (owner?.role_id === 1) {
+    return form5.commex_approved_by && 
+           form5.asd_approved_by;
+  }
+  
+  // For roles 3 (student) and 4 (faculty), need ComEx + (ASD OR Dean)
+  if ([3, 4].includes(owner?.role_id)) {
+    return form5.commex_approved_by && 
+           (form5.asd_approved_by || form5.dean_approved_by);
+  }
+  
+  return false;
+}, [form5, owner?.role_id]);
+
   return (
     <div className="form5-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">CHECKLIST OF CRITERIA FOR PROJECT PROPOSAL</h2>
@@ -285,7 +303,7 @@ const getRoleName = (roleId) => {
 
       <div className="flex gap-2 mb-6">
         {/* Update button */}
-        {isEventOwner && (
+        {isEventOwner && !isFullyApproved && (
           <Button
             onClick={() => navigate("/event/form/005", { state: { formdata: form5 } })}
             className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
