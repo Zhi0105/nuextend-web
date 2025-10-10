@@ -35,7 +35,7 @@ export const View = () => {
   const decryptedToken = useMemo(() => (token ? DecryptString(token) : null), [token]);
   const decryptedUser = useMemo(() => (token ? DecryptUser(user) : null), [token, user]);
   const roleId = decryptedUser?.role_id;
-  const { data: userData, loading: userLoading } = getUsers({ token: decryptedToken }) 
+  const { data: userData } = getUsers({ token: decryptedToken }) 
 
   const needsAllEvents = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
   const needsUserEvents = !needsAllEvents;
