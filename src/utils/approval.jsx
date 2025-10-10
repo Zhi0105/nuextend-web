@@ -143,12 +143,11 @@ export const checkApprovalProcess = (
 
   return { approvers, included, approvedList, nextApprover, isFullyApproved };
 };
-
 export const getFormNumber = (pathname) => {
     const result = _.toNumber(_.last(_.split(pathname, '/')));
     return result
 }
-export const getFormStatus = (form, formNumber, isAdminOwner = false) => {
+export const getFormStatus = (form, formNumber, isAdminOwner = false, isFacultyOwner = false) => {
   if (!form?.length) {
     return <h1 className="text-blue-600">for fill up</h1>;
   }
@@ -170,8 +169,8 @@ export const getFormStatus = (form, formNumber, isAdminOwner = false) => {
   // ✅ Determine required approvers for this form
   let requiredApprovers = approverMap[formNumber] || [];
 
-  // ✅ If admin owner, exclude dean
-  if (isAdminOwner) {
+  // ✅ If admin owner, exclude dean (unless faculty owner)
+  if (isAdminOwner && !isFacultyOwner) {
     requiredApprovers = requiredApprovers.filter(a => a !== "dean");
   }
 
@@ -187,11 +186,12 @@ export const getFormStatus = (form, formNumber, isAdminOwner = false) => {
   let totalApprovers = requiredApprovers.length;
 
   // ✅ Special handling for forms 4 & 5
-  if (formNumber === 4 || formNumber === 5) {
+  if (formNumber === 4 || formNumber === 5 || formNumber === 1 || formNumber === 2 || formNumber === 3 || formNumber === 9 || formNumber === 10) {
     // dean OR asd counts as one slot
-    const deanOrAsdApproved = isAdminOwner
-      ? approverValues.asd // if admin, dean excluded
-      : (approverValues.dean || approverValues.asd);
+    const deanOrAsdApproved =
+      isAdminOwner && !isFacultyOwner
+        ? approverValues.asd // if admin (non-faculty), dean excluded
+        : (approverValues.dean || approverValues.asd); // otherwise, include dean
 
     // if dean/asd slot approved
     if (deanOrAsdApproved) approvedCount++;
@@ -214,3 +214,4 @@ export const getFormStatus = (form, formNumber, isAdminOwner = false) => {
   // ✅ Otherwise → pending with progress
   return <h1 className="text-yellow-400">{`Pending ${approvedCount} / ${totalApprovers}`}</h1>;
 };
+
