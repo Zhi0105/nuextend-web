@@ -24,7 +24,7 @@ export const UpdatedOutreach = () => {
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedUser = token && DecryptUser(user)
     const [showInstruction, setShowInstruction] = useState(false);
-    
+
     const eventOwnerId =
     event?.created_by ??
     event?.user_id ??

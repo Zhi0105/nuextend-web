@@ -11,6 +11,7 @@ import { DecryptUser } from '@_src/utils/helpers';
 import { PiDownloadSimpleBold } from 'react-icons/pi';
 import { MdOutlinePictureAsPdf } from "react-icons/md";
 import _ from 'lodash';
+import { CgProfile } from 'react-icons/cg';
 
 export const AdminSidenav = () => {
     const { logout } = useContext(AuthContext)
@@ -52,6 +53,19 @@ export const AdminSidenav = () => {
                             className="text-xl text-gray-500"
                         />
                         <span>Home</span>
+                    </Link>
+                </li>
+                <li>
+                    <Link
+                        to="/profile"
+                        className="flex gap-6 cursor-pointer"
+                        >
+                        <CgProfile
+                            width={5}
+                            height={5}
+                            className="text-xl text-gray-500"
+                        />
+                        <span>Profile</span>
                     </Link>
                 </li>
                 <li>

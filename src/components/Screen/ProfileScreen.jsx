@@ -1,15 +1,24 @@
 import { DashboardTemplate } from "@_src/templates/DashboardTemplate"
-import { AdminSidenav } from "@_src/routes/AdminSidenav"
-import { Dean } from "../Pages/Dean"
 import { Header } from "@_src/components/Partial/Header"
+import { useUserStore } from '@_src/store/auth';
+import { DecryptUser } from "@_src/utils/helpers";
+import { AdminSidenav } from "@_src/routes/AdminSidenav"
+import { Sidenav } from "@_src/routes/Sidenav"
+import { Profile } from "../Pages/Profile";
 
-export const CreateDeanScreen = () => {
+export const ProfileScreen = () => {
+    const { user } = useUserStore((state) => ({
+        user: state.user
+    }));
+    const decryptedUser = DecryptUser(user);
+    const isAdminRole = [1, 9, 10, 11].includes(decryptedUser?.role_id);
+    
     return (
         <DashboardTemplate
-            sidenav={<AdminSidenav />}
+            sidenav={isAdminRole ? <AdminSidenav /> : <Sidenav />}
             header={<Header />}
         >
-            <Dean />
+            <Profile />
         </DashboardTemplate>
     )
 }

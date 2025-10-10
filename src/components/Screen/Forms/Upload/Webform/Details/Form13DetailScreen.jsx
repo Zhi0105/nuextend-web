@@ -4,9 +4,9 @@ import { useUserStore } from '@_src/store/auth';
 import { DecryptUser } from "@_src/utils/helpers";
 import { AdminSidenav } from "@_src/routes/AdminSidenav"
 import { Sidenav } from "@_src/routes/Sidenav"
-import { Form12Detail } from "@_src/components/Pages/Forms/Uploads/Webform/Detail/Form13Detail";
+import { Form13Detail } from "@_src/components/Pages/Forms/Uploads/Webform/Detail/Form13Detail";
 
-export const Form12DetailScreen = () => {
+export const Form13DetailScreen = () => {
     const { user } = useUserStore((state) => ({
         user: state.user
     }));
@@ -18,7 +18,7 @@ export const Form12DetailScreen = () => {
             sidenav={isAdminRole ? <AdminSidenav /> : <Sidenav />}
             header={<Header />}
         >
-            <Form12Detail />
+            <Form13Detail />
         </DashboardTemplate>
     )
 }

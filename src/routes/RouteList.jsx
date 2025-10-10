@@ -78,11 +78,13 @@ import { Form9DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/
 import { Form10DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form10DetailScreen'
 import { Form11DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form11DetailScreen'
 import { Form12DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form12DetailScreen'
+import { Form13DetailScreen } from '@_src/components/Screen/Forms/Upload/Webform/Details/Form13DetailScreen'
 
 import { CreateReportScreen } from '@_src/components/Screen/Activity/CreateReportScreen';
 import { ViewReportScreen } from "@_src/components/Screen/Activity/ViewReportScreen";
 import { UploadAttachmentScreen } from "@_src/components/Screen/Forms/Upload/UploadAttachmentScreen";
 import { AnnouncementScreen } from "@_src/components/Screen/Event/AnnouncementScreen";
+import { ProfileScreen } from '@_src/components/Screen/ProfileScreen'
 import PrivateRoute from './PrivateRoute'
 import LoginRoute from './LoginRoute'
 
@@ -94,6 +96,8 @@ export const RouteList = () => {
         <Routes location={location} key={location.pathname}>
             <Route element={<PrivateRoute />}>
             <Route path="/dashboard" element={<DashboardScreen />} />
+
+                <Route path="/profile" element={<ProfileScreen />} />
 
                 <Route path="/certificate-print" element={<Certificate />} />
                 <Route path="/create-report-progress" element={<CreateReportScreen />} />
@@ -149,6 +153,7 @@ export const RouteList = () => {
                 <Route path="/event/form/011" element={<Form11Screen />} />
                 <Route path="/event/form/012" element={<Form12Screen />} />
 
+
                 <Route path="/event/form/detail/001" element={<Form1DetailScreen />} />
                 <Route path="/event/form/detail/002" element={<Form2DetailScreen />} />
                 <Route path="/event/form/detail/003" element={<Form3DetailScreen />} />
@@ -161,6 +166,7 @@ export const RouteList = () => {
                 <Route path="/event/form/detail/010" element={<Form10DetailScreen />} />
                 <Route path="/event/form/detail/011" element={<Form11DetailScreen />} />
                 <Route path="/event/form/detail/012" element={<Form12DetailScreen />} />
+                <Route path="/event/form/detail/013" element={<Form13DetailScreen />} />
                 
                 {/* NEW FORM ROUTE */}
 

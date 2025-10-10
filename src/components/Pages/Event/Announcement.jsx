@@ -22,7 +22,7 @@ import { useLocation } from "react-router-dom";
 
 export const Announcement = () => {
   const location = useLocation();
-  const { event_id } = location.state || {};
+  const { event_id, event } = location.state || {};
 
   const { token, user } = useUserStore((s) => ({
     token: s.token,
@@ -43,6 +43,16 @@ export const Announcement = () => {
     body: "",
   });
   const [loading, setLoading] = useState(false);
+
+  const eventOwnerId =
+    event?.created_by ??
+    event?.user_id ??
+    event?.owner_id ??
+    event?.author_id ??
+    null;
+
+    const isEventOwner = !!decryptedUser?.id && decryptedUser.id === eventOwnerId;
+
 
   // Fetch announcements (filtered by event if provided)
   const {
@@ -195,9 +205,9 @@ export const Announcement = () => {
       <h1 className="text-2xl font-semibold mb-4">Announcements</h1>
 
       {/* Create button for Admins only */}
-      {[1, 9, 10, 11].includes(currentRoleId) && (
+      { isEventOwner && (
         <Button
-          label="Create Announcement"
+          label="Create Announcement" 
           className="bg-[#2211cc] text-white font-bold rounded-lg px-4 py-2 mb-6"
           onClick={() => openDialog()}
         />

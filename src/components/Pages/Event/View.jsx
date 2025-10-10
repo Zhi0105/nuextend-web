@@ -284,7 +284,7 @@ export const View = () => {
               className={`w-7 h-7 ${eventRow?.is_posted ? "text-gray-200" : "text-[#364190]"}`}
             />
           </button>
-          <button onClick={() => navigate("/event/announcement", { state: { event_id: eventRow.id } })}>
+          <button onClick={() => navigate("/event/announcement", { state: { event_id: eventRow.id, event: eventRow } })}>
           <Tooltip target=".announcement" content="Announcements" position="right" />
           <FaBullhorn className="announcement w-7 h-7 text-[#364190]" />
         </button>
@@ -343,7 +343,7 @@ export const View = () => {
           <Tooltip target=".form" content="Form" position="right" />
           <FaWpforms className="form w-7 h-7 text-[#364190]" />
         </button>
-        <button onClick={() => navigate("/event/announcement", { state: { event_id: eventRow.id } })}>
+        <button onClick={() => navigate("/event/announcement", { state: { event_id: eventRow.id, event: eventRow } })}>
           <Tooltip target=".announcement" content="Announcements" position="right" />
           <FaBullhorn className="announcement w-7 h-7 text-[#364190]" />
         </button>
