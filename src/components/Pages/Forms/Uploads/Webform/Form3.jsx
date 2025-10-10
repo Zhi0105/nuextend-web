@@ -93,6 +93,7 @@ export const Form3 = ({ onSubmit }) => {
         control,
         formState: { errors },
         watch,
+        setValue,
         reset,
     } = useForm({ defaultValues, mode: "onSubmit" });
 
@@ -354,119 +355,156 @@ export const Form3 = ({ onSubmit }) => {
                     </div>
                 </Fieldset>
 
-                {/* Detailed Budget */}
-                <Fieldset legend="Detailed Budget" className={TW_CARD}>
-                    <div className="space-y-6">
-                        {dbFA.fields.map((field, idx) => (
-                            <Card key={field.id} className={TW_CARD}>
-                                <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-                                    <div>
-                                        <InputLabel>Item</InputLabel>
-                                        <InputText
-                                        {...register(`detailed_budget.${idx}.item`, { required: "Required", maxLength: { value: 255, message: "Max 255 chars" } })}
-                                        className={TW_INPUT}
-                                        />
-                                        <FieldError error={errors?.detailed_budget?.[idx]?.item} />
-                                    </div>
+               {/* Detailed Budget */}
+{/* Detailed Budget */}
+<Fieldset legend="Detailed Budget" className={TW_CARD}>
+    <div className="space-y-6">
+        {dbFA.fields.map((field, idx) => {
+            // Calculate total based on current values
+            const calculateTotal = () => {
+                const quantity = watch(`detailed_budget.${idx}.quantity`);
+                const amount = watch(`detailed_budget.${idx}.amount`);
+                
+                if (quantity != null && amount != null && !isNaN(quantity) && !isNaN(amount)) {
+                    return Number(quantity) * Number(amount);
+                }
+                return null;
+            };
 
-                                    <div className="md:col-span-2">
-                                        <InputLabel>Details / Particulars</InputLabel>
-                                        <InputTextarea
-                                        rows={2}
-                                        autoResize
-                                        {...register(`detailed_budget.${idx}.details`, { maxLength: { value: 2000, message: "Max 2000 chars" } })}
-                                        className={TW_INPUT}
-                                        />
-                                    </div>
+            return (
+                <Card key={field.id} className={TW_CARD}>
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+                        <div>
+                            <InputLabel>Item</InputLabel>
+                            <InputText
+                                {...register(`detailed_budget.${idx}.item`, { required: "Required", maxLength: { value: 255, message: "Max 255 chars" } })}
+                                className={TW_INPUT}
+                            />
+                            <FieldError error={errors?.detailed_budget?.[idx]?.item} />
+                        </div>
 
-                                    <div>
-                                        <InputLabel>Quantity</InputLabel>
-                                        <Controller
-                                        control={control}
-                                        name={`detailed_budget.${idx}.quantity`}
-                                        rules={{ validate: (v) => (v == null || Number(v) >= 0) || "Must be ≥ 0" }}
-                                        render={({ field }) => (
-                                            <InputNumber
-                                            value={field.value}
-                                            onValueChange={(e) => field.onChange(e.value)}
-                                            inputClassName={TW_INPUT}
-                                            className="w-full"
-                                            />
-                                        )}
-                                        />
-                                        <FieldError error={errors?.detailed_budget?.[idx]?.quantity} />
-                                    </div>
+                        <div className="md:col-span-2">
+                            <InputLabel>Details / Particulars</InputLabel>
+                            <InputTextarea
+                                rows={2}
+                                autoResize
+                                {...register(`detailed_budget.${idx}.details`, { maxLength: { value: 2000, message: "Max 2000 chars" } })}
+                                className={TW_INPUT}
+                            />
+                        </div>
 
-                                    <div>
-                                        <InputLabel>Amount (₱)</InputLabel>
-                                        <Controller
-                                        control={control}
-                                        name={`detailed_budget.${idx}.amount`}
-                                        rules={{ validate: (v) => (v == null || Number(v) >= 0) || "Must be ≥ 0" }}
-                                        render={({ field }) => (
-                                            <InputNumber
-                                            value={field.value}
-                                            onValueChange={(e) => field.onChange(e.value)}
-                                            mode="currency"
-                                            currency="PHP"
-                                            locale="en-PH"
-                                            placeholder="0.00"
-                                            inputClassName={TW_INPUT}
-                                            className="w-full"
-                                            />
-                                        )}
-                                        />
-                                        <FieldError error={errors?.detailed_budget?.[idx]?.amount} />
-                                    </div>
-
-                                    <div>
-                                        <InputLabel>Total (₱)</InputLabel>
-                                        <Controller
-                                        control={control}
-                                        name={`detailed_budget.${idx}.total`}
-                                        rules={{ validate: (v) => (v == null || Number(v) >= 0) || "Must be ≥ 0" }}
-                                        render={({ field }) => (
-                                            <InputNumber
-                                            value={field.value}
-                                            onValueChange={(e) => field.onChange(e.value)}
-                                            mode="currency"
-                                            currency="PHP"
-                                            locale="en-PH"
-                                            placeholder="0.00"
-                                            inputClassName={TW_INPUT}
-                                            className="w-full"
-                                            />
-                                        )}
-                                        />
-                                        <FieldError error={errors?.detailed_budget?.[idx]?.total} />
-                                    </div>
-                                </div>
-
-                                <div className="mt-4 flex gap-2">
-                                    <Button
-                                        type="button"
-                                        icon="pi pi-plus"
-                                        label="Add"
-                                        className={TW_BTN}
-                                        onClick={() =>
-                                        dbFA.append({ item: "", details: "", quantity: null, amount: null, total: null })
-                                        }
+                        <div>
+                            <InputLabel>Quantity</InputLabel>
+                            <Controller
+                                control={control}
+                                name={`detailed_budget.${idx}.quantity`}
+                                rules={{ validate: (v) => (v == null || Number(v) >= 0) || "Must be ≥ 0" }}
+                                render={({ field }) => (
+                                    <InputNumber
+                                        value={field.value}
+                                        onValueChange={(e) => {
+                                            const newQuantity = e.value;
+                                            field.onChange(newQuantity);
+                                            
+                                            // Update total
+                                            const currentAmount = watch(`detailed_budget.${idx}.amount`);
+                                            if (newQuantity != null && currentAmount != null) {
+                                                const newTotal = Number(newQuantity) * Number(currentAmount);
+                                                setValue(`detailed_budget.${idx}.total`, newTotal, { shouldValidate: true });
+                                            } else {
+                                                setValue(`detailed_budget.${idx}.total`, null, { shouldValidate: true });
+                                            }
+                                        }}
+                                        inputClassName={TW_INPUT}
+                                        className="w-full"
                                     />
-                                    {dbFA.fields.length > 1 && (
-                                        <Button
-                                        type="button"
-                                        icon="pi pi-trash"
-                                        label="Remove"
-                                        severity="danger"
-                                        className={TW_BTN}
-                                        onClick={() => dbFA.remove(idx)}
-                                        />
-                                    )}
-                                </div>
-                            </Card>
-                        ))}
+                                )}
+                            />
+                            <FieldError error={errors?.detailed_budget?.[idx]?.quantity} />
+                        </div>
+
+                        <div>
+                            <InputLabel>Amount (₱)</InputLabel>
+                            <Controller
+                                control={control}
+                                name={`detailed_budget.${idx}.amount`}
+                                rules={{ validate: (v) => (v == null || Number(v) >= 0) || "Must be ≥ 0" }}
+                                render={({ field }) => (
+                                    <InputNumber
+                                        value={field.value}
+                                        onValueChange={(e) => {
+                                            const newAmount = e.value;
+                                            field.onChange(newAmount);
+                                            
+                                            // Update total
+                                            const currentQuantity = watch(`detailed_budget.${idx}.quantity`);
+                                            if (currentQuantity != null && newAmount != null) {
+                                                const newTotal = Number(currentQuantity) * Number(newAmount);
+                                                setValue(`detailed_budget.${idx}.total`, newTotal, { shouldValidate: true });
+                                            } else {
+                                                setValue(`detailed_budget.${idx}.total`, null, { shouldValidate: true });
+                                            }
+                                        }}
+                                        mode="currency"
+                                        currency="PHP"
+                                        locale="en-PH"
+                                        placeholder="0.00"
+                                        inputClassName={TW_INPUT}
+                                        className="w-full"
+                                    />
+                                )}
+                            />
+                            <FieldError error={errors?.detailed_budget?.[idx]?.amount} />
+                        </div>
+
+                        <div>
+                            <InputLabel>Total (₱)</InputLabel>
+                            <Controller
+                                control={control}
+                                name={`detailed_budget.${idx}.total`}
+                                render={({ field }) => (
+                                    <InputNumber
+                                        value={calculateTotal()} // Use calculated value
+                                        onValueChange={(e) => field.onChange(e.value)}
+                                        mode="currency"
+                                        currency="PHP"
+                                        locale="en-PH"
+                                        placeholder="0.00"
+                                        inputClassName={TW_INPUT + " bg-gray-50"}
+                                        className="w-full"
+                                        disabled
+                                    />
+                                )}
+                            />
+                        </div>
                     </div>
-                </Fieldset>
+
+                    <div className="mt-4 flex gap-2">
+                        <Button
+                            type="button"
+                            icon="pi pi-plus"
+                            label="Add"
+                            className={TW_BTN}
+                            onClick={() =>
+                                dbFA.append({ item: "", details: "", quantity: null, amount: null, total: null })
+                            }
+                        />
+                        {dbFA.fields.length > 1 && (
+                            <Button
+                                type="button"
+                                icon="pi pi-trash"
+                                label="Remove"
+                                severity="danger"
+                                className={TW_BTN}
+                                onClick={() => dbFA.remove(idx)}
+                            />
+                        )}
+                    </div>
+                </Card>
+            );
+        })}
+    </div>
+</Fieldset>
 
                 {/* Budget Sourcing */}
                 <Fieldset legend="Budget Sourcing" className={TW_CARD}>

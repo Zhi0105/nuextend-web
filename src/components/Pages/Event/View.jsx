@@ -7,10 +7,11 @@ import { DecryptString, DecryptUser } from "@_src/utils/helpers";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { FilterMatchMode } from "primereact/api";
-import { InputText } from "primereact/inputtext";
+import { InputText } from "primereact/inputtext"; 
 import { Dropdown } from "primereact/dropdown";
 import { Tooltip } from "primereact/tooltip";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { getUsers } from "@_src/services/user";
 import { toast } from "react-toastify";
 import _ from "lodash";
 
@@ -34,6 +35,7 @@ export const View = () => {
   const decryptedToken = useMemo(() => (token ? DecryptString(token) : null), [token]);
   const decryptedUser = useMemo(() => (token ? DecryptUser(user) : null), [token, user]);
   const roleId = decryptedUser?.role_id;
+  const { data: userData, loading: userLoading } = getUsers({ token: decryptedToken }) 
 
   const needsAllEvents = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
   const needsUserEvents = !needsAllEvents;
@@ -76,6 +78,7 @@ export const View = () => {
       const id = _.get(row, "event_status_id");
       if (id === 1) return "Active";
       if (id === 2) return "Completed";
+      if (id === 10) return "Ongoing";
       return "Unknown";
     };
     return (rawEvents ?? []).map((e) => {
@@ -101,7 +104,8 @@ export const View = () => {
 
   const statusOptions = [
     { label: "All statuses", value: null },
-    { label: "Pending ", value: "Active" },
+    { label: "Pending/Planing", value: "Pending/Planning" },
+    { label: "Ongoing", value: "Ongoing" },
     { label: "Completed", value: "Completed" },
   ];
   const createdByAdminOptions = [
@@ -162,10 +166,10 @@ export const View = () => {
   };
 
   const handleGenerateCertificates = (eventData) => {
-  console.log(eventData)
   const participants = _.get(eventData, "participants", []);
   const eventMembers = _.get(eventData, "eventmember", []);
   const eventOwner = _.get(eventData, "user");
+  const users = userData?.data
 
   // Helper to format full name
   const formatName = (user) => {
@@ -176,20 +180,41 @@ export const View = () => {
     return `${lastname}, ${firstname}${middlename ? " " + middlename : ""}`.trim();
   };
 
-  // Collect all names
-  const participantNames = participants.map((p) => formatName(p.user)).filter(Boolean);
-  const memberNames = eventMembers.map((m) => formatName(m.user)).filter(Boolean);
-  const ownerName = formatName(eventOwner);
+  // Participants → default role "volunteer"
+  const participantData = participants
+    .map((p) => ({
+      name: formatName(p.user),
+      role: "volunteer",
+    }))
+    .filter((p) => p.name);
 
-  // Merge and deduplicate
-  const allNames = _.uniq([...participantNames, ...memberNames, ownerName].filter(Boolean));
+  // Event members → use their specific role
+  const memberData = eventMembers
+    .map((m) => ({
+      name: formatName(m.user),
+      role: m.role || "volunteer",
+    })).filter((p) => p.name);
 
-  if (!allNames.length) {
-    toast("Unable to generate certificates: no valid names found.", { type: "warning" });
+
+  // Owner → also treated as "volunteer" (or you can change to "organizer" if desired)
+  const ownerData = eventOwner
+    ? [{ name: formatName(eventOwner), role: "volunteer" }]
+    : [];
+
+  // Merge and deduplicate by name
+  const allPeople = _.uniqBy(
+    [...participantData, ...memberData, ...ownerData],
+    "name"
+  );
+
+  if (!allPeople.length) {
+    toast("Unable to generate certificates: no valid names found.", {
+      type: "warning",
+    });
     return;
   }
 
-  // Get implementation date (fallbacks in case of missing data)
+  // Get implementation date
   const implementDate =
     _.get(eventData, "implement_date") ||
     _.get(eventData, "implementation_date") ||
@@ -197,8 +222,16 @@ export const View = () => {
     _.get(eventData, "created_at") ||
     null;
 
-  previewCertificates({ names: allNames, implementDate });
-  };
+  previewCertificates({
+    users,
+    people: allPeople, // array of { name, role }
+    implementDate,
+    title: eventData?.eventName,
+    location: eventData?.location,
+    term: eventData?.term
+  });
+};
+
   const handleUpdateEventNavigation = (rowData) => {
     if (roleId === 1) navigate("/admin/event/update", { state: rowData });
     else navigate("/event/update", { state: rowData });
@@ -365,6 +398,8 @@ export const View = () => {
   const organizationBody = (row) => _.get(row, "organization.name") || "—";
   const budgetProposalBody = (row) => pesoFormat(row?.budget_proposal);
   const createdAtBody = (row) => formatDate(row?.created_at);
+
+
 
   if (eventLoading || userEventLoading || eventRefetchLoading || userEventRefetchLoading) {
     return (

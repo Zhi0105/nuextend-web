@@ -48,6 +48,7 @@ export const Create = () => {
             organization: "",
             name: "",
             description: "",
+            location: "",
             model: "",
             event_type: null,
             unsdgs: [],
@@ -88,7 +89,7 @@ export const Create = () => {
     };
 
     const onSubmit = (data) => {
-        const { members, target_group, organization, model, event_type, name, term, implement_date,description, activities, budget_proposal, skills, unsdgs } = data
+        const { members, target_group, organization, model, event_type, name, term, implement_date, description, location, activities, budget_proposal, skills, unsdgs } = data
         const updatedActivities = _.map(activities, (activity) => ({
             name: activity.name,
             description: activity.description,
@@ -109,6 +110,7 @@ export const Create = () => {
             term,
             implement_date: implement_date ? setImplementationDate(implement_date) : null,
             description,
+            location,
             budget_proposal,
             skills: _.map(skills, 'id'),
             unsdgs: _.map(unsdgs, 'id'),
@@ -131,6 +133,7 @@ export const Create = () => {
                         term: getValues("term"),
                         implement_date: null,
                         description: "",
+                        location: "",
                         target_group: "",
                         name: "",
                         budget_proposal: 0,
@@ -382,6 +385,27 @@ export const Create = () => {
                                     </p>
                                 )}
                             </div>
+                            <div className="location">
+                                <Controller
+                                    control={control}
+                                    rules={{ required: true }}
+                                    render={({ field: { onChange, value } }) => (
+                                        <InputText
+                                            value={value}
+                                            onChange={onChange}
+                                            rows={4}
+                                            placeholder="Enter event location"
+                                            className={`${errors.location && 'p-invalid'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                                        />
+                                    )}
+                                    name="location"
+                                />
+                                {errors.location && (
+                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
+                                        event location is required.*
+                                    </p>
+                                )}
+                            </div>
                             <div className="description">
                                 <Controller
                                     control={control}
@@ -456,7 +480,6 @@ export const Create = () => {
                             {/* Add Calendar Picker for implement_date */}
                             <div className="implement_date">
                                 <label htmlFor="implement_date" className="block text-sm font-medium text-gray-700 mb-1">
-                                    Implementation Date
                                 </label>
                                 <Controller
                                     control={control}

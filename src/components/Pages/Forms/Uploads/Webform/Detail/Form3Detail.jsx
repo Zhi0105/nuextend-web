@@ -194,6 +194,26 @@ export const Form3Detail = () => {
       remarks: '',
       approver: ''
     });
+    const isFullyApproved = useMemo(() => {
+  if (!formData) return false;
+  
+  // For role 3 (faculty), need dean + 3 other approvers
+  if (owner?.role_id === 3) {
+    return formData.dean_approved_by && 
+           formData.commex_approved_by && 
+           formData.asd_approved_by && 
+           formData.ad_approved_by;
+  }
+  
+  // For roles 1 and 4, need 3 approvers (excluding dean)
+  if ([1, 4].includes(owner?.role_id)) {
+    return formData.commex_approved_by && 
+           formData.asd_approved_by && 
+           formData.ad_approved_by;
+  }
+  
+  return false;
+}, [formData, owner?.role_id]);
   return (
     <div className="project-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
       <div className="w-full max-w-5xl bg-white shadow rounded-lg p-6 my-6">
@@ -290,7 +310,7 @@ export const Form3Detail = () => {
                     {item.amount ? `₱ ${parseFloat(item.amount).toLocaleString()}` : "N/A"}
                   </td>
                   <td className="border p-2 break-words whitespace-normal">
-                    {item.amount ? `₱ ${parseFloat(item.amount).toLocaleString()}` : "N/A"}
+                    {item.amount ? `₱ ${parseFloat(item.total).toLocaleString()}` : "N/A"}
                   </td>
                 </tr>
               ))
@@ -457,7 +477,7 @@ export const Form3Detail = () => {
 
       {/* Buttons */}
       <div className="flex gap-2 mt-4">
-        {isEventOwner && (
+        {isEventOwner && !isFullyApproved && (
           <Button
             onClick={() => navigate("/event/form/003", { state: { formdata: form3 } })}
             className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"

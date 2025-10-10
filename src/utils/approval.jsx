@@ -140,11 +140,11 @@ export const getFormStatus = (form, formNumber, isAdminOwner = false) => {
 
   // ✅ Rule 1: any remarks = sent for revised
   if (is_revised) {
-    return <h1 className="text-red-400">sent for revised</h1>;
+    return <h1 className="text-red-400">Sent for Revision</h1>;
   }
 
   if (is_updated) {
-    return <h1 className="text-blue-400">updated</h1>;
+    return <h1 className="text-blue-400">Form Updated</h1>;
   }
 
   // ✅ Determine required approvers for this form
@@ -192,5 +192,5 @@ export const getFormStatus = (form, formNumber, isAdminOwner = false) => {
   }
 
   // ✅ Otherwise → pending with progress
-  return <h1 className="text-yellow-400">{`pending ${approvedCount} / ${totalApprovers}`}</h1>;
+  return <h1 className="text-yellow-400">{`Pending ${approvedCount} / ${totalApprovers}`}</h1>;
 };

@@ -54,21 +54,6 @@ export const AdminSidenav = () => {
                         <span>Home</span>
                     </Link>
                 </li>
-                {decryptedUser?.role_id === 1 && (
-                    <li>
-                        <Link
-                            to="/admin/create/dean"
-                            className="flex gap-6 cursor-pointer"
-                            >
-                            <IoIosCreate 
-                                width={5}
-                                height={5}
-                                className='text-xl text-gray-500'
-                            />
-                            <span>Signatories</span>
-                        </Link>
-                    </li>
-                )}
                 <li>
                     <div
                         className="flex items-center justify-between rounded cursor-pointer"
@@ -258,6 +243,21 @@ export const AdminSidenav = () => {
                                 <span>Format</span>
                             </Link>
                         </div>
+                    </li>
+                )}
+                {decryptedUser?.role_id === 1 && (
+                    <li>
+                        <Link
+                            to="/admin/create/dean"
+                            className="flex gap-6 cursor-pointer"
+                            >
+                            <IoIosCreate 
+                                width={5}
+                                height={5}
+                                className='text-xl text-gray-500'
+                            />
+                            <span>Signatories</span>
+                        </Link>
                     </li>
                 )}
                 <li
