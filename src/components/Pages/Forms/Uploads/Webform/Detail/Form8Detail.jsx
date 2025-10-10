@@ -26,8 +26,7 @@ export const Form8Detail = () => {
   const [form8, setForm8] = useState(initialData || null);
 
   const approvalCheck = checkApprovalProcess(getFormNumber(pathname), decryptedUser?.role_id, [ form8[0]?.is_dean && 9, form8[0]?.is_commex && 1, form8[0]?.is_asd && 10, form8[0]?.is_ad && 11, ].filter(Boolean), (owner?.role_id === 1 || owner?.role_id === 4), (owner?.role_id === 4))
-  const isApprovalCheckPass = approvalCheck?.included && [...approvalCheck.nextApprover].includes(decryptedUser?.role_id)
-  
+  const isApprovalCheckPass = approvalCheck?.included && Array.isArray(approvalCheck?.nextApprover) ? approvalCheck.nextApprover.includes(decryptedUser?.role_id) : false;
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
