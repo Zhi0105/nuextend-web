@@ -27,7 +27,7 @@ export const Form12Detail = () => {
   const [form12, setForm12] = useState(initialData || null);
 
   const approvalCheck = checkApprovalProcess(getFormNumber(pathname), decryptedUser?.role_id, [ form12[0]?.is_dean && 9, form12[0]?.is_commex && 1, form12[0]?.is_asd && 10, form12[0]?.is_ad && 11, ].filter(Boolean), (owner?.role_id === 1 || owner?.role_id === 4), (owner?.role_id === 4))
-  const isApprovalCheckPass = approvalCheck?.included && Array.isArray(approvalCheck?.nextApprover) ? approvalCheck.nextApprover.includes(decryptedUser?.role_id) : false;
+  const isApprovalCheckPass = approvalCheck?.included && ( Number(decryptedUser?.role_id) === Number(approvalCheck?.nextApprover))
   
   // Extract data from form12
   const form12Data = form12?.[0] || form12;
@@ -184,6 +184,14 @@ export const Form12Detail = () => {
       approver: 'All Remarks' 
     });
   };
+
+  const isFullyApproved = useMemo(() => {
+  if (!formData) return false;
+  
+  // For Form12, only need ComEx and ASD approval regardless of role
+  return formData.commex_approved_by && 
+         formData.asd_approved_by;
+}, [formData]);
   
 
   return (
@@ -362,7 +370,7 @@ export const Form12Detail = () => {
 
       {/* Buttons */}
       <div className="flex gap-2 mt-4">
-        {isEventOwner && (
+        {isEventOwner && !isFullyApproved && (
           <Button
             onClick={() => navigate("/event/form/012", { state: { formdata: form12 } })}
             className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"

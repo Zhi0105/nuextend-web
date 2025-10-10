@@ -140,6 +140,7 @@ export const checkApprovalProcess = (
     }
     isFullyApproved = nextApprover === null;
   }
+console.log({ approvers, included, approvedList, nextApprover, isFullyApproved });
 
   return { approvers, included, approvedList, nextApprover, isFullyApproved };
 };
@@ -147,14 +148,23 @@ export const getFormNumber = (pathname) => {
     const result = _.toNumber(_.last(_.split(pathname, '/')));
     return result
 }
-export const getFormStatus = (form, formNumber, isAdminOwner = false, isFacultyOwner = false) => {
+export const getFormStatus = (
+  form,
+  formNumber,
+  isAdminOwner = false,
+  isFacultyOwner = false
+) => {
   if (!form?.length) {
     return <h1 className="text-blue-600">for fill up</h1>;
   }
 
-  const { 
-    is_ad, is_asd, is_commex, is_dean,
-    is_revised, is_updated
+  const {
+    is_ad,
+    is_asd,
+    is_commex,
+    is_dean,
+    is_revised,
+    is_updated,
   } = form[0];
 
   // ✅ Rule 1: any remarks = sent for revised
@@ -171,7 +181,7 @@ export const getFormStatus = (form, formNumber, isAdminOwner = false, isFacultyO
 
   // ✅ If admin owner, exclude dean (unless faculty owner)
   if (isAdminOwner && !isFacultyOwner) {
-    requiredApprovers = requiredApprovers.filter(a => a !== "dean");
+    requiredApprovers = requiredApprovers.filter((a) => a !== "dean");
   }
 
   // ✅ Map of approval flags
@@ -179,31 +189,36 @@ export const getFormStatus = (form, formNumber, isAdminOwner = false, isFacultyO
     ad: is_ad,
     asd: is_asd,
     commex: is_commex,
-    dean: is_dean
+    dean: is_dean,
   };
 
   let approvedCount = 0;
   let totalApprovers = requiredApprovers.length;
 
   // ✅ Special handling for forms 4 & 5
-  if (formNumber === 4 || formNumber === 5 || formNumber === 1 || formNumber === 2 || formNumber === 3 || formNumber === 9 || formNumber === 10) {
-    // dean OR asd counts as one slot
+  if (formNumber === 4 || formNumber === 5) {
+    /**
+     * ✅ Logic:
+     * - If admin (non-faculty): dean excluded, only ASD + CommEx count.
+     * - If faculty owner: dean is still included, so dean/asd slot required.
+     * - Always require CommEx approval.
+     */ 
+
     const deanOrAsdApproved =
       isAdminOwner && !isFacultyOwner
-        ? approverValues.asd // if admin (non-faculty), dean excluded
-        : (approverValues.dean || approverValues.asd); // otherwise, include dean
+        ? approverValues.asd // only ASD counts if admin (not faculty)
+        : approverValues.dean || approverValues.asd; // include dean if faculty
 
-    // if dean/asd slot approved
+    approvedCount = 0;
+    totalApprovers = 2; // dean/asd slot + commex
+
     if (deanOrAsdApproved) approvedCount++;
-
-    // commex is always required
     if (approverValues.commex) approvedCount++;
-
-    // Total approvers logic
-    totalApprovers = 2; // (dean/asd slot + commex)
   } else {
     // ✅ Normal counting
-    approvedCount = requiredApprovers.filter(key => approverValues[key]).length;
+    approvedCount = requiredApprovers.filter(
+      (key) => approverValues[key]
+    ).length;
   }
 
   // ✅ Rule 2: all required approved → done
@@ -212,6 +227,10 @@ export const getFormStatus = (form, formNumber, isAdminOwner = false, isFacultyO
   }
 
   // ✅ Otherwise → pending with progress
-  return <h1 className="text-yellow-400">{`Pending ${approvedCount} / ${totalApprovers}`}</h1>;
+  return (
+    <h1 className="text-yellow-400">
+      {`Pending ${approvedCount} / ${totalApprovers}`}
+    </h1>
+  );
 };
 

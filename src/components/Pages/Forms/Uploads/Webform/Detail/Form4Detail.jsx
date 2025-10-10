@@ -193,6 +193,23 @@ const [remarksModal, setRemarksModal] = useState({
     };
     return roleMap[roleId] || 'Unknown Role';
   };
+  const isFullyApproved = useMemo(() => {
+  if (!form4) return false;
+  
+  // For role 1 (ComEx), need ComEx + ASD approvals
+  if (owner?.role_id === 1) {
+    return form4.commex_approved_by && 
+           form4.asd_approved_by;
+  }
+  
+  // For roles 3 (student) and 4 (faculty), need ComEx + (ASD OR Dean)
+  if ([3, 4].includes(owner?.role_id)) {
+    return form4.commex_approved_by && 
+           (form4.asd_approved_by || form4.dean_approved_by);
+  }
+  
+  return false;
+}, [form4, owner?.role_id]);
 
   return (
     <div className="form4-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
@@ -265,7 +282,7 @@ const [remarksModal, setRemarksModal] = useState({
 
       {/* Action buttons */}
       <div className="flex gap-2 mt-4">
-        {isEventOwner && (
+        {isEventOwner && !isFullyApproved && (
           <Button
             onClick={() => navigate("/event/form/004", { state: { formdata: form4 } })}
             className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"

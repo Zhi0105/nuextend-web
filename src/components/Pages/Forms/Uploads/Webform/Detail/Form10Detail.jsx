@@ -26,8 +26,7 @@ export const Form10Detail = () => {
   const [form10, setForm10] = useState(initialData || null);
 
   const approvalCheck = checkApprovalProcess(getFormNumber(pathname), decryptedUser?.role_id, [ form10[0]?.is_dean && 9, form10[0]?.is_commex && 1, form10[0]?.is_asd && 10, form10[0]?.is_ad && 11, ].filter(Boolean), (owner?.role_id === 1 || owner?.role_id === 4), (owner?.role_id === 4))
-  const isApprovalCheckPass = approvalCheck?.included && Array.isArray(approvalCheck?.nextApprover) ? approvalCheck.nextApprover.includes(decryptedUser?.role_id) : false;
-
+  const isApprovalCheckPass = approvalCheck?.included && ( Number(decryptedUser?.role_id) === Number(approvalCheck?.nextApprover))
 
   // Extract data from form10 and event
   const form10Data = form10?.[0] || form10;
@@ -197,6 +196,27 @@ export const Form10Detail = () => {
 
   const formData = form10[0] || form10;
 
+    const isFullyApproved = useMemo(() => {
+  if (!formData) return false;
+  
+  // For role 1 (ComEx), need 3 approvers (excluding dean)
+  if (owner?.role_id === 1) {
+    return formData.commex_approved_by && 
+           formData.asd_approved_by && 
+           formData.ad_approved_by;
+  }
+  
+  // For roles 3 (student) and 4 (faculty), need all 4 approvers
+  if ([3, 4].includes(owner?.role_id)) {
+    return formData.dean_approved_by && 
+           formData.commex_approved_by && 
+           formData.asd_approved_by && 
+           formData.ad_approved_by;
+  }
+  
+  return false;
+}, [formData, owner?.role_id]);
+
   return (
     <div className="project-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
       <div className="w-full max-w-5xl bg-white shadow rounded-lg p-6 my-6">
@@ -273,7 +293,7 @@ export const Form10Detail = () => {
         <table className="w-full border border-collapse">
           <thead>
             <tr>
-              {owner?.role_id === 3 && <th className="border p-2 text-center">Dean</th>}
+              {(owner?.role_id === 3 || owner?.role_id === 4) && <th className="border p-2 text-center">Dean</th>}
               <th className="border p-2 text-center">ComEx</th>
               <th className="border p-2 text-center">Academic Services Director</th>
               <th className="border p-2 text-center">Academic Director</th>
@@ -282,7 +302,7 @@ export const Form10Detail = () => {
           <tbody>
             <tr>
               {/* Dean Column */}
-              {owner?.role_id === 3 && (
+              {(owner?.role_id === 3 || owner?.role_id === 4) && (
                 <td className="border p-6 text-center align-bottom h-32">
                   {formData?.dean_approved_by ? (
                     <div className="flex flex-col justify-end h-full">
@@ -385,7 +405,7 @@ export const Form10Detail = () => {
 
       {/* Buttons */}
       <div className="flex gap-2 mt-4">
-        {isEventOwner && (
+        {isEventOwner && !isFullyApproved && (
           <Button
             onClick={() => navigate("/event/form/010", { state: { formdata: form10 } })}
             className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"

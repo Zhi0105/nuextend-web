@@ -26,7 +26,7 @@ export const Form8Detail = () => {
   const [form8, setForm8] = useState(initialData || null);
 
   const approvalCheck = checkApprovalProcess(getFormNumber(pathname), decryptedUser?.role_id, [ form8[0]?.is_dean && 9, form8[0]?.is_commex && 1, form8[0]?.is_asd && 10, form8[0]?.is_ad && 11, ].filter(Boolean), (owner?.role_id === 1 || owner?.role_id === 4), (owner?.role_id === 4))
-  const isApprovalCheckPass = approvalCheck?.included && Array.isArray(approvalCheck?.nextApprover) ? approvalCheck.nextApprover.includes(decryptedUser?.role_id) : false;
+  const isApprovalCheckPass = approvalCheck?.included && ( Number(decryptedUser?.role_id) === Number(approvalCheck?.nextApprover));
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
@@ -184,6 +184,13 @@ export const Form8Detail = () => {
   if (!form8) return null;
 
   const formData = form8[0] || form8;
+
+    const isFullyApproved = useMemo(() => {
+    if (!formData) return false;
+    
+    // For Form8, only need ComEx approval regardless of role
+    return formData.commex_approved_by;
+  }, [formData]);
 
   return (
     <div className="project-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
@@ -356,7 +363,7 @@ export const Form8Detail = () => {
 
       {/* Buttons */}
       <div className="flex gap-2 mt-4">
-        {isEventOwner && (
+        {isEventOwner && !isFullyApproved && (
           <Button
             onClick={() => navigate("/event/form/008", { state: { formdata: form8 } })}
             className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
