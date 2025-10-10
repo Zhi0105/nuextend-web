@@ -9,6 +9,7 @@ import { RiCalendarEventFill } from "react-icons/ri";
 import { IoIosEye, IoIosCreate  } from "react-icons/io";
 import { PiDownloadSimpleBold } from "react-icons/pi";
 import { MdOutlinePictureAsPdf } from "react-icons/md";
+import { CgProfile } from "react-icons/cg";
 import { DecryptUser } from '@_src/utils/helpers';
 import _ from 'lodash';
 
@@ -48,6 +49,20 @@ export const Sidenav = () => {
                         <span>Home</span>
                     </Link>
                 </li>
+                <li>
+                    <Link
+                        to="/profile"
+                        className="flex gap-6 cursor-pointer"
+                        >
+                        <CgProfile
+                            width={5}
+                            height={5}
+                            className="text-xl text-gray-500"
+                        />
+                        <span>Profile</span>
+                    </Link>
+                </li>
+
                 {validateUserRole(decryptedUser?.role_id) && (
                     <>
                     <li>

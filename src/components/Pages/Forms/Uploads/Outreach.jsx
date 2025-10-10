@@ -23,7 +23,6 @@ export const Outreach = () => {
     const queryClient = useQueryClient()    
     const decryptedToken = token && DecryptString(token)
 
-
     const eventOwnerId =
     event?.created_by ??
     event?.user_id ??

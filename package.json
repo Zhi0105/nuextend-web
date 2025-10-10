@@ -34,6 +34,7 @@
     "browser-image-compression": "^2.0.2",
     "classnames": "^2.5.1",
     "crypto-js": "^4.1.1",
+    "date-fns": "^4.1.0",
     "dayjs": "^1.11.7",
     "framer-motion": "^10.8.5",
     "html2canvas": "^1.4.1",
