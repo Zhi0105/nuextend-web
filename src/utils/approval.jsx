@@ -67,7 +67,13 @@ import _ from "lodash";
   14: ["commex", "asd"]
 };
 
-export const checkApprovalProcess = (formNumber, roleId, approvedList = [], isNotStudentOwner = false) => {
+export const checkApprovalProcess = (
+  formNumber,
+  roleId,
+  approvedList = [],
+  isNotStudentOwner,
+  isFacultyOwner // ✅ new argument
+) => {
   const approverHierarchy = {
     1: [9, 1, 10, 11],   // dean -> comex -> asd -> ad
     2: [9, 1, 10, 11],
@@ -93,6 +99,13 @@ export const checkApprovalProcess = (formNumber, roleId, approvedList = [], isNo
     approvers = approvers.filter(a => a !== 9);
   }
 
+  // ✅ Re-include dean (9) for form 4 or 5 if isFacultyOwner = true
+  if ((formNumber === 4 || formNumber === 5) && isFacultyOwner) {
+    if (!approvers.includes(9)) {
+      approvers.unshift(9); // Add at index 0
+    }
+  }
+
   let included = approvers.includes(roleId);
   let nextApprover = null;
   let isFullyApproved = false;
@@ -100,10 +113,16 @@ export const checkApprovalProcess = (formNumber, roleId, approvedList = [], isNo
   if (formNumber === 4 || formNumber === 5) {
     // Special case: dean OR asd then comex
     let deanOrAsdIds = isNotStudentOwner ? [10] : [9, 10];
+
+    // ✅ Ensure facultyOwner logic applies here too
+    if (isFacultyOwner) {
+      deanOrAsdIds = [9, 10];
+    }
+
     let deanOrAsdApproved = approvedList.some(r => deanOrAsdIds.includes(r));
 
     if (!deanOrAsdApproved) {
-      nextApprover = deanOrAsdIds; // either dean or asd (or just asd if faculty owner)
+      nextApprover = deanOrAsdIds; // either dean or asd
     } else if (!approvedList.includes(1)) {
       nextApprover = 1; // comex after dean/asd
     } else {
@@ -123,7 +142,8 @@ export const checkApprovalProcess = (formNumber, roleId, approvedList = [], isNo
   }
 
   return { approvers, included, approvedList, nextApprover, isFullyApproved };
-}
+};
+
 export const getFormNumber = (pathname) => {
     const result = _.toNumber(_.last(_.split(pathname, '/')));
     return result

@@ -25,8 +25,8 @@ export const Form9Detail = () => {
 
   const [form9, setForm9] = useState(initialData || null);
 
-  const approvalCheck = checkApprovalProcess(getFormNumber(pathname), decryptedUser?.role_id, [ form9[0]?.is_dean && 9, form9[0]?.is_commex && 1, form9[0]?.is_asd && 10, form9[0]?.is_ad && 11, ].filter(Boolean), (owner?.role_id === 1 || owner?.role_id === 4))
-  const isApprovalCheckPass = approvalCheck?.included && ( Number(decryptedUser?.role_id) === Number(approvalCheck?.nextApprover))
+  const approvalCheck = checkApprovalProcess(getFormNumber(pathname), decryptedUser?.role_id, [ form9[0]?.is_dean && 9, form9[0]?.is_commex && 1, form9[0]?.is_asd && 10, form9[0]?.is_ad && 11, ].filter(Boolean), (owner?.role_id === 1 || owner?.role_id === 4), (owner?.role_id === 4))
+  const isApprovalCheckPass = approvalCheck?.included && [...approvalCheck.nextApprover].includes(decryptedUser?.role_id)
     
 
   // Extract data from form9 and related data
