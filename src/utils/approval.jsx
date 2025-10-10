@@ -100,7 +100,7 @@ export const checkApprovalProcess = (
   }
 
   // ✅ Re-include dean (9) for form 4 or 5 if isFacultyOwner = true
-  if ((formNumber === 4 || formNumber === 5) && isFacultyOwner) {
+  if ((formNumber === 4 || formNumber === 5 || formNumber === 1 || formNumber === 2 || formNumber === 3 || formNumber === 9 || formNumber === 10) && isFacultyOwner) {
     if (!approvers.includes(9)) {
       approvers.unshift(9); // Add at index 0
     }
