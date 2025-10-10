@@ -99,7 +99,7 @@ export const UpdatedProgram = () => {
                             <tbody className="divide-y divide-yellow-200/70">
                                 {forms.map((form, index) => {
                                     const isOdd = index % 2 === 1;
-                                    const showView = hasSubmission(event, form.formKey); // <— THIS is the toggle
+                                    const showView = hasSubmission(event, form.formKey) || form.formKey === 'form13'
 
                                     return (
                                         <tr key={form.id} className={isOdd ? "bg-yellow-50" : ""}>
@@ -111,8 +111,13 @@ export const UpdatedProgram = () => {
                                             {/* code */}
                                             <td className="px-4 py-4 align-top text-slate-700">{form.code}</td>
 
-                                            <td>{getFormStatus(event[form.formKey], _.toNumber(_.replace(form.formKey, /^\D+/g, '')), ( event?.user.role_id === 1 || event?.user.role_id === 4 ), (event?.user.role_id === 4))}</td>
-    
+                                           {/* status */}
+                                            {form.formKey === 'form13' ? (
+                                                <td className="text-gray-500">none</td>
+                                            ) : (
+                                                <td>{getFormStatus(event[form.formKey], _.toNumber(_.replace(form.formKey, /^\D+/g, '')), ( event?.user.role_id === 1 || event?.user.role_id === 4 ), (event?.user.role_id === 4))}</td>
+                                            )}
+
                                             {/* upload cell */}
                                             <td className="px-4 py-4 align-top">
                                         
