@@ -136,6 +136,7 @@ export const createEvent = (payload) => {
         implement_date,
         name,
         description,
+        location,
         budget_proposal,
         skills,
         unsdgs,
@@ -157,6 +158,7 @@ export const createEvent = (payload) => {
         term,
         implement_date,
         description,
+        location,
         budget_proposal,
         skills: [...skills],
         unsdgs: [...unsdgs],
@@ -187,12 +189,9 @@ export const updateEvent = (payload) => {
         implement_date,
         budget_proposal,
         description,
-
-        // relations (optional)
+        location,
         skills,
         unsdgs,
-
-        // nested activities (optional) - full upsert set
         activities,
         members,
     } = payload;
@@ -223,6 +222,7 @@ export const updateEvent = (payload) => {
         name,
         target_group,
         description,
+        location,
         term,
         implement_date,
         budget_proposal,

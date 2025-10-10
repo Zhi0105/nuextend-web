@@ -19,7 +19,7 @@ export const Dean = () => {
     
     const { handleSubmit, control, reset, watch, formState: { errors }} = useForm({
         defaultValues: {
-            role: { id: 9 }, // Keep as object like original working version
+            role: { id: 9 }, // Keep as object like original working version 
             department: "", // Keep as "department" like original working version
             firstname: "",
             middlename: "",
@@ -38,6 +38,8 @@ export const Dean = () => {
     const { data: usersData, isLoading: usersLoading, error: usersError } = getUsers({ 
         token: decryptedToken 
     });
+
+    console.log(usersData);
     
     const filteredUsers = usersData?.data?.filter(user => 
         [9, 10, 11].includes(user.role_id)

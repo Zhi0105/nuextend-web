@@ -62,6 +62,8 @@ export const Update = () => {
       unsdgs: [],
       skills: [],
       name: "",
+      description: "",
+      location: "",
       implement_date: null,
       target_group: "",
       budget_proposal: 0,
@@ -154,6 +156,8 @@ export const Update = () => {
       unsdgs: [...(filteredUNSDG || [])],
       skills: [...(filteredSkills || [])],
       name: event.name || event.activityName || "",
+      description: event.description || event.activityName || "",
+      location: event.location || event.activityName || "",
       target_group: event.target_group || "",
       budget_proposal: event.budget_proposal || 0,
       implement_date: event.implement_date ? new Date(event.implement_date) : null,
@@ -170,7 +174,7 @@ export const Update = () => {
   }, [modelId, activitiesValues.length, handleAddActivity]);
 
     const onSubmit = (data) => {
-    const { members, organization, model, event_type, name, term, implement_date, target_group, budget_proposal, skills, unsdgs, activities } = data;
+    const { members, organization, model, event_type, name, term, location, description, implement_date, target_group, budget_proposal, skills, unsdgs, activities } = data;
 
     // Map to service shape: each activity has { id?, name, description, address, start_date, end_date }
     const activitiesPayload = (activities || []).map((a) => ({
@@ -193,6 +197,8 @@ export const Update = () => {
         name,
         target_group,
         term,
+        location,
+        description,
         implement_date: implement_date ? setImplementationDate(implement_date) : null,
         budget_proposal,
         skills: _.map(skills, 'id'),
@@ -391,7 +397,48 @@ export const Update = () => {
                 />
                 {errors.name && <p className="text-sm italic mt-1 text-red-400 indent-2">event name is required.*</p>}
               </div>
+              <div className="location">
+  <Controller
+    control={control}
+    rules={{ required: true }}
+    render={({ field: { onChange, value } }) => (
+      <InputText
+        value={value}
+        onChange={onChange}
+        placeholder="Enter event location"
+        className={`${errors.location && "border border-red-500"} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+      />
+    )}
+    name="location"
+  />
+  {errors.location && (
+    <p className="text-sm italic mt-1 text-red-400 indent-2">
+      event location is required.*
+    </p>
+  )}
+</div>
 
+<div className="description">
+  <Controller
+    control={control}
+    rules={{ required: true }}
+    render={({ field: { onChange, value } }) => (
+      <textarea
+        value={value}
+        onChange={onChange}
+        rows={4}
+        placeholder="Enter event description"
+        className={`${errors.description && "border border-red-500"} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+      />
+    )}
+    name="description"
+  />
+  {errors.description && (
+    <p className="text-sm italic mt-1 text-red-400 indent-2">
+      event description is required.*
+    </p>
+  )}
+</div>
               <div className="target_group">
                 <Controller
                   control={control}
