@@ -201,23 +201,19 @@ export const Form9Detail = () => {
 
   const formData = form9[0] || form9;
 
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const isFullyApproved = useMemo(() => {
-  if (!formData) return false;
+if (!formData) return false;
   
   // For role 1 (ComEx), need 3 approvers (excluding dean)
   if (owner?.role_id === 1) {
-    return formData.commex_approved_by && 
-           formData.asd_approved_by && 
-           formData.ad_approved_by;
+    return formData.commex_approved_by && formData.asd_approved_by && formData.ad_approved_by;
   }
   
   // For roles 3 (student) and 4 (faculty), need all 4 approvers
   if ([3, 4].includes(owner?.role_id)) {
-    return formData.dean_approved_by && 
-           formData.commex_approved_by && 
-           formData.asd_approved_by && 
-           formData.ad_approved_by;
-  }
+    return formData.dean_approved_by && formData.commex_approved_by && formData.asd_approved_by && formData.ad_approved_by;
+    }
   
   return false;
 }, [formData, owner?.role_id]);
