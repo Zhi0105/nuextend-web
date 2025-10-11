@@ -188,6 +188,7 @@ export const Create = () => {
         )
     }
 
+    const modelDataList = decryptedUser?.role_id === 1 ? modelData?.data : _.dropRight(modelData?.data)
 
     return (
         <div className="create-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] mt-[50px]">
@@ -211,7 +212,7 @@ export const Create = () => {
                                         className="w-full md:w-14rem capitalize border border-gray-400" 
                                         value={value} 
                                         onChange={onChange} 
-                                        options={modelData?.data} 
+                                        options={modelDataList} 
                                         optionLabel="name" 
                                         placeholder="Select model" 
                                         checkmark={true} 

@@ -29,9 +29,7 @@ export const UpdatedProject = () => {
     null;
 
     const isEventOwner = !!decryptedUser?.id && decryptedUser.id === eventOwnerId;
-
-
-
+    
     // fixed rows (you can tweak names/codes)
     const forms = [
         { id: "NUB-ACD-CMX-F-002", name: "Project Proposal Format", code: "NUB-ACD-CMX-F-002", formKey: 'form2' },
@@ -41,6 +39,7 @@ export const UpdatedProject = () => {
         { id: "NUB-ACD-CMX-F-011", name: "Extension Program and Project Itinerary of Travel Format", code: "NUB-ACD-CMX-F-011", formKey: 'form11' },
         { id: "NUB-ACD-CMX-F-012", name: "Minutes of the Meeting Format", code: "NUB-ACD-CMX-F-012", formKey: 'form12' },
         { id: "NUB-ACD-CMX-F-013", name: "List of Attendees, Volunteers, and Donors Format", code: "NUB-ACD-CMX-F-013", formKey: 'form13' },
+        { id: "NUB-ACD-CMX-F-014", name: "Post-Activity Report Format", code: "NUB-ACD-CMX-F-014", formKey: 'form14' },
         { id: "NUB-ACD-CMX-F-010", name: "Outreach Project Evaluation and Documentation Report Format", code: "NUB-ACD-CMX-F-010", formKey: 'form10' }
     ];
         
@@ -100,7 +99,7 @@ export const UpdatedProject = () => {
                         <tbody className="divide-y divide-yellow-200/70">
                             {forms.map((form, index) => {
                                 const isOdd = index % 2 === 1;
-                                const showView = hasSubmission(event, form.formKey) || form.formKey === 'form13'
+                                const showView = hasSubmission(event, form.formKey) || form.formKey === 'form13'  || form.formKey === 'form14' 
 
                                 return (
                                     <tr key={form.id} className={isOdd ? "bg-yellow-50" : ""}>
@@ -113,7 +112,7 @@ export const UpdatedProject = () => {
                                         <td className="px-4 py-4 align-top text-slate-700">{form.code}</td>
 
                                          {/* status */}
-                                        {form.formKey === 'form13' ? (
+                                        {form.formKey === 'form13' || form.formKey === 'form14' ? (
                                             <td className="text-gray-500">none</td>
                                         ) : (
                                             <td>{getFormStatus(event[form.formKey], _.toNumber(_.replace(form.formKey, /^\D+/g, '')), ( event?.user.role_id === 1 || event?.user.role_id === 4 ), (event?.user.role_id === 4))}</td>
@@ -130,7 +129,7 @@ export const UpdatedProject = () => {
                                                             <>
                                                                 {showView ? (
                                                                     <button
-                                                                            onClick={() => navigate(`/event/form/detail/${SetFormCodeNavigate(form.id)}`, 
+                                                                            onClick={() => form.formKey === 'form14' ? navigate("/event/activities", { state: event }) : navigate(`/event/form/detail/${SetFormCodeNavigate(form.id)}`, 
                                                                                 {
                                                                                     state: {
                                                                                         event: event,
@@ -155,7 +154,8 @@ export const UpdatedProject = () => {
                                                     <>
                                                     {showView ? (
                                                         <button
-                                                            onClick={() => navigate(`/event/form/detail/${SetFormCodeNavigate(form.id)}`, 
+                                                                onClick={() => form.formKey === 'form14' ? navigate("/event/activities", { state: event }) : navigate(`/event/form/detail/${SetFormCodeNavigate(form.id)}`, 
+                                                            
                                                                 {
                                                                     state: {
                                                                         event: event,

@@ -253,6 +253,7 @@ export const View = () => {
     if (rowData.model_id === 1) navigate("/event/form/outreach", { state: { event: rowData } });
     if (rowData.model_id === 2) navigate("/event/form/project", { state: { event: rowData } });
     if (rowData.model_id === 3) navigate("/event/form/program", { state: { event: rowData } });
+    if (rowData.model_id === 4) navigate("/event/form/emergency", { state: { event: rowData } });
   };
 
   const actionBodyTemplateForActivity = (rowData) => {

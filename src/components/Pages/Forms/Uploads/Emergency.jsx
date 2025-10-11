@@ -17,7 +17,7 @@ import _ from "lodash";
 import { useState } from "react";
 import { PiWarningCircleThin } from "react-icons/pi";
 
-export const UpdatedOutreach = () => {
+export const Emergency = () => {
     const location = useLocation()
     const navigate = useNavigate()
     const { event } = location.state || {} 
@@ -33,22 +33,15 @@ export const UpdatedOutreach = () => {
     null;
 
     const isEventOwner = !!decryptedUser?.id && decryptedUser.id === eventOwnerId;
-
-    // fixed rows (you can tweak names/codes)
+        // fixed rows (you can tweak names/codes)
     const forms = [
-        { id: "NUB-ACD-CMX-F-003", name: "Outreach Project Proposal Format", code: "NUB-ACD-CMX-F-003", formKey: 'form3' },
-        { id: "NUB-ACD-CMX-F-005", name: "Checklist of Criteria for Project Proposal", code: "NUB-ACD-CMX-F-005", formKey: 'form5' },
-        { id: "NUB-ACD-CMX-F-007", name: "Manifestation of Consent and Cooperation for the Outreach Project", code: "NUB-ACD-CMX-F-007", formKey: 'form7' },
-        { id: "NUB-ACD-CMX-F-008", name: "Target Group Needs Diagnosis Report Format", code: "NUB-ACD-CMX-F-008", formKey: 'form8' },
-        { id: "NUB-ACD-CMX-F-011", name: "Extension Program and Project Itinerary of Travel Format", code: "NUB-ACD-CMX-F-011", formKey: 'form11' },
-        { id: "NUB-ACD-CMX-F-012", name: "Minutes of the Meeting Format", code: "NUB-ACD-CMX-F-012", formKey: 'form12' },
         { id: "NUB-ACD-CMX-F-013", name: "List of Attendees, Volunteers, and Donors Format", code: "NUB-ACD-CMX-F-013", formKey: 'form13' },
         { id: "NUB-ACD-CMX-F-014", name: "Post-Activity Report Format", code: "NUB-ACD-CMX-F-014", formKey: 'form14' },
         { id: "NUB-ACD-CMX-F-010", name: "Outreach Project Evaluation and Documentation Report Format", code: "NUB-ACD-CMX-F-010", formKey: 'form10' }
     ];
 
-    // 2) Small helpers.
     const hasSubmission = (event, key) =>  Array.isArray(event?.[key]) && event[key].length > 0;
+    // 2) Small helpers.
     // Navigate to Upload Attachment
     const handleNavigateToAttachments = () => {
         navigate('/upload-attachment', { 
@@ -58,10 +51,11 @@ export const UpdatedOutreach = () => {
             } 
         });
     };
+    
 
-    return (
-        <div className="outreach-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-0 sm:pl-[200px] py-20">
-            <div className="w-full max-w-5xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+  return (
+    <div className="emergency-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-0 sm:pl-[200px] py-20">
+        <div className="w-full max-w-5xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
                     {/* INSTRUCTIONS with expand/minimize */}
                     <div className="mb-5 border rounded-lg">
                         <div
@@ -86,7 +80,7 @@ export const UpdatedOutreach = () => {
                     </div>
                     {/* header */}
                     <div className="bg-[#153e6f] px-4 py-3 text-center font-bold text-white">
-                        Outreach Forms
+                        Emergency Forms
                     </div>
                     {/* table */}
                     <div className="overflow-x-auto">
@@ -160,9 +154,9 @@ export const UpdatedOutreach = () => {
                                                                 onClick={() => form.formKey === 'form14' ? navigate("/event/activities", { state: event }) : navigate(`/event/form/detail/${SetFormCodeNavigate(form.id)}`, 
                                                                     {
                                                                         state: {
-                                                                             event: event,
-                                                                             owner: event?.user,
-                                                                             data: event?.[form.formKey] ?? [], // ← dito papasok ang event.form3, form5, etc.
+                                                                                event: event,
+                                                                                owner: event?.user,
+                                                                                data: event?.[form.formKey] ?? [], // ← dito papasok ang event.form3, form5, etc.
                                                                         }
                                                                     }
                                                                 )}
@@ -191,15 +185,16 @@ export const UpdatedOutreach = () => {
                             </tbody>
                         </table>
                     </div>
-            </div>
-            {/* ADD THIS BUTTON RIGHT AFTER THE HEADER DIV */}
-            <div className="flex justify-end p-4 bg-gray-50 border-b">
-                <Button
-                    label="Other Attachments"
-                    className="bg-[#2211cc] text-white font-bold rounded-lg px-4 py-2"
-                    onClick={handleNavigateToAttachments}
-                />
-            </div>
         </div>
-    )
+        {/* ADD THIS BUTTON RIGHT AFTER THE HEADER DIV */}
+        <div className="flex justify-end p-4 bg-gray-50 border-b">
+            <Button
+                label="Other Attachments"
+                className="bg-[#2211cc] text-white font-bold rounded-lg px-4 py-2"
+                onClick={handleNavigateToAttachments}
+            />
+        </div>
+    </div>
+  )
 }
+

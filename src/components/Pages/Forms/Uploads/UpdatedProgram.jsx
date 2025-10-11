@@ -40,6 +40,7 @@ export const UpdatedProgram = () => {
             { id: "NUB-ACD-CMX-F-011", name: "Extension Program and Project Itinerary of Travel Format", code: "NUB-ACD-CMX-F-011",  formKey: 'form11' },
             { id: "NUB-ACD-CMX-F-012", name: "Minutes of the Meeting Format", code: "NUB-ACD-CMX-F-012",  formKey: 'form12' },
             { id: "NUB-ACD-CMX-F-013", name: "List of Attendees, Volunteers, and Donors Format", code: "NUB-ACD-CMX-F-013",  formKey: 'form13' },
+            { id: "NUB-ACD-CMX-F-014", name: "Post-Activity Report Format", code: "NUB-ACD-CMX-F-014", formKey: 'form14' },
             { id: "NUB-ACD-CMX-F-009", name: "Extension Program Evaluation and Terminal Report Format", code: "NUB-ACD-CMX-F-009",  formKey: 'form9' }
         ];
 
@@ -99,7 +100,7 @@ export const UpdatedProgram = () => {
                             <tbody className="divide-y divide-yellow-200/70">
                                 {forms.map((form, index) => {
                                     const isOdd = index % 2 === 1;
-                                    const showView = hasSubmission(event, form.formKey) || form.formKey === 'form13'
+                                    const showView = hasSubmission(event, form.formKey) || form.formKey === 'form13'  || form.formKey === 'form14' 
 
                                     return (
                                         <tr key={form.id} className={isOdd ? "bg-yellow-50" : ""}>
@@ -112,7 +113,7 @@ export const UpdatedProgram = () => {
                                             <td className="px-4 py-4 align-top text-slate-700">{form.code}</td>
 
                                            {/* status */}
-                                            {form.formKey === 'form13' ? (
+                                            {form.formKey === 'form13' || form.formKey === 'form14' ? (
                                                 <td className="text-gray-500">none</td>
                                             ) : (
                                                 <td>{getFormStatus(event[form.formKey], _.toNumber(_.replace(form.formKey, /^\D+/g, '')), ( event?.user.role_id === 1 || event?.user.role_id === 4 ), (event?.user.role_id === 4))}</td>
@@ -129,7 +130,8 @@ export const UpdatedProgram = () => {
                                                                 <>
                                                                     {showView ? (
                                                                         <button
-                                                                                onClick={() => navigate(`/event/form/detail/${SetFormCodeNavigate(form.id)}`, 
+                                                                            onClick={() => form.formKey === 'form14' ? navigate("/event/activities", { state: event }) : navigate(`/event/form/detail/${SetFormCodeNavigate(form.id)}`, 
+
                                                                                     {
                                                                                         state: {
                                                                                             event: event,
@@ -154,7 +156,8 @@ export const UpdatedProgram = () => {
                                                         <>
                                                         {showView ? (
                                                             <button
-                                                                onClick={() => navigate(`/event/form/detail/${SetFormCodeNavigate(form.id)}`, 
+                                                                onClick={() => form.formKey === 'form14' ? navigate("/event/activities", { state: event }) : navigate(`/event/form/detail/${SetFormCodeNavigate(form.id)}`, 
+                                                                
                                                                     {
                                                                         state: {
                                                                             event: event,

@@ -53,6 +53,8 @@ import { ProgramDataScreen } from '@_src/components/Screen/Forms/Generate/Data/P
 import { ActivityScreen } from '@_src/components/Screen/Event/ActivityScreen'
 import { ReportScreen } from '@_src/components/Screen/Activity/ReportScreen'
 
+import { EmergencyScreen } from '@_src/components/Screen/Forms/Upload/EmergencyScreen'
+
 import { Form1Screen } from '@_src/components/Screen/Forms/Upload/Webform/From1Screen'
 import { Form2Screen } from '@_src/components/Screen/Forms/Upload/Webform/Form2Screen'
 import { Form3Screen } from '@_src/components/Screen/Forms/Upload/Webform/Form3Screen'
@@ -138,6 +140,7 @@ export const RouteList = () => {
                 <Route path="/event/form/project" element={<ProjectScreen />} />
                 <Route path="/event/form/outreach" element={<OutreachScreen />} />
                 <Route path="/event/form/program" element={<ProgramScreen />} />
+                <Route path="/event/form/emergency" element={<EmergencyScreen />} />
 
 
                 <Route path="/event/form/001" element={<Form1Screen />} />
