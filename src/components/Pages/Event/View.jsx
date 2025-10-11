@@ -148,22 +148,29 @@ export const View = () => {
   });
 
   const handleTerminate = (data) => {
-    const validateTermination = _.some(data?.forms, (item) => {
-      return (
-        (_.endsWith(_.get(item, "code"), "009") || _.endsWith(_.get(item, "code"), "010")) &&
-        _.get(item, "is_commex") &&
-        _.get(item, "is_dean") &&
-        _.get(item, "is_asd") &&
-        _.get(item, "is_ad")
-      );
-    });
+  const form9 = data?.form9 || {};
+  const form10 = data?.form10 || {};
 
-    if (!validateTermination) {
-      toast("Unable to terminate, incomplete event process.", { type: "warning" });
-    } else {
-      handleEventTerminate({ token: decryptedToken, id: data?.id });
-    }
+  // Function to check if a single form has all approvals true
+  const isFormComplete = (forms) => {
+    // If forms is empty or not an array, return false
+    if (!Array.isArray(forms) || _.isEmpty(forms)) return false;
+
+    // Check if EVERY form has all required boolean flags as true
+    return _.every(forms, (form) =>
+      _.every(["is_commex", "is_dean", "is_asd", "is_ad"], (key) => _.get(form, key, false))
+    );
   };
+  // Check if either form9 or form10 is fully approved
+  const validateTermination = isFormComplete(form9) || isFormComplete(form10);
+
+  if (!validateTermination) {
+    toast("Unable to terminate, incomplete event process.", { type: "warning" });
+  } else {
+    handleEventTerminate({ token: decryptedToken, id: data?.id });
+  }
+};
+
 
   const handleGenerateCertificates = (eventData) => {
   const participants = _.get(eventData, "participants", []);
