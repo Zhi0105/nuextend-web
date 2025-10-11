@@ -39,8 +39,11 @@ export const Form6Detail = () => {
   const decryptedUser = token && DecryptUser(user);
   const decryptedToken = token && DecryptString(token);
   const approvalCheck = checkApprovalProcess(getFormNumber(location?.pathname), decryptedUser?.role_id, [ form6[0]?.is_dean && 9, form6[0]?.is_commex && 1, form6[0]?.is_asd && 10, form6[0]?.is_ad && 11, ].filter(Boolean), (routeState?.owner?.role_id === 1 || routeState?.owner?.role_id === 4), (routeState?.owner?.role_id === 4))
-  const isApprovalCheckPass = approvalCheck?.included && ( Number(decryptedUser?.role_id) === Number(approvalCheck?.nextApprover));
-
+  const isApprovalCheckPass = approvalCheck?.included && (
+      Array.isArray(approvalCheck?.nextApprover) 
+        ? approvalCheck.nextApprover.includes(Number(decryptedUser?.role_id))
+        : Number(decryptedUser?.role_id) === Number(approvalCheck?.nextApprover)
+  );
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
 
