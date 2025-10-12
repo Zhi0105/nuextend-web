@@ -26,54 +26,67 @@ function getBase64ImageFromURL(url) {
   });
 }
 
-export const downloadForm6Pdf = async (formData, owner) => {
+export const downloadForm6Pdf = async (formData, owner, usersData) => {
   // Get logo for header
   const logo = await getBase64ImageFromURL('/LogoHeader.png');
 
+  // Get ComEx and ASD names from signatories data
+  const comexUser = usersData?.data?.find(user => user.role_id === 1);
+  const asdUser = usersData?.data?.find(user => user.role_id === 10);
+  
+  const comexName = comexUser ? 
+    `${comexUser.firstname} ${comexUser.lastname}` : 
+    "ComEx Coordinator";
+  
+  const asdName = asdUser ? 
+    `${asdUser.firstname} ${asdUser.lastname}` : 
+    "Academic Services Director";
+  
+  const asdLastName = asdUser?.lastname || "Venturina";
+
   // === HEADER CONTENT (appears on every page) ===
-// === HEADER CONTENT (appears on every page) ===
-const headerContent = [{
-  columns: [
-    // Image on the left
-    {
-      width: 'auto',
-      image: logo,
-      width: 250,
-      margin: [20, -20, 0, 0]
-    },
-    // Text on the right
-    {
-      width: '*',
-      stack: [
-            {
-          text: 'Manifestation of Consent and Cooperation',
-          fontSize: 10,
-          bold: true,
-          margin: [0, 0, 0, 0]
-        },
-        {
-          text: 'for the Extension Program',
-          fontSize: 10,
-          bold: true,
-          margin: [0, 0, 0, 0]
-        },
-        {
-          text: 'NUB – ACD – CMX – F – 006',
-          fontSize: 10,
-          bold: true,
-          margin: [0, 0, 0, 0]
-        },
-        {
-          text: '2025',
-          fontSize: 10,
-          bold: true
-        }
-      ],
-      alignment: 'right'
-    }
-  ],
-  margin: [0, 20, 30, 0]
-}];
+  const headerContent = [{
+    columns: [
+      // Image on the left
+      {
+        width: 'auto',
+        image: logo,
+        width: 250,
+        margin: [20, -20, 0, 0]
+      },
+      // Text on the right
+      {
+        width: '*',
+        stack: [
+          {
+            text: 'Manifestation of Consent and Cooperation',
+            fontSize: 10,
+            bold: true,
+            margin: [0, 0, 0, 0]
+          },
+          {
+            text: 'for the Extension Program',
+            fontSize: 10,
+            bold: true,
+            margin: [0, 0, 0, 0]
+          },
+          {
+            text: 'NUB – ACD – CMX – F – 006',
+            fontSize: 10,
+            bold: true,
+            margin: [0, 0, 0, 0]
+          },
+          {
+            text: '2025',
+            fontSize: 10,
+            bold: true
+          }
+        ],
+        alignment: 'right'
+      }
+    ],
+    margin: [0, 20, 30, 0]
+  }];
 
   const docDefinition = {
     pageSize: 'A4',
@@ -107,26 +120,30 @@ const headerContent = [{
       // Content
       {
         stack: [
+          // To section with dynamic ASD name
           {
             text: [
               { text: 'To:', bold: true },
               '\n',
-              { text: '   Academic Services Director', bold: true }
+              { text: `   ${asdName}`, bold: true }
             ],
             margin: [0, 0, 0, 10]
           },
+          // Through section with dynamic ComEx name
           {
             text: [
               { text: 'Through:', bold: true },
               '\n',
-              { text: '   ComEx Coordinator', bold: true }
+              { text: `   ${comexName}`, bold: true }
             ],
             margin: [0, 0, 0, 20]
           },
+          // Greeting with dynamic last name
           {
-            text: 'Dear Mr. Venturina,',
+            text: `Dear Mr./Ms. ${asdLastName}:`,
             margin: [0, 0, 0, 10]
           },
+          // Letter content
           {
             text: [
               'Greetings! I, as the designated ',

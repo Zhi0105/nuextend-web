@@ -213,11 +213,12 @@ const ProjectCard = memo(function ProjectCard({
 export const Form1 = () => {
   const queryClient = useQueryClient();
   const location = useLocation();
-  const {  formdata } = location.state || {};
+  const { formdata, event } = location.state || {};
   const navigate = useNavigate();
   const { token } = useUserStore((state) => ({ token: state.token }));
   const decryptedToken = token && DecryptString(token);
-
+  
+  console.log(event);
   const { mutate: handleCreateForm1, isLoading: createForm1Loading } = useMutation({
     mutationFn: createForm1,
     onSuccess: (data) => {
@@ -252,7 +253,6 @@ export const Form1 = () => {
       background: "",
       overallGoal: "",
       scholarlyConnection: "",
-      programTeamMembers: [],
       cooperatingAgencies: [],
       componentProjects: [ { title: "", outcomes: "", budget: null } ],
       projects: [
@@ -309,7 +309,6 @@ export const Form1 = () => {
       background: fd.background ?? "",
       overallGoal: fd.overall_goal ?? "",
       scholarlyConnection: fd.scholarly_connection ?? "",
-      programTeamMembers: toStringList(fd.program_team_members ?? fd.team_members, "name"),
       cooperatingAgencies: toStringList(fd.cooperating_agencies, "name"),
       componentProjects: (fd.component_projects ?? fd.componentProjects ?? []).map((p) => ({
         title: p.title ?? "",
@@ -337,7 +336,6 @@ export const Form1 = () => {
       scholarly_connection: data.scholarlyConnection,
 
       // arrays of strings
-      programTeamMembers: [...(data.programTeamMembers ?? [])],
       cooperatingAgencies: [...(data.cooperatingAgencies ?? [])],
 
       // component projects (proposal-level)
@@ -416,26 +414,7 @@ export const Form1 = () => {
               />
               {errors.overallGoal && <small className="p-error block mt-1">Required</small>}
             </div>
-            <div className="md:col-span-2">
-              <label className="block mb-2">Program Team Members</label>
-              <Controller
-                control={control}
-                name="programTeamMembers"
-                rules={{ validate: (v) => (v?.length ?? 0) > 0 || "Add at least one team member" }}
-                render={({ field }) => (
-                  <Chips
-                    value={field.value}
-                    onChange={(e) => field.onChange(e.value)}
-                    separator="," placeholder="Type a name, press Enter"
-                    pt={{ input: { className: "w-full px-4" }, container: { className: "w-full border border-gray-400" } }}
-                    className={`w-full py-1 ${errors.programTeamMembers ? "p-invalid" : ""}`}
-                  />
-                )}
-              />
-              {errors.programTeamMembers && (
-                <small className="p-error block mt-1">{errors.programTeamMembers.message}</small>
-              )}
-            </div>
+            
             <div className="md:col-span-2">
               <label className="block mb-2">Cooperating Agencies</label>
               <Controller
@@ -541,11 +520,6 @@ export const Form1 = () => {
         </div>
 
         <Divider />
-
-        {/* Live JSON preview */}
-        <Fieldset legend="Preview JSON" className="rounded-2xl">
-          <pre className="whitespace-pre-wrap text-xs bg-gray-50 p-3 rounded-xl overflow-auto">{JSON.stringify(watch(), null, 2)}</pre>
-        </Fieldset>
       </form>
     </div>
   );

@@ -106,7 +106,7 @@ export const Form12Detail = () => {
       id: form12[0]?.id ?? form12.id,
       role_id: roleId,
     });
-    navigate("/event/view");
+    navigate(-2);
   };
 
   // ✅ Revise
@@ -140,7 +140,7 @@ export const Form12Detail = () => {
       remark: remarks  // ✅ Unified 'remark' field
     });
     setShowRevise(false);
-    navigate("/event/view");
+    navigate(-2);
   };
 
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;
@@ -218,7 +218,7 @@ export const Form12Detail = () => {
                   <td className="border p-2 break-words whitespace-normal">{attender.full_name || ""}</td>
                   <td className="border p-2 break-words whitespace-normal">{attender.designation || ""}</td>
                   <td className="border p-2 break-words whitespace-normal">
-                    {`${attender.department?.name || ""}${attender.program?.name ? " - " + attender.program.name : ""}`}
+                    {`${attender.department?.initial || ""}${attender.program?.initial ? " - " + attender.program.initial : ""}`}
 
                   </td>
                 </tr>

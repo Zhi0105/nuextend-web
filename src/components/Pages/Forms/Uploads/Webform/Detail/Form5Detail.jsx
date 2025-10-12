@@ -89,7 +89,7 @@ export const Form5Detail = () => {
   const onApprove = () => {
     if (!form5 || !canAction) return;
     doApprove({ token: decryptedToken, id: form5.id, role_id: roleId });
-    navigate("/event/view");
+    navigate(-2);
   };
 
   // Revise
@@ -122,7 +122,7 @@ export const Form5Detail = () => {
       remark: remarks  // ✅ Unified 'remark' field
     });
     setShowRevise(false);
-    navigate("/event/view");
+    navigate(-2);
   };
 
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;
@@ -304,49 +304,6 @@ const isFullyApproved = useMemo(() => {
         </table>
       </div>
 
-      <div className="flex gap-2 mb-6">
-        {/* Update button */}
-        {isEventOwner && !isFullyApproved && (
-          <Button
-            onClick={() => navigate("/event/form/005", { state: { formdata: form5 } })}
-            className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
-            label="Update"
-          />
-        )}
-
-        {/* Approve + Revise */}
-        {canAction && isApprovalCheckPass && (
-          <>
-            <Button
-              onClick={onApprove}
-              disabled={approveLoading}
-              className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-              label={approveLoading ? "Approving…" : "Approve"}
-            />
-            <Button
-              onClick={() => setShowRevise(true)}
-              disabled={rejectLoading}
-              className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-              label="Revise"
-            />
-          </>
-        )}
-
-        {/* ✅ PDF Button */}
-          {canDownloadPdf && (
-            <Button
-              onClick={() => downloadForm5Pdf(form5, checklist, roleId, owner)}
-              className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-              label="Download PDF"
-            />
-          )}
-          <Button
-            onClick={handleViewRemarks}
-            className="bg-blue-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-            label="View Remarks"
-          />
-      </div>
-
       {/* Consent Section */}
       <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">Consent</h2>
 
@@ -453,6 +410,49 @@ const isFullyApproved = useMemo(() => {
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <div className="flex gap-2 mb-6">
+        {/* Update button */}
+        {isEventOwner && !isFullyApproved && (
+          <Button
+            onClick={() => navigate("/event/form/005", { state: { formdata: form5 } })}
+            className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label="Update"
+          />
+        )}
+
+        {/* Approve + Revise */}
+        {canAction && isApprovalCheckPass && (
+          <>
+            <Button
+              onClick={onApprove}
+              disabled={approveLoading}
+              className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label={approveLoading ? "Approving…" : "Approve"}
+            />
+            <Button
+              onClick={() => setShowRevise(true)}
+              disabled={rejectLoading}
+              className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label="Revise"
+            />
+          </>
+        )}
+
+        {/* ✅ PDF Button */}
+          {canDownloadPdf && (
+            <Button
+              onClick={() => downloadForm5Pdf(form5, checklist, roleId, owner)}
+              className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label="Download PDF"
+            />
+          )}
+          <Button
+            onClick={handleViewRemarks}
+            className="bg-blue-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label="View Remarks"
+          />
       </div>
 
       {/* ✅ ADD THIS NEW MODAL */}

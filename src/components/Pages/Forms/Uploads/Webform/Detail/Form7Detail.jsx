@@ -78,7 +78,7 @@ export const Form7Detail = () => {
   const onApprove = () => {
     if (!formData || !canAction) return;
     doApprove({ token: decryptedToken, id: formData.id, role_id: roleId });
-    navigate("/event/view");
+    navigate(-2);
   };
 
   // ✅ Revise
@@ -111,7 +111,7 @@ export const Form7Detail = () => {
       remark: remarks  // ✅ Unified 'remark' field (not role-specific keys)
     });
     setShowRevise(false);
-    navigate("/event/view");
+    navigate(-2);
   };
 
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;
@@ -235,47 +235,6 @@ export const Form7Detail = () => {
           </div>
         </div>
 
-      
-      <div className="flex gap-2 my-6">
-        {isEventOwner && !isFullyApproved && (
-          <Button
-            onClick={() => navigate("/event/form/007", { state: { formdata: formData } })}
-            className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
-            label="Update"
-          />
-        )}
-        {canAction && isApprovalCheckPass && (
-          <>
-            <Button
-              onClick={onApprove}
-              disabled={approveLoading}
-              className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-              label={approveLoading ? "Approving…" : "Approve"}
-            />
-            <Button
-              onClick={() => setShowRevise(true)}
-              disabled={rejectLoading}
-              className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-              label="Revise"
-            />
-          </>
-        )}
-
-        {/* pdf download */}
-        {canDownloadPdf && (
-          <Button
-            onClick={() => downloadForm7Pdf(formData, owner)}
-            className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-            label="Download PDF"
-          />
-        )}
-        <Button
-          onClick={handleViewRemarks}
-          className="bg-blue-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-          label="View Remarks"
-        />
-      </div>
-
     {/* Consent Section - Only ComEx for Form7 */}
     <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">Consent</h2>
 
@@ -314,6 +273,45 @@ export const Form7Detail = () => {
         </tbody>
       </table>
     </div>
+    <div className="flex gap-2 my-6">
+        {isEventOwner && !isFullyApproved && (
+          <Button
+            onClick={() => navigate("/event/form/007", { state: { formdata: formData } })}
+            className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label="Update"
+          />
+        )}
+        {canAction && isApprovalCheckPass && (
+          <>
+            <Button
+              onClick={onApprove}
+              disabled={approveLoading}
+              className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label={approveLoading ? "Approving…" : "Approve"}
+            />
+            <Button
+              onClick={() => setShowRevise(true)}
+              disabled={rejectLoading}
+              className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label="Revise"
+            />
+          </>
+        )}
+
+        {/* pdf download */}
+        {canDownloadPdf && (
+          <Button
+            onClick={() => downloadForm7Pdf(formData, owner)}
+            className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label="Download PDF"
+          />
+        )}
+        <Button
+          onClick={handleViewRemarks}
+          className="bg-blue-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+          label="View Remarks"
+        />
+      </div>
 
     {/* ✅ ADD THIS NEW MODAL */}
     <Dialog

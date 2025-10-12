@@ -84,7 +84,7 @@ const ActivityAttendance = ({ data, eventMembers }) => {
                         : "Unknown"}
                     </td>
                     <td className="py-2 px-4 text-gray-800 border-b">
-                      {p?.user?.department?.name || "—"}
+                      {p?.user?.department?.initial || "—"}
                     </td>
                   </tr>
                 ))}
@@ -123,7 +123,7 @@ const ActivityAttendance = ({ data, eventMembers }) => {
                       : "Unknown"}
                   </td>
                   <td className="py-2 px-4 text-gray-800 border-b">
-                    {member?.user?.department?.name || "—"}
+                    {member?.user?.department?.initial || "—"}
                   </td>
                   <td className="py-2 px-4 text-gray-800 border-b capitalize">
                     {member?.role || "—"}
