@@ -89,7 +89,7 @@ export const Form4Detail = () => {
   const onApprove = () => {
     if (!form4 || !canAction) return;
     doApprove({ token: decryptedToken, id: form4.id, role_id: roleId });
-    navigate("/event/view");
+    navigate(-2);
   };
 
   // Revise
@@ -116,7 +116,7 @@ export const Form4Detail = () => {
       remark: remarks  // ✅ Unified 'remark' field
     });
     setShowRevise(false);
-    navigate("/event/view");
+    navigate(-2);
   };
 
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;
@@ -283,46 +283,6 @@ const [remarksModal, setRemarksModal] = useState({
         </div>
       </div>
 
-      {/* Action buttons */}
-      <div className="flex gap-2 mt-4">
-        {isEventOwner && !isFullyApproved && (
-          <Button
-            onClick={() => navigate("/event/form/004", { state: { formdata: form4 } })}
-            className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
-            label="Update"
-          />
-        )}
-        {canAction && isApprovalCheckPass && (
-          <>
-            <Button
-              onClick={onApprove}
-              disabled={approveLoading}
-              className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-              label={approveLoading ? "Approving…" : "Approve"}
-            />
-            <Button
-              onClick={() => setShowRevise(true)}
-              disabled={rejectLoading}
-              className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-              label="Revise"
-            />
-          </>
-        )}
-        {/* ✅ PDF Button */}
-        {canDownloadPdf && (
-          <Button
-            onClick={() => downloadForm4Pdf(form4, checklist, roleId, owner)}
-            className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-            label="Download PDF"
-          />
-        )}
-        <Button
-          onClick={handleViewRemarks}
-          className="bg-blue-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-          label="View Remarks"
-        />
-      </div>
-
       {/* Consent Section */}
       <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">Consent</h2>
 
@@ -417,6 +377,46 @@ const [remarksModal, setRemarksModal] = useState({
             </tr>
           </tbody>
         </table>
+      </div>
+
+      {/* Action buttons */}
+      <div className="flex gap-2 mt-4">
+        {isEventOwner && !isFullyApproved && (
+          <Button
+            onClick={() => navigate("/event/form/004", { state: { formdata: form4 } })}
+            className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label="Update"
+          />
+        )}
+        {canAction && isApprovalCheckPass && (
+          <>
+            <Button
+              onClick={onApprove}
+              disabled={approveLoading}
+              className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label={approveLoading ? "Approving…" : "Approve"}
+            />
+            <Button
+              onClick={() => setShowRevise(true)}
+              disabled={rejectLoading}
+              className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label="Revise"
+            />
+          </>
+        )}
+        {/* ✅ PDF Button */}
+        {canDownloadPdf && (
+          <Button
+            onClick={() => downloadForm4Pdf(form4, checklist, roleId, owner)}
+            className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label="Download PDF"
+          />
+        )}
+        <Button
+          onClick={handleViewRemarks}
+          className="bg-blue-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+          label="View Remarks"
+        />
       </div>
       {/* ✅ ADD THIS NEW MODAL */}
         <Dialog

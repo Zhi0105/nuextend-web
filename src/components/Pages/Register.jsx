@@ -43,7 +43,7 @@ export const Register = () => {
     useEffect(() => {
         if(!roleLoading) {
             console.log(roleData)
-            const includeItems = [4, 3, 5, 2]
+            const includeItems = [4, 3]
             const filteredRoles = _.filter(roleData?.data, role => includeItems.includes(role.id))
             const sortedRoles = _.sortBy(filteredRoles, role => includeItems.indexOf(role.id));
             

@@ -55,7 +55,6 @@ export const createForm1 = (payload) => {
     background,
     overall_goal,
     scholarly_connection,
-    programTeamMembers,
     cooperatingAgencies,
     componentProjects,
     projects,
@@ -73,7 +72,6 @@ export const createForm1 = (payload) => {
     overall_goal,
     scholarly_connection,
 
-    programTeamMembers: [...programTeamMembers],
     cooperatingAgencies: [...cooperatingAgencies],
     componentProjects: [...componentProjects],
 
@@ -105,7 +103,6 @@ export const updateForm1 = (payload) => {
     background,
     overall_goal,
     scholarly_connection,
-    programTeamMembers,
     cooperatingAgencies,
     componentProjects,
     projects,
@@ -120,8 +117,7 @@ export const updateForm1 = (payload) => {
     background,
     overall_goal,
     scholarly_connection,
-
-    programTeamMembers: [...programTeamMembers],
+    
     cooperatingAgencies: [...cooperatingAgencies],
     componentProjects: [...componentProjects],
 

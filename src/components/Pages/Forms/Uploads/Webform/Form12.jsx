@@ -1,5 +1,5 @@
 // src/features/forms/Form12.jsx
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { Card } from "primereact/card";
 import { InputText } from "primereact/inputtext";
@@ -58,6 +58,7 @@ export const Form12 = ({ onSubmit }) => {
     control,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm({ defaultValues, mode: "onBlur" });
 
@@ -79,14 +80,75 @@ export const Form12 = ({ onSubmit }) => {
   const { data: programs, isLoading: loadingPrograms } = getPrograms();
   const { data: departments, isLoading: loadingDepartments } = getDepartments();
 
-  const programOptions =
-    programs?.data.map((p) => ({ label: p.name, value: p.id })) || [];
+  // State to track selected departments for each attendee
+  const [selectedDepartments, setSelectedDepartments] = useState({});
+
+  // Watch all attendees' department selections
+  const attendeesData = watch("attendees");
+
+  // Update selected departments when attendees data changes
+  useEffect(() => {
+    if (attendeesData) {
+      const departmentsMap = {};
+      attendeesData.forEach((attendee, index) => {
+        departmentsMap[index] = attendee.department_id;
+      });
+      setSelectedDepartments(departmentsMap);
+    }
+  }, [attendeesData]);
+
+  // Department options
   const departmentOptions =
     departments?.data.map((d) => ({ label: d.name, value: d.id })) || [];
+
+  // Get filtered program options based on selected department for a specific attendee
+  const getProgramOptionsForAttendee = (attendeeIndex) => {
+    const selectedDepartmentId = selectedDepartments[attendeeIndex];
+    
+    if (!selectedDepartmentId || !programs?.data) {
+      return [];
+    }
+
+    // Filter programs based on department_id
+    return programs.data
+      .filter(program => program.department_id === selectedDepartmentId)
+      .map(program => ({ 
+        label: program.name, 
+        value: program.id 
+      }));
+  };
+
+  // Handle department change for an attendee
+  const handleDepartmentChange = (attendeeIndex, departmentId) => {
+    // Update the selected departments state
+    setSelectedDepartments(prev => ({
+      ...prev,
+      [attendeeIndex]: departmentId
+    }));
+
+    // Clear the program selection when department changes
+    const currentAttendees = [...(attendeesData || [])];
+    if (currentAttendees[attendeeIndex]) {
+      currentAttendees[attendeeIndex].programs_id = "";
+      reset({
+        ...watch(),
+        attendees: currentAttendees
+      });
+    }
+  };
 
   useEffect(() => {
     const srcData = Array.isArray(formdata) ? formdata?.[0] : formdata;
     if (!srcData) return;
+
+    // Initialize selected departments from form data
+    if (srcData.attendees) {
+      const initialDepartments = {};
+      srcData.attendees.forEach((attendee, index) => {
+        initialDepartments[index] = attendee.department_id;
+      });
+      setSelectedDepartments(initialDepartments);
+    }
 
     reset({
       ...srcData,
@@ -110,6 +172,7 @@ export const Form12 = ({ onSubmit }) => {
       reset(defaultValues);
       replaceAttendees(defaultValues.attendees);
       replaceNewItems(defaultValues.new_items);
+      setSelectedDepartments({});
       navigate("/event/view");
     },
     onError: (err) => {
@@ -136,34 +199,34 @@ export const Form12 = ({ onSubmit }) => {
   const disabled = creating || updating || isSubmitting;
 
   const formatDateForMysql = (date) => {
-  if (!date) return null;
-  return new Date(date).toISOString().slice(0, 19).replace("T", " ");
-};
-
-const submit = (data) => {
-  const srcData = Array.isArray(formdata) ? formdata?.[0] : formdata;
-
-  const payload = {
-    ...(srcData?.id && { id: srcData.id }),
-    event_id: event?.id || data.event_id,
-    meeting_date: formatDateForMysql(data.meeting_date),
-    call_to_order: data.call_to_order ?? "",
-    aomftlm: data.aomftlm ?? "",
-    other_matters: data.other_matters ?? "",
-    adjournment: formatDateForMysql(data.adjournment),
-    documentation: data.documentation ?? "",
-    attendees: data.attendees || [],
-    new_items: data.new_items || [],
+    if (!date) return null;
+    return new Date(date).toISOString().slice(0, 19).replace("T", " ");
   };
 
-  onSubmit?.(payload);
+  const submit = (data) => {
+    const srcData = Array.isArray(formdata) ? formdata?.[0] : formdata;
 
-  if (srcData) {
-    updateMut({ token: decryptedToken, ...payload });
-  } else {
-    createMut({ token: decryptedToken, ...payload });
-  }
-};
+    const payload = {
+      ...(srcData?.id && { id: srcData.id }),
+      event_id: event?.id || data.event_id,
+      meeting_date: formatDateForMysql(data.meeting_date),
+      call_to_order: data.call_to_order ?? "",
+      aomftlm: data.aomftlm ?? "",
+      other_matters: data.other_matters ?? "",
+      adjournment: formatDateForMysql(data.adjournment),
+      documentation: data.documentation ?? "",
+      attendees: data.attendees || [],
+      new_items: data.new_items || [],
+    };
+
+    onSubmit?.(payload);
+
+    if (srcData) {
+      updateMut({ token: decryptedToken, ...payload });
+    } else {
+      createMut({ token: decryptedToken, ...payload });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white w-full flex flex-col items-center sm:pl-[200px] py-20">
@@ -238,121 +301,158 @@ const submit = (data) => {
                 label="Add Attendee"
                 icon="pi pi-plus"
                 className={TW_BTN}
-                onClick={() =>
+                onClick={() => {
                   addAttendee({
                     full_name: "",
                     designation: "",
                     department_id: "",
                     programs_id: "",
-                  })
-                }
+                  });
+                  // Initialize department selection for new attendee
+                  const newIndex = attendeeFields.length;
+                  setSelectedDepartments(prev => ({
+                    ...prev,
+                    [newIndex]: ""
+                  }));
+                }}
               />
             </div>
-            {attendeeFields.map((row, idx) => (
-              <div
-                key={row.keyId}
-                className="border border-gray-300 rounded-lg p-4 space-y-4 relative"
-              >
-                <Button
-                  type="button"
-                  icon="pi pi-trash"
-                  className="absolute top-2 right-2 text-red-600"
-                  onClick={() => removeAttendee(idx)}
-                />
+            {attendeeFields.map((row, idx) => {
+              const programOptionsForAttendee = getProgramOptionsForAttendee(idx);
+              const selectedDepartmentId = selectedDepartments[idx];
 
-                {/* Full Name */}
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium">Full Name</label>
-                  <Controller
-                    name={`attendees.${idx}.full_name`}
-                    control={control}
-                    rules={req("Full Name")}
-                    render={({ field }) => (
-                      <InputText {...field} className="px-2 py-2 my-2" placeholder="Full Name" />
-                    )}
+              return (
+                <div
+                  key={row.keyId}
+                  className="border border-gray-300 rounded-lg p-4 space-y-4 relative"
+                >
+                  <Button
+                    type="button"
+                    icon="pi pi-trash"
+                    className="absolute top-2 right-2 text-red-600"
+                    onClick={() => {
+                      removeAttendee(idx);
+                      // Remove from selected departments state
+                      setSelectedDepartments(prev => {
+                        const newState = { ...prev };
+                        delete newState[idx];
+                        // Reindex the remaining entries
+                        const reindexed = {};
+                        Object.keys(newState).forEach((key, index) => {
+                          reindexed[index] = newState[key];
+                        });
+                        return reindexed;
+                      });
+                    }}
                   />
-                  {errors?.attendees?.[idx]?.full_name && (
-                    <span className={TW_ERR}>
-                      {errors.attendees[idx].full_name.message}
-                    </span>
-                  )}
-                </div>
 
-                {/* Designation */}
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium">Designation</label>
-                  <Controller
-                    name={`attendees.${idx}.designation`}
-                    control={control}
-                    rules={req("Designation")}
-                    render={({ field }) => (
-                      <InputText {...field} className="px-2 py-2 my-2" placeholder="Designation" />
+                  {/* Full Name */}
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium">Full Name</label>
+                    <Controller
+                      name={`attendees.${idx}.full_name`}
+                      control={control}
+                      rules={req("Full Name")}
+                      render={({ field }) => (
+                        <InputText {...field} className="px-2 py-2 my-2" placeholder="Full Name" />
+                      )}
+                    />
+                    {errors?.attendees?.[idx]?.full_name && (
+                      <span className={TW_ERR}>
+                        {errors.attendees[idx].full_name.message}
+                      </span>
                     )}
-                  />
-                  {errors?.attendees?.[idx]?.designation && (
-                    <span className={TW_ERR}>
-                      {errors.attendees[idx].designation.message}
-                    </span>
-                  )}
-                </div>
+                  </div>
 
-                {/* Department Dropdown */}
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium">Department</label>
-                  <Controller
-                    name={`attendees.${idx}.department_id`}
-                    control={control}
-                    rules={req("Department")}
-                    render={({ field }) => (
-                      <Dropdown
-                        {...field}
-                        value={field.value}
-                        options={departmentOptions}
-                        onChange={(e) => field.onChange(e.value)}
-                        placeholder={
-                          loadingDepartments ? "Loading..." : "Select Department"
-                        }
-                        filter
-                        className="w-full"
-                      />
+                  {/* Designation */}
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium">Designation</label>
+                    <Controller
+                      name={`attendees.${idx}.designation`}
+                      control={control}
+                      rules={req("Designation")}
+                      render={({ field }) => (
+                        <InputText {...field} className="px-2 py-2 my-2" placeholder="Designation" />
+                      )}
+                    />
+                    {errors?.attendees?.[idx]?.designation && (
+                      <span className={TW_ERR}>
+                        {errors.attendees[idx].designation.message}
+                      </span>
                     )}
-                  />
-                  {errors?.attendees?.[idx]?.department_id && (
-                    <span className={TW_ERR}>
-                      {errors.attendees[idx].department_id.message}
-                    </span>
-                  )}
-                </div>
+                  </div>
 
-                {/* Program Dropdown */}
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium">Program</label>
-                  <Controller
-                    name={`attendees.${idx}.programs_id`}
-                    control={control}
-                    rules={req("Program")}
-                    render={({ field }) => (
-                      <Dropdown
-                        {...field}
-                        value={field.value}
-                        options={programOptions}
-                        onChange={(e) => field.onChange(e.value)}
-                        placeholder={
-                          loadingPrograms ? "Loading..." : "Select Program"
-                        }
-                        filter
-                        className="w-full"
-                      />
+                  {/* Department Dropdown */}
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium">Department</label>
+                    <Controller
+                      name={`attendees.${idx}.department_id`}
+                      control={control}
+                      rules={req("Department")}
+                      render={({ field }) => (
+                        <Dropdown
+                          {...field}
+                          value={field.value}
+                          options={departmentOptions}
+                          onChange={(e) => {
+                            field.onChange(e.value);
+                            handleDepartmentChange(idx, e.value);
+                          }}
+                          placeholder={
+                            loadingDepartments ? "Loading..." : "Select Department"
+                          }
+                          filter
+                          className="w-full"
+                        />
+                      )}
+                    />
+                    {errors?.attendees?.[idx]?.department_id && (
+                      <span className={TW_ERR}>
+                        {errors.attendees[idx].department_id.message}
+                      </span>
                     )}
-                  />
-                  {errors?.attendees?.[idx]?.programs_id && (
-                    <span className={TW_ERR}>
-                      {errors.attendees[idx].programs_id.message}
-                    </span>
-                  )}
+                  </div>
+
+                  {/* Program Dropdown - Filtered by Department */}
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium">Program</label>
+                    <Controller
+                      name={`attendees.${idx}.programs_id`}
+                      control={control}
+                      rules={req("Program")}
+                      render={({ field }) => (
+                        <Dropdown
+                          {...field}
+                          value={field.value}
+                          options={programOptionsForAttendee}
+                          onChange={(e) => field.onChange(e.value)}
+                          placeholder={
+                            selectedDepartmentId 
+                              ? (programOptionsForAttendee.length === 0 
+                                  ? "No programs available" 
+                                  : "Select Program")
+                              : "Select Department first"
+                          }
+                          disabled={!selectedDepartmentId || programOptionsForAttendee.length === 0}
+                          filter
+                          className="w-full"
+                        />
+                      )}
+                    />
+                    {errors?.attendees?.[idx]?.programs_id && (
+                      <span className={TW_ERR}>
+                        {errors.attendees[idx].programs_id.message}
+                      </span>
+                    )}
+                    {selectedDepartmentId && programOptionsForAttendee.length === 0 && (
+                      <span className="text-[11px] text-orange-600 px-2">
+                        No programs available for selected department
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* New Items (Vertical Layout) */}
@@ -518,6 +618,7 @@ const submit = (data) => {
               reset(defaultValues);
               replaceAttendees(defaultValues.attendees);
               replaceNewItems(defaultValues.new_items);
+              setSelectedDepartments({});
             }}
           />
         </div>

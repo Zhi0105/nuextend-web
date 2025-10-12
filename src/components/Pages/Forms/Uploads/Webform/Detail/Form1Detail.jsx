@@ -18,6 +18,7 @@ export const Form1Detail = () => {
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const { event, owner, data: initialData } = state || {};
+  console.log(event);
 
   const queryClient = useQueryClient();
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
@@ -99,7 +100,7 @@ const canDownloadPdf = useMemo(() => {
   const onApprove = () => {
     if (!form1 || !canAction) return;
     doApprove({ token: decryptedToken, id: form1[0].id, role_id: roleId });
-    navigate("/event/view");
+    navigate(-2);
   };
 
   // Revise
@@ -132,7 +133,7 @@ const canDownloadPdf = useMemo(() => {
       remark: remarks  // ✅ Unified 'remark' field
     });
     setShowRevise(false);
-    navigate("/event/view");
+    navigate(-2);
   };
 
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;
@@ -233,15 +234,19 @@ const canDownloadPdf = useMemo(() => {
           <div className="ml-4 mt-4">
             <p className="font-semibold text-gray-600">2. Program Team Members</p>
             <ul className="list-disc ml-6">
-              {form1[0]?.team_members?.length > 0 ? (
-                form1[0].team_members.map((m) => <li key={m.id}>{m.name}</li>)
+              {event?.eventmember?.length > 0 ? (
+                event.eventmember.map((member) => (
+                  <li key={member.id}>
+                    {member.user?.firstname} {member.user?.middlename} {member.user?.lastname}
+                     role{member.role && ` - ${member.role}`}
+                  </li>
+                ))
               ) : (
                 <li>No team members</li>
               )}
             </ul>
           </div>
         </div>
-
         {/* D. Target Group */}
         <div className="mb-6">
           <p className="font-semibold text-gray-600">D. Target Group</p>

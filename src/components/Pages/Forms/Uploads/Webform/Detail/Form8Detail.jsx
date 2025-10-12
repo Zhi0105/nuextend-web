@@ -105,7 +105,7 @@ export const Form8Detail = () => {
   const onApprove = () => {
     if (!form8 || !canAction) return;
     doApprove({ token: decryptedToken, id: form8[0]?.id ?? form8.id, role_id: roleId });
-    navigate("/event/view");
+    navigate(-2);
   };
 
   // ✅ Revise
@@ -138,7 +138,7 @@ export const Form8Detail = () => {
       remark: remarks  // ✅ Unified 'remark' field
     });
     setShowRevise(false);
-    navigate("/event/view");
+    navigate(-2);
   };
 
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;
@@ -214,19 +214,22 @@ export const Form8Detail = () => {
             <p>{teamLeader || "No team leader specified"}</p>
           </div>
 
-          {/* Team Members */}
-          <div className="ml-4 mt-4">
-            <p className="font-semibold text-gray-600">B. Members</p>
-            <ul className="list-disc ml-6">
-              {teamMembers.length > 0 ? (
-                teamMembers.map((member, index) => (
-                  <li key={member.id || index}>{member.name}</li>
-                ))
-              ) : (
-                <li>No team members specified</li>
-              )}
-            </ul>
-          </div>
+           {/* Team Members - Using the same format as Form1Detail */}
+            <div className="ml-4 mt-4">
+              <p className="font-semibold text-gray-600">B. Members</p>
+              <ul className="list-disc ml-6">
+                {event?.eventmember?.length > 0 ? (
+                  event.eventmember.map((member) => (
+                    <li key={member.id}>
+                      {member.user?.firstname} {member.user?.middlename} {member.user?.lastname}
+                      {member.role && ` role - ${member.role}`}
+                    </li>
+                  ))
+                ) : (
+                  <li>No team members</li>
+                )}
+              </ul>
+            </div>
         </div>
 
         {/* III. REPORT PROPER */}

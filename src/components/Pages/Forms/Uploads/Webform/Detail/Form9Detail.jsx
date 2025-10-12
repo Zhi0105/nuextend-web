@@ -122,7 +122,7 @@ export const Form9Detail = () => {
       id: form9[0]?.id ?? form9.id,
       role_id: roleId,
     });
-    navigate("/event/view");
+    navigate(-2);
   };
 
   // ✅ Revise
@@ -156,7 +156,7 @@ export const Form9Detail = () => {
       remark: remarks  // ✅ Unified 'remark' field
     });
     setShowRevise(false);
-    navigate("/event/view");
+    navigate(-2);
   };
 
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;

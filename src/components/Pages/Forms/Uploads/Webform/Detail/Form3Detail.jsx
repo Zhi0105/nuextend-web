@@ -97,7 +97,7 @@ export const Form3Detail = () => {
   const onApprove = () => {
     if (!form3 || !canAction) return;
     doApprove({ token: decryptedToken, id: form3[0].id, role_id: roleId });
-    navigate("/event/view");
+    navigate(-2);
   };
 
   const handleViewRemarks = () => {
@@ -156,7 +156,7 @@ export const Form3Detail = () => {
       remark: remarks // ✅ Change to unified 'remark' field
     });
     setShowRevise(false);
-    navigate("/event/view");
+    navigate(-2);
   };
 
   const isEventOwner = !!decryptedUser?.id && decryptedUser.id === owner?.id;

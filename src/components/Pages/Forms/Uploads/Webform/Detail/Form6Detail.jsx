@@ -7,11 +7,13 @@ import { approveForm6, rejectForm6 } from "@_src/services/formservice";
 import { Dialog } from "primereact/dialog";
 import { Button } from "primereact/button";
 import { InputTextarea } from "primereact/inputtextarea";
+import { getUsers } from "@_src/services/user";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { downloadForm6Pdf } from "@_src/utils/pdf/form6Pdf";
 import { checkApprovalProcess } from "@_src/utils/approval";
 import { getFormNumber } from "@_src/utils/approval";
+
 
 export const Form6Detail = () => {
   const location = useLocation();
@@ -29,7 +31,6 @@ export const Form6Detail = () => {
 
   const [form6, setForm6] = useState(incoming ?? null);
   useEffect(() => setForm6(incoming ?? null), [incoming]);
-
 
   // normalize to object in `details`
   const details = Array.isArray(form6) ? form6[0] : form6;
@@ -93,7 +94,7 @@ export const Form6Detail = () => {
   const onApprove = () => {
     if (!details || !canAction) return;
     doApprove({ token: decryptedToken, id: details.id, role_id: roleId });
-    navigate("/event/view");
+    navigate(-2);
   };
 
   // Revise
@@ -126,7 +127,7 @@ export const Form6Detail = () => {
       remark: remarks  // ✅ Unified 'remark' field
     });
     setShowRevise(false);
-    navigate("/event/view");
+    navigate(-2);
   };
 
   const canDownloadPdf = useMemo(() => {
@@ -173,6 +174,10 @@ export const Form6Detail = () => {
     return roleMap[roleId] || 'Unknown Role';
   };
 
+    const { data: usersData } = getUsers({ 
+      token: decryptedToken 
+      });
+
   const isFullyApproved = useMemo(() => {
   if (!details) return false;
   
@@ -184,104 +189,81 @@ export const Form6Detail = () => {
   return (
     <div className="form6-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">MANIFESTATION OF CONSENT AND COOPERATION FOR THE EXTENSION PROGRAM</h2>
+<div className="bg-white shadow-md rounded-lg p-8 w-full max-w-4xl">
+  
+  <p className="text-right mb-6">
+    Date:{" "}
+    {details?.created_at
+      ? new Date(details.created_at).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+      : "_____________"}
+  </p>
 
-      <div className="bg-white shadow-md rounded-lg p-8 w-full max-w-4xl">
-        
-        <p className="text-right mb-6">
-          Date:{" "}
-          {details?.created_at
-            ? new Date(details.created_at).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })
-            : "_____________"}
-        </p>
-
+  {/* Get ComEx and ASD names from your signatories data */}
+  {(() => {
+    // Get ComEx user (role_id 1)
+    const comexUser = usersData?.data?.find(user => user.role_id === 1);
+    // Get ASD user (role_id 10)
+    const asdUser = usersData?.data?.find(user => user.role_id === 10);
+    
+return (
+      <>
         <p className="mb-1">To:<br />
-          <span className="ml-6 font-semibold">Academic Services Director</span>
+          <span className="ml-6 font-semibold">
+            {asdUser ? 
+              `${asdUser.firstname} ${asdUser.lastname}` : 
+              "Academic Services Director"}
+          </span>
         </p>
 
         <p className="mb-1">Through:<br />
-          <span className="ml-6 font-semibold">ComEx Coordinator</span>
+          <span className="ml-6 font-semibold">
+            {comexUser ? 
+              `${comexUser.firstname} ${comexUser.lastname}` : 
+              "ComEx Coordinator"}
+          </span>
         </p>
 
-        <p className="mt-6">Dear Mr. Venturina,</p>
-
-        <p className="mt-4 leading-relaxed text-justify">
-          Greetings! I, as the designated <span className="font-semibold">{details.designation ?? "_____________"}</span>, 
-          representing the <span className="font-semibold">{details.organization ?? "_____________"}</span>, 
-          would like to formally inform your good office of our willingness to enter into a partnership with the 
-          <span className="font-semibold"> {details.partnership ?? "_____________"}</span> of National University in their extension program entitled: 
-          <span className="font-semibold"> {details.entitled ?? "_____________"}</span>, which will run from 
-          <span className="font-semibold"> {details.conducted_on ?? "_____________"}</span> up until the program’s termination.
+        <p className="mt-6">
+          Dear Mr./Ms. {asdUser?.lastname || "Venturina"},
         </p>
+      </>
+    );
+  })()}
 
-        <p className="mt-4 leading-relaxed text-justify">
-          With this manifestation of consent, I also would like to establish our full cooperation on the activities and plans for this said program from the start until it ends as it may be mutually beneficial to both parties involved.
-        </p>
+  <p className="mt-4 leading-relaxed text-justify">
+    Greetings! I, as the designated <span className="font-semibold">{details.designation ?? "_____________"}</span>, 
+    representing the <span className="font-semibold">{details.organization ?? "_____________"}</span>, 
+    would like to formally inform your good office of our willingness to enter into a partnership with the 
+    <span className="font-semibold"> {details.partnership ?? "_____________"}</span> of National University in their extension program entitled: 
+    <span className="font-semibold"> {details.entitled ?? "_____________"}</span>, which will run from 
+    <span className="font-semibold"> {details.conducted_on ?? "_____________"}</span> up until the program's termination.
+  </p>
 
-        <p className="mt-4 leading-relaxed">
-          I hereby affix my signature on this date to manifest my concurrence on behalf of the 
-          <span className="font-semibold"> {details.behalf_of ?? "_____________"}</span>.
-        </p>
+  <p className="mt-4 leading-relaxed text-justify">
+    With this manifestation of consent, I also would like to establish our full cooperation on the activities and plans for this said program from the start until it ends as it may be mutually beneficial to both parties involved.
+  </p>
 
-        <p className="mt-6">Sincerely,</p>
+  <p className="mt-4 leading-relaxed">
+    I hereby affix my signature on this date to manifest my concurrence on behalf of the 
+    <span className="font-semibold"> {details.behalf_of ?? "_____________"}</span>.
+  </p>
 
-        <div className="mt-12">
-          <p className="font-semibold">__________________________</p>
-          <p>Signature Over Printed Name</p>
-          <p>Designation: {details.designation ?? "_____________"}</p>
-          <p>Organization/Institution: {details.organization ?? "_____________"}</p>
-          <p>Address: {details.address ?? "_____________"}</p>
-          <p>Mobile Number: {details.mobile_number ?? "_____________"}</p>
-          <p>Email Address: {details.email ?? "_____________"}</p>
-        </div>
-      </div>
+  <p className="mt-6">Sincerely,</p>
 
-      <div className="flex gap-2 mt-6">
-        {/* Update button (unchanged behavior) */}
-        {isEventOwner && !isFullyApproved &&  (
-          <Button
-            onClick={() => navigate("/event/form/006", { state: { formdata: details } })}
-            className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
-            label="Update"
-          />
-        )}
-
-        {/* Approve + Revise (unchanged behavior) */}
-        {canAction && isApprovalCheckPass && (
-          <>
-            <Button
-              onClick={onApprove}
-              disabled={approveLoading}
-              className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-              label={approveLoading ? "Approving…" : "Approve"}
-            />
-            <Button
-              onClick={() => setShowRevise(true)}
-              disabled={rejectLoading}
-              className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-              label="Revise"
-            />
-          </>
-        )}
-
-        {/* download pdf*/}
-        {canDownloadPdf && (
-          <Button
-            onClick={() => downloadForm6Pdf(details, routeState?.owner)}
-            className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-            label="Download PDF"
-          />
-        )}
-
-        <Button
-          onClick={handleViewRemarks}
-          className="bg-blue-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
-          label="View Remarks"
-        />
-      </div>
+  <div className="mt-12">
+    <p className="font-semibold">__________________________</p>
+    <p>Signature Over Printed Name</p>
+    <p>Designation: {details.designation ?? "_____________"}</p>
+    <p>Organization/Institution: {details.organization ?? "_____________"}</p>
+    <p>Address: {details.address ?? "_____________"}</p>
+    <p>Mobile Number: {details.mobile_number ?? "_____________"}</p>
+    <p>Email Address: {details.email ?? "_____________"}</p>
+  </div>
+</div>
 
       {/* Consent Section - Only ComEx for Form6 */}
       <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">Consent</h2>
@@ -320,6 +302,49 @@ export const Form6Detail = () => {
             </tr>
           </tbody>
         </table>
+      </div>
+      <div className="flex gap-2 mt-6">
+        {/* Update button (unchanged behavior) */}
+        {isEventOwner && !isFullyApproved &&  (
+          <Button
+            onClick={() => navigate("/event/form/006", { state: { formdata: details } })}
+            className="bg-[#013a63] text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label="Update"
+          />
+        )}
+
+        {/* Approve + Revise (unchanged behavior) */}
+        {canAction && isApprovalCheckPass && (
+          <>
+            <Button
+              onClick={onApprove}
+              disabled={approveLoading}
+              className="bg-emerald-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label={approveLoading ? "Approving…" : "Approve"}
+            />
+            <Button
+              onClick={() => setShowRevise(true)}
+              disabled={rejectLoading}
+              className="bg-rose-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+              label="Revise"
+            />
+          </>
+        )}
+
+        {/* download pdf*/}
+        {canDownloadPdf && (
+          <Button
+            onClick={() => downloadForm6Pdf(details, routeState?.owner, usersData)}
+            className="bg-indigo-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+            label="Download PDF"
+          />
+        )}
+
+        <Button
+          onClick={handleViewRemarks}
+          className="bg-blue-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
+          label="View Remarks"
+        />
       </div>
 
       {/* ✅ ADD THIS NEW MODAL */}

@@ -189,7 +189,26 @@ export const Create = () => {
     }
 
     const modelDataList = decryptedUser?.role_id === 1 ? modelData?.data : _.dropRight(modelData?.data)
-
+    const getDisabledDates = () => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to start of day
+        
+        const fourWeeksLater = new Date();
+        fourWeeksLater.setDate(today.getDate() + 28); // 4 weeks = 28 days
+        fourWeeksLater.setHours(23, 59, 59, 999); // Set to end of day
+        
+        // Create an array of all dates between today and 4 weeks later
+        const disabledDates = [];
+        const currentDate = new Date(today);
+        
+        while (currentDate <= fourWeeksLater) {
+            disabledDates.push(new Date(currentDate));
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        return disabledDates;
+    };
+    
     return (
         <div className="create-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] mt-[50px]">
             <form
@@ -200,6 +219,7 @@ export const Create = () => {
                     Create event:
                 </label>
                 <Stepper ref={stepperRef} linear>
+                    {/*SELECT MODEL*/}
                     <StepperPanel>
                         <div className="models">
                             <Controller
@@ -238,6 +258,7 @@ export const Create = () => {
                             />
                         </div>
                     </StepperPanel>
+                    {/*EVENT DETAIL*/}
                     <StepperPanel>
                         <div className="flex flex-col gap-4">
                             <div className="term">
@@ -478,7 +499,6 @@ export const Create = () => {
                                     </p>
                                 )}
                             </div>
-                            {/* Add Calendar Picker for implement_date */}
                             <div className="implement_date">
                                 <label htmlFor="implement_date" className="block text-sm font-medium text-gray-700 mb-1">
                                 </label>
@@ -486,25 +506,51 @@ export const Create = () => {
                                     control={control}
                                     rules={{
                                     required: true,
+                                    validate: {
+                                        notInRestrictedPeriod: (value) => {
+                                        if (!value) return true; // Let required rule handle empty values
+                                        const disabledDates = getDisabledDates();
+                                        const selectedDate = new Date(value);
+                                        selectedDate.setHours(0, 0, 0, 0);
+                                        
+                                        // Check if selected date is in the disabled range
+                                        return !disabledDates.some(disabledDate => 
+                                            disabledDate.getTime() === selectedDate.getTime()
+                                        );
+                                        }
+                                    }
                                     }}
-                                    render={({ field: { onChange, value } }) => (
-                                    <Calendar
+                                    render={({ field: { onChange, value } }) => {
+                                    const disabledDates = getDisabledDates();
+                                    const minSelectableDate = new Date(disabledDates[disabledDates.length - 1]);
+                                    minSelectableDate.setDate(minSelectableDate.getDate() + 1); // Day after last disabled date
+                                    
+                                    return (
+                                        <Calendar
                                         id="implement_date"
-                                        value={value} // ✅ Keep as Date object
+                                        value={value}
                                         onChange={(e) => {
-                                        onChange(e.value); // ✅ store Date object directly
+                                            onChange(e.value);
                                         }}
                                         dateFormat="yy-mm-dd"
-                                        placeholder="Select implementation date"
+                                        placeholder="Select Event start date"
                                         className={`w-full ${errors.implement_date && 'border border-red-500'}`}
                                         showIcon
-                                    />
-                                    )}
+                                        disabledDates={disabledDates}
+                                        minDate={minSelectableDate}
+                                        />
+                                    );
+                                    }}
                                     name="implement_date"
                                 />
-                                {errors.implement_date && (
+                                {errors.implement_date?.type === 'notInRestrictedPeriod' && (
                                     <p className="text-sm italic mt-1 text-red-400 indent-2">
-                                    Implementation date is required.*
+                                    Implementation date cannot be within the next 4 weeks from today.
+                                    </p>
+                                )}
+                                {errors.implement_date?.type === 'required' && (
+                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
+                                    Event date is required.*
                                     </p>
                                 )}
                             </div>
@@ -529,6 +575,7 @@ export const Create = () => {
                             </div>
                         </div>
                     </StepperPanel> 
+                    {/*EVENT MEMBER*/}
                     <StepperPanel>
                         <div>
                             <div className="w-full capitalize flex flex-col gap-2">
@@ -670,27 +717,7 @@ export const Create = () => {
                             </div>
                         </div>
                     </StepperPanel>
-
-                    {/* <StepperPanel>
-                        <div className="flex pt-4 justify-between px-4">
-                                <Button
-                                className="bg-[#2211cc] text-[#c7c430] px-4 py-2"
-                                label="Back"
-                                severity="secondary"
-                                onClick={() => stepperRef.current.prevCallback()}
-                                />
-                                <Button
-                                className="bg-[#2211cc] text-[#c7c430] px-4 py-2"
-                                label="Next"
-                                iconPos="right"
-                                onClick={() => {
-                                    trigger().then((valid) => {
-                                    if (valid) stepperRef.current.nextCallback();
-                                    });
-                                }}
-                                />
-                        </div>
-                    </StepperPanel> */}
+                    {/*EVENT ACTIVITIES*/}
                     <StepperPanel>
                         <div>
                             <div className="w-full capitalize flex flex-col gap-2">

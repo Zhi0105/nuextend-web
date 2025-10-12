@@ -37,11 +37,13 @@ export const downloadForm8Pdf = async (form8, event, owner, roleId) => {
 
   // support either an array [obj] or a direct object
   const f = Array.isArray(form8) ? form8[0] || {} : form8 || {};
-  const form1Data = event?.form1?.[0];
   
-  // Get team leader and members from form1
-  const teamLeader = event?.user ? `${event.user.firstname} ${event.user.middlename} ${event.user.lastname}` : "";
-  const teamMembers = form1Data?.team_members || [];
+  // Get team leader and members using the same format as Form1
+  const teamLeader = event?.user ? 
+    `${event.user.firstname} ${event.user.middlename} ${event.user.lastname}`.trim() : 
+    "No team leader specified";
+  
+  const teamMembers = event?.eventmember || [];
   
   const proposedTitle = event?.eventName || "—";
   const introduction = f?.introduction || "—";
@@ -131,11 +133,11 @@ export const downloadForm8Pdf = async (form8, event, owner, roleId) => {
     margin: [0, 5, 0, 5] 
   });
   content.push({ 
-    text: teamLeader || "No team leader specified", 
+    text: teamLeader, 
     margin: [20, 0, 0, 10] 
   });
 
-  // B. Members
+  // B. Members - Using the same format as Form1
   content.push({ 
     text: "B. Members", 
     bold: true, 
@@ -144,14 +146,18 @@ export const downloadForm8Pdf = async (form8, event, owner, roleId) => {
   
   if (teamMembers.length > 0) {
     teamMembers.forEach((member) => {
+      const memberName = `${member.user?.firstname || ""} ${member.user?.middlename || ""} ${member.user?.lastname || ""}`.trim();
+      const roleText = member.role ? ` role - ${member.role}` : '';
+      const fullText = `• ${memberName}${roleText}`;
+      
       content.push({ 
-        text: `• ${member.name || "—"}`, 
+        text: fullText, 
         margin: [20, 2, 0, 2] 
       });
     });
   } else {
     content.push({ 
-      text: "No team members specified", 
+      text: "• No team members", 
       margin: [20, 0, 0, 10] 
     });
   }
