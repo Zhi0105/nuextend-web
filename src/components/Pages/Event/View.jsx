@@ -159,11 +159,13 @@ export const View = () => {
     if (!Array.isArray(forms) || _.isEmpty(forms)) return false;
     
 
+    console.log(data)
+
     //  FOR COMMEX
     if(is_commex_owner === 1) {
-        return _.every(forms, (form) =>
-      _.every(["is_commex", "is_asd", "is_ad"], (key) => _.get(form, key, false))
-    );
+          return _.every(forms, (form) =>
+        _.every(["is_commex", "is_asd", "is_ad"], (key) => _.get(form, key, false))
+      );
     }
 
     // Check if EVERY form has all required boolean flags as true
