@@ -151,6 +151,8 @@ export const View = () => {
   const form9 = data?.form9 || {};
   const form10 = data?.form10 || {};
 
+  console.log(data)
+
   // Function to check if a single form has all approvals true
   const isFormComplete = (forms) => {
     // If forms is empty or not an array, return false
