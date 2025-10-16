@@ -223,7 +223,7 @@ export const setNotifBadge = (event) => {
     const formArray = event[formKey]
 
     if (Array.isArray(formArray) && formArray.length > 0) {
-      const isApproved = formArray.some(item => item.is_approved === 1)
+      const isApproved = formArray.some(item => item.is_approved === 1 || item.is_approved === true)
       if (isApproved) {
         approvedCount++
       }
