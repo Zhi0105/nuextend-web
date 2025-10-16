@@ -44,7 +44,7 @@ export const SetTermValue = () => {
     } else if (currentDate.isBetween(thirdTermStart, thirdTermEnd, null, '[]')) {
         return `${year} 3rd term`;
     }
-  
+
     return 'Out of range'; // If no term is matched (shouldn't happen)
 }
 // eslint-disable-next-line react-refresh/only-export-components
@@ -207,4 +207,9 @@ export const toMemberObjects = (arr) =>
 
 export const SetFormCodeNavigate = (formCode) => {
     return `${_.last(formCode.split('-'))}`
+}
+
+export const setNotifBadge = (event) => {
+    const count = Object.keys(event).filter(key => key.startsWith('form') && Array.isArray(event[key]) && event[key].length > 0).length
+    return count
 }

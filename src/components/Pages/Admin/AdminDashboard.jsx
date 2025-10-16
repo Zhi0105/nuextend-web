@@ -5,6 +5,19 @@ import { useUserStore } from '@_src/store/auth';
 import { DecryptString } from '@_src/utils/helpers';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from 'primereact/card';
+import { SetTermValue } from '@_src/utils/helpers';
+import { 
+  getTotalVolunteer, 
+  getTotalRoleCount, 
+  getAllActiveStatusEvents,
+  getModelCount,
+  getTotalUtilizedBudget,
+  getAllPendingEvents,
+  getEventStatus,
+  getTop3Org,
+  getVolunteerPerDepartment,
+  getVolunteerPerRole
+} from '@_src/utils/dashboard';
 import {
   PieChart, Pie, Cell,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
@@ -16,12 +29,14 @@ export const AdminDashboard = () => {
   const decryptedToken = token && DecryptString(token);
   const { data: termData, isLoading: termLoading } = getTerms({ token: decryptedToken });
   const [selectedTerm, setSelectedTerm] = useState(null);
+  const [reports, setReports] = useState([])
 
   const { mutate: getReport, isLoading: getReportLoading } = useMutation({
     mutationFn: getDashBoardReport,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-      console.log("Report data:", data?.data);
+      // console.log("Report data:", data?.data);
+      setReports(data?.data)
     },
     onError: (err) => {
       console.log("@GDE", err)
@@ -34,13 +49,18 @@ export const AdminDashboard = () => {
     }
   }, [selectedTerm, decryptedToken, getReport]);
 
-  if (termLoading || getReportLoading) {
-    return (
-      <div className="dashboard-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px]">
-        Loading....
-      </div>
-    );
+  useEffect(() => {
+  if (termData && termData.terms && !selectedTerm) {
+    const defaultTerm = SetTermValue(); // your helper’s returned term name
+    const foundTerm = termData.terms.find(term => term.name === defaultTerm);
+
+    if (foundTerm) {
+      setSelectedTerm(foundTerm.name);
+    }
   }
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [termData]);
+
 
   const termOptions = termData?.terms?.map((term) => ({
     label: `Tri-Sem: ${term.name}`,
@@ -52,13 +72,17 @@ export const AdminDashboard = () => {
     { name: "Students", value: 250 },
     { name: "Faculty", value: 70 },
   ];
-  const barData = [
-    { name: "CBA", volunteers: 120 },
-    { name: "Engineering", volunteers: 80 },
-    { name: "CS/IT", volunteers: 70 },
-    { name: "Nursing", volunteers: 50 },
-  ];
+
   const COLORS = ['#3B3FA8', '#F7B500'];
+
+  
+  if (termLoading || getReportLoading) {
+    return (
+      <div className="dashboard-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px]">
+        Loading....
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-main min-h-screen bg-white w-full flex flex-col xs:pl-[0px] sm:pl-[200px] p-20 mx-2">
@@ -86,61 +110,58 @@ export const AdminDashboard = () => {
         {/* Top Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           <Card title="Total Volunteers" className="shadow-md border border-gray-100">
-            <div className="text-4xl font-bold text-indigo-600">320</div>
-            <p className="text-sm text-gray-500 mt-1">Students: 250 | Faculty: 70</p>
+            <div className="text-4xl font-bold text-indigo-600">{reports?.length && getTotalVolunteer(reports)}</div>
+            <p className="text-sm text-gray-500 mt-1">Students: {reports?.length && getTotalRoleCount(reports, "student")} | Faculty: {reports?.length && getTotalRoleCount(reports, "faculty")}</p>
           </Card>
 
           <Card title="Active Events" className="shadow-md border border-gray-100">
-            <div className="text-4xl font-bold text-indigo-600">12</div>
-            <p className="text-sm text-gray-500 mt-1">5 Programs, 7 Projects</p>
+            <div className="text-4xl font-bold text-indigo-600">{reports?.length && getAllActiveStatusEvents(reports)}</div>
+            <p className="text-sm text-gray-500 mt-1">{reports?.length && getModelCount(reports, 1)} Outreach, {reports?.length && getModelCount(reports, 2)} Project</p>
+            <p className="text-sm text-gray-500 mt-1">{reports?.length && getModelCount(reports, 3)} Program, {reports?.length && getModelCount(reports, 4)} Emergency</p>
           </Card>
 
           <Card title="Budget Utilized" className="shadow-md border border-gray-100">
-            <div className="text-4xl font-bold text-indigo-600">₱150,000</div>
-            <p className="text-sm text-gray-500 mt-1">Out of ₱200,000 allocated</p>
+            <div className="text-4xl font-bold text-indigo-600">{reports?.length && getTotalUtilizedBudget(reports)}</div>
           </Card>
 
-          <Card title="Pending Approvals" className="shadow-md border border-gray-100">
-            <div className="text-4xl font-bold text-indigo-600">6</div>
-            <p className="text-sm text-gray-500 mt-1">Requires Signatory</p>
+          <Card title="Pending/Planning" className="shadow-md border border-gray-100">
+            <div className="text-4xl font-bold text-indigo-600">{reports?.length && getAllPendingEvents(reports)}</div>
+            <p className="text-sm text-gray-500 mt-1">Requires Approval</p>
           </Card>
         </div>
 
              {/* Existing 3 Info Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
           <Card title="Events by Status" className="shadow-md border border-gray-100">
             <ul className="text-sm text-gray-700 space-y-1 mt-2">
-              <li>✅ Completed: 8</li>
-              <li>🟡 Ongoing: 12</li>
-              <li>🕓 Pending: 6</li>
-              <li>❌ Cancelled: 2</li>
+              <li>✅ Completed: {reports?.length && getEventStatus(reports, 2)}</li>
+              <li>🟡 Ongoing: {reports?.length && getEventStatus(reports, 10)}</li>
+              <li>🕓 Pending: {reports?.length && getEventStatus(reports, 1)}</li>
             </ul>
           </Card>
 
           <Card title="Top Organizations" className="shadow-md border border-gray-100">
             <ul className="text-sm text-gray-700 space-y-1 mt-2">
-              <li>🏥 Red Cross Youth – 5 Events</li>
-              <li>🎓 NSTP Class – 4 Events</li>
-              <li>🏛 Supreme Student Council – 3 Events</li>
+              {reports && (
+                getTop3Org(reports).map((item, idx) => {
+                  return(
+                    <li key={idx}>{item.name} - {item.count} Events</li>
+                  )
+                })
+              )}
             </ul>
           </Card>
 
-          <Card title="Budget by Term" className="shadow-md border border-gray-100">
-            <ul className="text-sm text-gray-700 space-y-1 mt-2">
-              <li>1st Term: ₱150,000 / ₱200,000</li>
-              <li>2nd Term: ₱80,000 / ₱180,000</li>
-              <li>3rd Term: ₱0 (Upcoming)</li>
-            </ul>
-          </Card>
         </div>
 
         {/* Charts + Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5 mt-10 w-full justify-center items-center">
           
           {/* Bar Chart */}
-          <Card title="Volunteers per Department" className="shadow-md border border-gray-100 col-span-3">
+          {getVolunteerPerDepartment(reports)?.length && (
+            <Card title="Volunteers per Department" className="shadow-md border border-gray-100 col-span-3">
             <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={barData}>
+              <BarChart data={getVolunteerPerDepartment(reports)}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
@@ -150,13 +171,15 @@ export const AdminDashboard = () => {
               </BarChart>
             </ResponsiveContainer>
           </Card>
+          )}
 
           {/* Pie Chart */}
+        {getVolunteerPerRole(reports)?.length && (
           <Card title="Students vs Faculty" className="shadow-md border border-gray-100  col-span-2 flex justify-center items-center">
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
-                  data={pieData}
+                  data={getVolunteerPerRole(reports)}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
@@ -173,7 +196,7 @@ export const AdminDashboard = () => {
               </PieChart>
             </ResponsiveContainer>
           </Card>
-
+        )}
           
         </div>
 

@@ -56,28 +56,6 @@ export const Emergency = () => {
   return (
     <div className="emergency-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-0 sm:pl-[200px] py-20">
         <div className="w-full max-w-5xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-                    {/* INSTRUCTIONS with expand/minimize */}
-                    <div className="mb-5 border rounded-lg">
-                        <div
-                            className="flex items-center justify-between bg-blue-100 px-4 py-2 cursor-pointer"
-                            onClick={() => setShowInstruction(!showInstruction)}
-                        >
-                            {/* left side: icon + text */}
-                            <div className="flex items-center gap-2">
-                                <PiWarningCircleThin className="text-blue-800 text-3xl" />
-                                <h2 className="font-semibold text-slate-800">Instruction</h2>
-                            </div>
-    
-                            {/* right side: chevron */}
-                            <i className={`pi ${showInstruction ? "pi-chevron-up" : "pi-chevron-down"} text-slate-600`}></i>
-                        </div>
-    
-                        {showInstruction && (
-                            <div className="p-4 bg-blue-50">
-                                <Instruction model_id={event?.model_id} />
-                            </div>
-                        )}
-                    </div>
                     {/* header */}
                     <div className="bg-[#153e6f] px-4 py-3 text-center font-bold text-white">
                         Emergency Forms

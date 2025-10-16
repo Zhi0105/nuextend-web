@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getEvents, getUserEvents, eventPost, eventTerminate } from "@_src/services/event";
 import { EventContext } from "@_src/contexts/EventContext";
 import { useUserStore } from "@_src/store/auth";
-import { DecryptString, DecryptUser } from "@_src/utils/helpers";
+import { DecryptString, DecryptUser, setNotifBadge } from "@_src/utils/helpers";
 import { DataTable } from "primereact/datatable";
 import { Column } from "primereact/column";
 import { FilterMatchMode } from "primereact/api";
@@ -11,6 +11,7 @@ import { InputText } from "primereact/inputtext";
 import { Dropdown } from "primereact/dropdown";
 import { Tooltip } from "primereact/tooltip";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { Badge } from "primereact/badge";
 import { getUsers } from "@_src/services/user";
 import { toast } from "react-toastify";
 import _ from "lodash";
@@ -36,6 +37,7 @@ export const View = () => {
   const decryptedUser = useMemo(() => (token ? DecryptUser(user) : null), [token, user]);
   const roleId = decryptedUser?.role_id;
   const { data: userData } = getUsers({ token: decryptedToken }) 
+  
 
   const needsAllEvents = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
   const needsUserEvents = !needsAllEvents;
@@ -217,7 +219,7 @@ export const View = () => {
 
   // Owner → also treated as "volunteer" (or you can change to "organizer" if desired)
   const ownerData = eventOwner
-    ? [{ name: formatName(eventOwner), role: "volunteer" }]
+    ? [{ name: formatName(eventOwner), role: "leader" }]
     : [];
 
   // Merge and deduplicate by name
@@ -271,24 +273,52 @@ export const View = () => {
   const actionBodyTemplateForActivity = (rowData) => {
     const eventRow = rowData?.__event || rowData;
 
+    const eventOwnerId =
+    eventRow?.created_by ??
+    eventRow?.user_id ??
+    eventRow?.owner_id ??
+    eventRow?.author_id ??
+    null;
+
+    const isEventOwner = !!decryptedUser?.id && decryptedUser.id === eventOwnerId;
+
     if ([1].includes(roleId)) {
       return (
         <div className="flex gap-8">
-          <button onClick={() => handleUpdateEventNavigation(eventRow)}>
-          <Tooltip target=".edit" content="Edit" position="right" />
-          <PiNotePencil className="edit w-7 h-7 text-[#364190]" />
-        </button>
+          {isEventOwner && (
+            <button 
+              disabled={!isEventOwner}
+              onClick={() => handleUpdateEventNavigation(eventRow)}
+            >
+              <Tooltip target=".edit" content="Edit" position="right" />
+              <PiNotePencil className="edit w-7 h-7 text-[#364190]" />
+          </button>
+          )}
           <button onClick={() => handleDetailEventNavigation(eventRow)}>
             <Tooltip target=".view" content="View" position="right" />
             <PiListMagnifyingGlass className="view w-7 h-7 text-[#364190]" />
           </button>
-          <button onClick={() => navigate("/event/activities", { state: eventRow })}>
+          <button
+            className="p-overlay-badge"
+            onClick={() => navigate("/event/activities", { state: eventRow })}
+          >
             <Tooltip target=".activities" content="Activities" position="right" />
             <VscLayoutActivitybarLeft className="activities w-7 h-7 text-[#364190]" />
+            {eventRow?.activity.length > 0 &&
+              <Badge severity="info" value={`${eventRow?.activity.length}`} />
+            }
           </button>
-          <button onClick={() => handleFormNavigation(eventRow)}>
+          <button 
+            className="p-overlay-badge" 
+            onClick={() => handleFormNavigation(eventRow)}
+          >
             <Tooltip target=".form" content="Form" position="right" />
             <FaWpforms className="form w-7 h-7 text-[#364190]" />
+            {setNotifBadge(eventRow) > 0 ? (
+              <Badge severity="info" value={`${setNotifBadge(eventRow)}`} />
+            ) : (
+              <Badge severity="danger" value="!" />
+            )}
           </button>
           <button
             disabled={eventRow?.is_posted || eventPostLoading}
@@ -318,6 +348,7 @@ export const View = () => {
               <PiCertificate className="generate w-7 h-7 text-[#364190]" />
             </button>
           )}
+          {isEventOwner && (
           <button
             disabled={removeEventLoading}
             onClick={() => removeEvent({ token: decryptedToken, id: eventRow?.id })}
@@ -325,6 +356,7 @@ export const View = () => {
             <Tooltip target=".remove" content="remove" position="right" />
             <FaTrash className="remove w-7 h-7 text-[#364190]" />
           </button>
+          )}
           
         </div>
       );
@@ -333,9 +365,14 @@ export const View = () => {
     if ([9, 10, 11].includes(roleId)) {
       return (
         <div className="flex gap-8">
-          <button onClick={() => handleFormNavigation(eventRow)}>
+          <button className="p-overlay-badge" onClick={() => handleFormNavigation(eventRow)}>
             <Tooltip target=".form" content="Form" position="right" />
             <FaWpforms className="form w-7 h-7 text-[#364190]" />
+            {setNotifBadge(eventRow) > 0 ? (
+              <Badge severity="info" value={`${setNotifBadge(eventRow)}`} />
+            ) : (
+              <Badge severity="danger" value="!" />
+            )}
           </button>
           <button onClick={() => navigate("/event/activities", { state: eventRow, creatorUserId: eventRow.user?.id })}>
             <Tooltip target=".activities" content="Activities" position="right" />
@@ -347,27 +384,43 @@ export const View = () => {
 
     return (
       <div className="flex gap-8">
-        <button onClick={() => handleUpdateEventNavigation(eventRow)}>
-          <Tooltip target=".edit" content="Edit" position="right" />
-          <PiNotePencil className="edit w-7 h-7 text-[#364190]" />
-        </button>
+        {isEventOwner && (
+            <button 
+              disabled={!isEventOwner}
+              onClick={() => handleUpdateEventNavigation(eventRow)}
+            >
+              <Tooltip target=".edit" content="Edit" position="right" />
+              <PiNotePencil className="edit w-7 h-7 text-[#364190]" />
+          </button>
+          )}
         <button onClick={() => handleDetailEventNavigation(eventRow)}>
           <Tooltip target=".view" content="View" position="right" />
           <PiListMagnifyingGlass className="view w-7 h-7 text-[#364190]" />
         </button>
-        <button onClick={() => navigate("/event/activities", { state: eventRow })}>
+        <button
+          className="p-overlay-badge"
+          onClick={() => navigate("/event/activities", { state: eventRow })}
+        >
           <Tooltip target=".activities" content="Activities" position="right" />
           <VscLayoutActivitybarLeft className="activities w-7 h-7 text-[#364190]" />
+          {eventRow?.activity.length > 0 &&
+            <Badge severity="info" value={`${eventRow?.activity.length}`} />
+          }
         </button>
-        <button onClick={() => handleFormNavigation(eventRow)}>
+        <button className="p-overlay-badge" onClick={() => handleFormNavigation(eventRow)}>
           <Tooltip target=".form" content="Form" position="right" />
           <FaWpforms className="form w-7 h-7 text-[#364190]" />
+          {setNotifBadge(eventRow) > 0 ? (
+            <Badge severity="info" value={`${setNotifBadge(eventRow)}`} />
+          ) : (
+            <Badge severity="danger" value="!" />
+          )}
         </button>
         <button onClick={() => navigate("/event/announcement", { state: { event_id: eventRow.id, event: eventRow } })}>
           <Tooltip target=".announcement" content="Announcements" position="right" />
           <FaBullhorn className="announcement w-7 h-7 text-[#364190]" />
         </button>
-
+        {isEventOwner && (
         <button
           disabled={removeEventLoading}
           onClick={() => removeEvent({ token: decryptedToken, id: eventRow?.id })}
@@ -375,6 +428,7 @@ export const View = () => {
           <Tooltip target=".remove" content="remove" position="right" />
           <FaTrash className="remove w-7 h-7 text-[#364190]" />
         </button>
+        )} 
       </div>
     );
   };
