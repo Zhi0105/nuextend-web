@@ -158,7 +158,7 @@ export const AdminDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5 mt-10 w-full justify-center items-center">
           
           {/* Bar Chart */}
-          {getVolunteerPerDepartment(reports)?.length && (
+          {getVolunteerPerDepartment(reports)?.length > 0 && (
             <Card title="Volunteers per Department" className="shadow-md border border-gray-100 col-span-3">
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={getVolunteerPerDepartment(reports)}>
@@ -174,7 +174,7 @@ export const AdminDashboard = () => {
           )}
 
           {/* Pie Chart */}
-        {getVolunteerPerRole(reports)?.length && (
+        {getVolunteerPerRole(reports)?.length > 0 && (
           <Card title="Students vs Faculty" className="shadow-md border border-gray-100  col-span-2 flex justify-center items-center">
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>

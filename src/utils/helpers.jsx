@@ -210,6 +210,26 @@ export const SetFormCodeNavigate = (formCode) => {
 }
 
 export const setNotifBadge = (event) => {
-    const count = Object.keys(event).filter(key => key.startsWith('form') && Array.isArray(event[key]) && event[key].length > 0).length
-    return count
+  // Get total forms that have items (length > 0)
+  const totalForms = Object.keys(event)
+    .filter(key => key.startsWith('form') && Array.isArray(event[key]) && event[key].length > 0)
+    .length
+
+  let approvedCount = 0
+
+  // Loop through all existing forms only
+  for (let i = 1; i <= 12; i++) {
+    const formKey = `form${i}`
+    const formArray = event[formKey]
+
+    if (Array.isArray(formArray) && formArray.length > 0) {
+      const isApproved = formArray.some(item => item.is_approved === 1)
+      if (isApproved) {
+        approvedCount++
+      }
+    }
+  }
+
+  const remainingCount = totalForms - approvedCount
+  return remainingCount
 }

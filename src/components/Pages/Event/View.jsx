@@ -299,14 +299,11 @@ export const View = () => {
             <PiListMagnifyingGlass className="view w-7 h-7 text-[#364190]" />
           </button>
           <button
-            className="p-overlay-badge"
             onClick={() => navigate("/event/activities", { state: eventRow })}
           >
             <Tooltip target=".activities" content="Activities" position="right" />
             <VscLayoutActivitybarLeft className="activities w-7 h-7 text-[#364190]" />
-            {eventRow?.activity.length > 0 &&
-              <Badge severity="info" value={`${eventRow?.activity.length}`} />
-            }
+        
           </button>
           <button 
             className="p-overlay-badge" 
@@ -317,7 +314,7 @@ export const View = () => {
             {setNotifBadge(eventRow) > 0 ? (
               <Badge severity="info" value={`${setNotifBadge(eventRow)}`} />
             ) : (
-              <Badge severity="danger" value="!" />
+              null
             )}
           </button>
           <button
@@ -371,7 +368,7 @@ export const View = () => {
             {setNotifBadge(eventRow) > 0 ? (
               <Badge severity="info" value={`${setNotifBadge(eventRow)}`} />
             ) : (
-              <Badge severity="danger" value="!" />
+              null
             )}
           </button>
           <button onClick={() => navigate("/event/activities", { state: eventRow, creatorUserId: eventRow.user?.id })}>
@@ -398,14 +395,10 @@ export const View = () => {
           <PiListMagnifyingGlass className="view w-7 h-7 text-[#364190]" />
         </button>
         <button
-          className="p-overlay-badge"
           onClick={() => navigate("/event/activities", { state: eventRow })}
         >
           <Tooltip target=".activities" content="Activities" position="right" />
           <VscLayoutActivitybarLeft className="activities w-7 h-7 text-[#364190]" />
-          {eventRow?.activity.length > 0 &&
-            <Badge severity="info" value={`${eventRow?.activity.length}`} />
-          }
         </button>
         <button className="p-overlay-badge" onClick={() => handleFormNavigation(eventRow)}>
           <Tooltip target=".form" content="Form" position="right" />
@@ -413,7 +406,7 @@ export const View = () => {
           {setNotifBadge(eventRow) > 0 ? (
             <Badge severity="info" value={`${setNotifBadge(eventRow)}`} />
           ) : (
-            <Badge severity="danger" value="!" />
+            null
           )}
         </button>
         <button onClick={() => navigate("/event/announcement", { state: { event_id: eventRow.id, event: eventRow } })}>
