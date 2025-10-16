@@ -24,6 +24,7 @@ export const UpdatedOutreach = () => {
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedUser = token && DecryptUser(user)
     const [showInstruction, setShowInstruction] = useState(false);
+    console.log(event);
 
     const eventOwnerId =
     event?.created_by ??
@@ -86,7 +87,7 @@ export const UpdatedOutreach = () => {
                     </div>
                     {/* header */}
                     <div className="bg-[#153e6f] px-4 py-3 text-center font-bold text-white">
-                        Outreach Forms
+                        {event?.name || 'Event'} Outreach Forms
                     </div>
                     {/* table */}
                     <div className="overflow-x-auto">

@@ -146,11 +146,11 @@ export const Report = () => {
 
   return (
     <div className="report-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem] px-4">
-      <h1 className="text-2xl font-semibold mb-4">Progress Reports</h1>
+      <h1 className="text-2xl font-semibold mb-4">	{data?.name || 'Event'} Post-Activity Report</h1>
 
       {isCreator && (
         <Button
-          label="Create Progress Report"
+          label="Create Form 14"
           className="bg-[#2211cc] text-[#c7c430] font-bold rounded-lg px-4 py-2 mb-6"
           onClick={() => {
             if (!activities_id) {
