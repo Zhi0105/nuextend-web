@@ -14,7 +14,6 @@ import {
 import { Tooltip } from "primereact/tooltip";
 import { getFormStatus } from "@_src/utils/approval";
 import _ from "lodash";
-import { useState } from "react";
 import { PiWarningCircleThin } from "react-icons/pi";
 
 export const Emergency = () => {
@@ -23,7 +22,6 @@ export const Emergency = () => {
     const { event } = location.state || {} 
     const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
     const decryptedUser = token && DecryptUser(user)
-    const [showInstruction, setShowInstruction] = useState(false);
 
     const eventOwnerId =
     event?.created_by ??
@@ -53,12 +51,12 @@ export const Emergency = () => {
     };
     
 
-  return (
+    return (
     <div className="emergency-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-0 sm:pl-[200px] py-20">
         <div className="w-full max-w-5xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
                     {/* header */}
                     <div className="bg-[#153e6f] px-4 py-3 text-center font-bold text-white">
-                        Emergency Forms
+                        {event?.name || 'Event'} Emergency Forms
                     </div>
                     {/* table */}
                     <div className="overflow-x-auto">
@@ -173,6 +171,6 @@ export const Emergency = () => {
             />
         </div>
     </div>
-  )
+    )
 }
 

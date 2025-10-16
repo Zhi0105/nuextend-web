@@ -81,7 +81,7 @@ export const UpdatedProject = () => {
                     </div>
                 {/* header */}
                 <div className="bg-[#153e6f] px-4 py-3 text-center font-bold text-white">
-                    Project Forms
+                    {event?.name || 'Event'} Project Forms
                 </div>
 
                 {/* table */}

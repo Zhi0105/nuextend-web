@@ -82,7 +82,7 @@ export const UpdatedProgram = () => {
                     </div>
                     {/* header */}
                     <div className="bg-[#153e6f] px-4 py-3 text-center font-bold text-white">
-                        Program Forms
+                        {event?.name || 'Event'} Program Forms
                     </div>
 
                     {/* table */}

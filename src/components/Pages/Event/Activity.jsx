@@ -108,6 +108,9 @@ export const Activity = () => {
 
   return (
     <div className="activity-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
+      <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+        {data?.name || 'Event'} Project
+      </h1>
       <div className="w-full flex justify-end mb-4 px-2">
         <InputText
           value={globalFilter}
