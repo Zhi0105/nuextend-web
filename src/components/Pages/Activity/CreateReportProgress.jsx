@@ -174,7 +174,7 @@ export const CreateReportProgress = () => {
         </div>
 
         <Button type="submit" label={isEditMode ? "Update Report" : "Submit Report"} className="bg-green-600 mt-4" />
-      </form>
+      </form> 
     </div>
   );
 };

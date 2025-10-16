@@ -27,11 +27,6 @@ export const View = () => {
                     <FaUserGroup className="w-4 h-4 text-[#364190]"/>
                     <label className="text-xs text-[#FCA712]">Members</label>
                 </button>
-                <button onClick={() => console.log(rowData)} className="flex gap-2 justify-center items-center cursor-pointer">
-                    <BsFillCalendarEventFill className="w-4 h-4 text-[#364190]"/>
-                    <label className="text-xs text-[#FCA712]">Events</label>
-                </button>
-                
             </div>
         )
     }
