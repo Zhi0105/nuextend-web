@@ -16,7 +16,6 @@ export const Activity = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const data = location.state;
-  console.log(data);
   const { token } = useUserStore((s) => ({ token: s.token }));
   const decryptedToken = token && DecryptString(token);
 

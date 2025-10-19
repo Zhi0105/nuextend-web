@@ -20,7 +20,9 @@ export const Report = () => {
   const currentUserId = decryptedUser?.id;
   const currentRoleId = decryptedUser?.role_id;
 
+
   const [reports, setReports] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [eventStatuses, setEventStatuses] = useState([]); // Fixed this line
   const [loading, setLoading] = useState(false);
   const [creatorId] = useState(creator_id || null);

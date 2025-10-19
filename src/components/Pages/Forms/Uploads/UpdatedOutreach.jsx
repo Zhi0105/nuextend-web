@@ -160,9 +160,9 @@ export const UpdatedOutreach = () => {
                                                                 onClick={() => form.formKey === 'form14' ? navigate("/event/activities", { state: event }) : navigate(`/event/form/detail/${SetFormCodeNavigate(form.id)}`, 
                                                                     {
                                                                         state: {
-                                                                             event: event,
-                                                                             owner: event?.user,
-                                                                             data: event?.[form.formKey] ?? [], // ← dito papasok ang event.form3, form5, etc.
+                                                                            event: event,
+                                                                            owner: event?.user,
+                                                                            data: event?.[form.formKey] ?? [], // ← dito papasok ang event.form3, form5, etc.
                                                                         }
                                                                     }
                                                                 )}

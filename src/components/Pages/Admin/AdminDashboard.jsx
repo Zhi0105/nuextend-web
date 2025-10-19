@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getEvents } from '@_src/services/event';
 import { Dropdown } from 'primereact/dropdown';
+import { Button } from "primereact/button";
 import { getDashBoardReport, getTerms } from '@_src/services/dashboard';
 import { useUserStore } from '@_src/store/auth';
 import { DecryptString, DecryptUser } from '@_src/utils/helpers';
@@ -24,6 +25,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { FormProgressList } from '@_src/components/Partial/FormProgressList';
+import { ApproverNotificationList } from "@_src/components/Partial/ApproverNotificationList";
 import _ from 'lodash';
 
 export const AdminDashboard = () => {
@@ -35,6 +37,8 @@ export const AdminDashboard = () => {
   const [selectedTerm, setSelectedTerm] = useState(null);
   const [reports, setReports] = useState([])
   const roleId = decryptedUser?.role_id;
+  const departmentId = decryptedUser?.department_id;
+  const [notificationDialogVisible, setNotificationDialogVisible] = useState(true);
 
   const { mutate: getReport, isLoading: getReportLoading } = useMutation({
     mutationFn: getDashBoardReport,
@@ -59,7 +63,7 @@ export const AdminDashboard = () => {
     enabled: needsAllEvents,
   });
 
-   const filteredEvents = _.filter(allEvents, (e) => e.event_status_id !== 2);
+  const filteredEvents = _.filter(allEvents, (e) => e.event_status_id !== 2);
 
   useEffect(() => {
     if (selectedTerm) {
@@ -122,8 +126,22 @@ export const AdminDashboard = () => {
       </div>
 
       <div className='my-4'>
-        <FormProgressList  eventList={filteredEvents}/>
-      </div>
+            {/* Approver Notification Dialog */}
+            <ApproverNotificationList 
+                eventList={filteredEvents}
+                currentUserRoleId={roleId}
+                currentUserDepartmentId={departmentId}
+                visible={notificationDialogVisible}
+                onHide={() => setNotificationDialogVisible(false)}
+            />
+
+            {/* Show regular form progress list */}
+            <FormProgressList 
+                eventList={filteredEvents}
+                currentUserRoleId={roleId}
+                currentUserDepartmentId={departmentId}
+            />
+        </div>
 
       {/* Cards Section */}
       <div className='flex flex-col justify-center items-center'>
@@ -219,8 +237,6 @@ export const AdminDashboard = () => {
         )}
           
         </div>
-
-   
       </div>
     </div>
   );
