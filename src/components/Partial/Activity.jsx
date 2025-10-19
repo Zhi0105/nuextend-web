@@ -63,41 +63,61 @@ export const Activity = ({
                 {activities?.map((activity, index) => (
                     <div key={activityKeys[index] ?? index} className="flex gap-4 px-2 pr-4 items-center">
                         <div className="w-full flex flex-col gap-4 mb-8">
-                        
-                            <InputText
-                                value={activity?.name ?? ""}
-                                onChange={(e) => onChange(index, "name", e.target.value)}
-                                name="name"
-                                type="text"
-                                id="name"
-                                placeholder="Enter your activity name"
-                                className={`bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
-                            />
+                            {/* Activity Name */}
+                            <div>
+                                <label htmlFor={`activity-name-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                                    Activity Name
+                                </label>
+                                <InputText
+                                    value={activity?.name ?? ""}
+                                    onChange={(e) => onChange(index, "name", e.target.value)}
+                                    name="name"
+                                    type="text"
+                                    id={`activity-name-${index}`}
+                                    placeholder="Enter your activity name"
+                                    className={`bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                                />
+                            </div>
 
-                            <InputText
-                                value={activity?.address ?? ""}
-                                onChange={(e) => onChange(index, "address", e.target.value)}
-                                name="Address"
-                                type="text"
-                                id="Address"
-                                placeholder="Enter your activity location"
-                                className={`bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
-                            />
+                            {/* Activity Location */}
+                            <div>
+                                <label htmlFor={`activity-address-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                                    Activity Location
+                                </label>
+                                <InputText
+                                    value={activity?.address ?? ""}
+                                    onChange={(e) => onChange(index, "address", e.target.value)}
+                                    name="Address"
+                                    type="text"
+                                    id={`activity-address-${index}`}
+                                    placeholder="Enter your activity location"
+                                    className={`bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                                />
+                            </div>
 
-                            <InputTextarea
-                                className={` bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
-                                name="description"
-                                value={activity?.description ?? ""}
-                                onChange={(e) => onChange(index, "description", e.target.value)}
-                                rows={4}
-                                placeholder="Enter your activity description"
-                            />
+                            {/* Activity Description */}
+                            <div>
+                                <label htmlFor={`activity-description-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                                    Activity Description
+                                </label>
+                                <InputTextarea
+                                    className={`bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                                    name="description"
+                                    id={`activity-description-${index}`}
+                                    value={activity?.description ?? ""}
+                                    onChange={(e) => onChange(index, "description", e.target.value)}
+                                    rows={4}
+                                    placeholder="Enter your activity description"
+                                />
+                            </div>
                             
+                            {/* Activity Dates */}
                             <div className="activity-dates">
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor={`activity-dates-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
                                     Activity Dates
                                 </label>
                                 <Calendar
+                                    id={`activity-dates-${index}`}
                                     className="w-full" 
                                     inputClassName="w-full"           
                                     value={activity.duration}
@@ -110,6 +130,7 @@ export const Activity = ({
                                     minDate={getMinDate()}
                                 />
                                 <p className="text-xs text-gray-500 mt-1">
+                                    Select the start and end date for this activity
                                 </p>
                             </div>
                         </div>
@@ -132,41 +153,61 @@ export const Activity = ({
             {activities?.map((activity, index) => (
                 <div key={activityKeys[index] ?? index} className="flex gap-4 px-2 pr-4 items-center">
                     <div className="w-full flex flex-col gap-4 mb-8">
-                    
-                        <InputText
-                            value={activity?.name ?? ""}
-                            onChange={(e) => onChange(index, "name", e.target.value)}
-                            name="name"
-                            type="text"
-                            id="name"
-                            placeholder="Enter your activity name"
-                            className={`bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
-                        />
+                        {/* Activity Name */}
+                        <div>
+                            <label htmlFor={`activity-name-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                                Activity Name
+                            </label>
+                            <InputText
+                                value={activity?.name ?? ""}
+                                onChange={(e) => onChange(index, "name", e.target.value)}
+                                name="name"
+                                type="text"
+                                id={`activity-name-${index}`}
+                                placeholder="Enter your activity name"
+                                className={`bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                            />
+                        </div>
 
-                        <InputText
-                            value={activity?.address ?? ""}
-                            onChange={(e) => onChange(index, "address", e.target.value)}
-                            name="Address"
-                            type="text"
-                            id="Address"
-                            placeholder="Enter your activity location"
-                            className={`bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
-                        />
+                        {/* Activity Location */}
+                        <div>
+                            <label htmlFor={`activity-address-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                                Activity Location
+                            </label>
+                            <InputText
+                                value={activity?.address ?? ""}
+                                onChange={(e) => onChange(index, "address", e.target.value)}
+                                name="Address"
+                                type="text"
+                                id={`activity-address-${index}`}
+                                placeholder="Enter your activity location"
+                                className={`bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                            />
+                        </div>
 
-                        <InputTextarea
-                            className={` bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
-                            name="description"
-                            value={activity?.description ?? ""}
-                            onChange={(e) => onChange(index, "description", e.target.value)}
-                            rows={4}
-                            placeholder="Enter your activity description"
-                        />
+                        {/* Activity Description */}
+                        <div>
+                            <label htmlFor={`activity-description-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                                Activity Description
+                            </label>
+                            <InputTextarea
+                                className={`bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                                name="description"
+                                id={`activity-description-${index}`}
+                                value={activity?.description ?? ""}
+                                onChange={(e) => onChange(index, "description", e.target.value)}
+                                rows={4}
+                                placeholder="Enter your activity description"
+                            />
+                        </div>
                         
+                        {/* Activity Dates */}
                         <div className="activity-dates">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                            <label htmlFor={`activity-dates-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
                                 Activity Dates
                             </label>
                             <Calendar
+                                id={`activity-dates-${index}`}
                                 className="w-full" 
                                 inputClassName="w-full"           
                                 value={activity.duration}
@@ -179,14 +220,15 @@ export const Activity = ({
                                 minDate={getMinDate()}
                             />
                             <p className="text-xs text-gray-500 mt-1">
+                                Select the start and end date for this activity
                             </p>
                         </div>
                     </div>
                     <span onClick={() => onRemove(index)} className="text-[25px] text-[#f86c6b] cursor-pointer">
-                    -
+                        -
                     </span>
                 </div>
             ))}
-        </div>
+    </div>
     )
 }

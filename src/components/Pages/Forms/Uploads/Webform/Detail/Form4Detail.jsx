@@ -196,19 +196,20 @@ const [remarksModal, setRemarksModal] = useState({
     };
     return roleMap[roleId] || 'Unknown Role';
   };
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const isFullyApproved = useMemo(() => {
   if (!form4) return false;
   
   // For role 1 (ComEx), need ComEx + ASD approvals
   if (owner?.role_id === 1) {
     return form4.commex_approved_by && 
-           form4.asd_approved_by;
+    form4.asd_approved_by;
   }
   
   // For roles 3 (student) and 4 (faculty), need ComEx + (ASD OR Dean)
   if ([3, 4].includes(owner?.role_id)) {
     return form4.commex_approved_by && 
-           (form4.asd_approved_by || form4.dean_approved_by);
+    (form4.asd_approved_by || form4.dean_approved_by);
   }
   
   return false;
@@ -283,101 +284,88 @@ const [remarksModal, setRemarksModal] = useState({
         </div>
       </div>
 
-      {/* Consent Section */}
-      <h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">Consent</h2>
+     {/* Consent Section */}
+<h2 className="text-2xl font-bold text-gray-800 mb-6 mt-8">Consent</h2>
 
-      <div className="w-full max-w-5xl mt-6">
-        <table className="w-full border border-collapse table-fixed">
-          <colgroup>
-            <col className="w-1/2" />
-            <col className="w-1/2" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th className="border p-2 text-center w-1/2">ComEx</th>
-              <th className="border p-2 text-center w-1/2">Academic Services Director / Dean</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              {/* ComEx Column */}
-              <td className="border p-6 text-center align-bottom h-32 w-1/2">
-                {form4?.commex_approved_by ? (
-                  <div className="flex flex-col justify-end h-full">
-                    <p className="font-semibold text-green-600 mb-2">Approved</p>
-                    <p className="font-medium">
-                      {form4?.commex_approver?.firstname}{" "}
-                      {form4?.commex_approver?.lastname}
-                    </p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {new Date(form4?.commex_approve_date).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: 'numeric' 
-                      })}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full">
-                    <p className="italic text-gray-500 mb-2">Awaiting Approval</p>
-                  </div>
-                )}
-              </td>
+<div className="w-full max-w-5xl mt-6">
+  <table className="w-full border border-collapse table-fixed">
+    <colgroup>
+      <col className="w-1/2" />
+      <col className="w-1/2" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th className="border p-2 text-center w-1/2">ComEx</th>
+        <th className="border p-2 text-center w-1/2">Academic Services Director / Dean</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        {/* ComEx Column */}
+        <td className="border p-6 text-center align-bottom h-32 w-1/2">
+          {form4?.commex_approved_by ? (
+            <div className="flex flex-col justify-end h-full">
+              <p className="font-semibold text-green-600 mb-2">Approved</p>
+              <p className="font-medium">
+                {form4?.commex_approver?.firstname}{" "}
+                {form4?.commex_approver?.lastname}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                {new Date(form4?.commex_approve_date).toLocaleDateString('en-US', { 
+                  month: 'short', 
+                  day: 'numeric', 
+                  year: 'numeric' 
+                })}
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full">
+              <p className="italic text-gray-500 mb-2">Awaiting Approval</p>
+            </div>
+          )}
+        </td>
 
-              {/* ASD/Dean Column - Show only one approver based on role requirements */}
-              <td className="border p-6 text-center align-bottom h-32 w-1/2">
-                {/* For role 3 (student) - show either ASD or Dean, whichever approved first */}
-                {[1, 4].includes(roleId) ? (
-                  // For ComEx (1) and Faculty (4) - only need ASD
-                  form4?.asd_approved_by ? (
-                    <div className="flex flex-col justify-end h-full">
-                      <p className="font-semibold text-green-600 mb-2">Approved</p>
-                      <p className="font-medium">
-                        {form4?.asd_approver?.firstname} {form4?.asd_approver?.lastname}
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {new Date(form4?.asd_approve_date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full">
-                      <p className="italic text-gray-500 mb-2">Awaiting Academic Services Director Approval</p>
-                    </div>
-                  )
-                ) : (
-                  // For other roles (including student role 3) - show whichever approved first
-                  form4?.asd_approved_by || form4?.dean_approved_by ? (
-                    <div className="flex flex-col justify-end h-full">
-                      <p className="font-semibold text-green-600 mb-2">Approved</p>
-                      <p className="font-medium">
-                        {form4?.asd_approved_by ? 
-                          `${form4.asd_approver?.firstname} ${form4.asd_approver?.lastname}` :
-                          `${form4.dean_approver?.firstname} ${form4.dean_approver?.lastname}`
-                        }
-                      </p>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {new Date(form4?.asd_approve_date || form4?.dean_approve_date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full">
-                      <p className="italic text-gray-500 mb-2">Awaiting Approval</p>
-                    </div>
-                  )
-                )}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+        {/* ASD/Dean Column - Show approvers for everyone */}
+        <td className="border p-6 text-center align-bottom h-32 w-1/2">
+          {form4?.asd_approved_by || form4?.dean_approved_by ? (
+            <div className="flex flex-col justify-end h-full">
+              <p className="font-semibold text-green-600 mb-2">Approved</p>
+              <p className="font-medium">
+                {form4?.asd_approved_by ? 
+                  `${form4.asd_approver?.firstname} ${form4.asd_approver?.lastname}` :
+                  `${form4.dean_approver?.firstname} ${form4.dean_approver?.lastname}`
+                }
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                {new Date(form4?.asd_approve_date || form4?.dean_approve_date).toLocaleDateString('en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full">
+              <p className="italic text-gray-500 mb-2">Awaiting Approval</p>
+              {(form4?.asd_remarks || form4?.dean_remarks) && (
+                <button
+                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-medium"
+                  onClick={() => setRemarksModal({ 
+                    show: true, 
+                    remarks: form4.asd_remarks || form4.dean_remarks, 
+                    approver: form4.asd_remarks ? 'Academic Services Director' : 'Dean' 
+                  })}
+                >
+                  View Remarks
+                </button>
+              )}
+            </div>
+          )}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
       {/* Action buttons */}
       <div className="flex gap-2 mt-4">

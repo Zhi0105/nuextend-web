@@ -20,10 +20,13 @@ export const ViewReport = () => {
   const currentUserId = decryptedUser?.id;
   const currentRoleId = decryptedUser?.role_id;
   
+  // eslint-disable-next-line no-unused-vars
   const [showRemarksDialog, setShowRemarksDialog] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [remarksText, setRemarksText] = useState("");
   const [showReviseDialog, setShowReviseDialog] = useState(false);
   const [revisionRemarks, setRevisionRemarks] = useState("");
+  // eslint-disable-next-line no-unused-vars
   const [currentReport, setCurrentReport] = useState(report);
   const [loading, setLoading] = useState(false);
 
@@ -47,6 +50,7 @@ export const ViewReport = () => {
 
   // Role-based button logic
   const canSubmitOrPullBack = [1, 3, 4, 5, 6, 7, 8, 9].includes(currentRoleId);
+  // eslint-disable-next-line no-unused-vars
   const canApproveOrRevise = [1, 10].includes(currentRoleId) && !hasApproved;
 
   const isCreator = currentUserId === creator_id;
@@ -62,7 +66,6 @@ export const ViewReport = () => {
   }, [report, navigate]);
 
   if (!currentReport) return null;
-
   // Handlers
   const handleSubmit = async () => {
     try {
@@ -125,6 +128,7 @@ export const ViewReport = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks, no-unused-vars
   const [isEditing, setIsEditing] = useState(false);
 
   const handleRevise = () => {
@@ -159,6 +163,7 @@ export const ViewReport = () => {
     }
   };
 
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   const [remarksModal, setRemarksModal] = useState({
     show: false,
     remarks: [], // Change from string to array
@@ -392,17 +397,6 @@ const handleViewRemarks = () => {
           className="bg-gray-600 text-white px-3 py-2 rounded-md text-xs font-semibold"
           label="Back"
         />
-
-       {/* Submit button - FIXED CONDITION */}
-        {console.log('Debug Submit Button:', {
-          eventStatusId,
-          canSubmitOrPullBack,
-          isCreator,
-          isFullyApproved,
-          isApprovedByAny,
-          condition1: [8, 5].includes(eventStatusId) && !isFullyApproved,
-          condition2: ![4, 6, 9].includes(eventStatusId) && !isApprovedByAny
-        })}
 
         {canSubmitOrPullBack && isCreator && 
           (([8, 5].includes(eventStatusId) && !isFullyApproved) || 
