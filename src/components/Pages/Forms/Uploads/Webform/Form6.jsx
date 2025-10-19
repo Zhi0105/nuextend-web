@@ -42,6 +42,7 @@ export const Form6 = ({ onSubmit }) => {
     control,
     handleSubmit,
     reset,
+    // eslint-disable-next-line no-unused-vars
     watch,
     formState: { errors, isSubmitting },
   } = useForm({ defaultValues, mode: "onBlur" });
@@ -296,13 +297,6 @@ export const Form6 = ({ onSubmit }) => {
             onClick={() => reset(defaultValues)}
           />
         </div>
-
-        <details className="mt-6">
-          <summary className="cursor-pointer select-none">Preview JSON (dev)</summary>
-          <pre className="bg-gray-50 p-3 rounded overflow-auto text-sm">
-            {JSON.stringify({ event_id: event?.id, ...watch() }, null, 2)}
-          </pre>
-        </details>
       </form>
     </div>
   );
