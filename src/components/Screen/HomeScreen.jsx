@@ -8,7 +8,7 @@ export const HomeScreen = () => {
     // Function to handle APK download
     const handleDownloadAPK = () => {
         // Replace with your actual APK file URL
-        const apkUrl = 'https://www.mediafire.com/file/q7posava5l8k5hv/nuextend.apk/file';
+        const apkUrl = "https://download850.mediafire.com/dz4scyqa74rgX0A-hfH7JN468zWIRrzRFCC7tPQkDtBLDWB_JR7dl748BnYQPrvBDZdPNi39Y7OFA5jagRUqTbUFGfnyKh6ro8sBJlvizmJVmDEsTqaQQXZy0Ur2l1ngXwP1LlYmC68hHtx5sgjqPME5YA6Z_TNUGzg_r6K_cToHx5k/uhrbkt7t7hfmwot/nuextend.apk";
         window.open(apkUrl, '_blank');
     };
 
