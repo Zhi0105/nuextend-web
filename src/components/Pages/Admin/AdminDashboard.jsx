@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { getEvents } from '@_src/services/event';
 import { Dropdown } from 'primereact/dropdown';
 import { getDashBoardReport, getTerms } from '@_src/services/dashboard';
 import { useUserStore } from '@_src/store/auth';
-import { DecryptString } from '@_src/utils/helpers';
+import { DecryptString, DecryptUser } from '@_src/utils/helpers';
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from 'primereact/card';
 import { SetTermValue } from '@_src/utils/helpers';
@@ -22,14 +23,18 @@ import {
   PieChart, Pie, Cell,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
+import { FormProgressList } from '@_src/components/Partial/FormProgressList';
+import _ from 'lodash';
 
 export const AdminDashboard = () => {
   const queryClient = useQueryClient();
-  const { token } = useUserStore((state) => ({ token: state.token }));
-  const decryptedToken = token && DecryptString(token);
+  const { user, token } = useUserStore((state) => ({ user: state.user, token: state.token }));
+  const decryptedUser = useMemo(() => (token ? DecryptUser(user) : null), [token, user]);
+  const decryptedToken = useMemo(() => (token ? DecryptString(token) : null), [token]);
   const { data: termData, isLoading: termLoading } = getTerms({ token: decryptedToken });
   const [selectedTerm, setSelectedTerm] = useState(null);
   const [reports, setReports] = useState([])
+  const roleId = decryptedUser?.role_id;
 
   const { mutate: getReport, isLoading: getReportLoading } = useMutation({
     mutationFn: getDashBoardReport,
@@ -42,6 +47,19 @@ export const AdminDashboard = () => {
       console.log("@GDE", err)
     },
   });
+
+  const needsAllEvents = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
+
+  const {
+    data: allEvents = [],
+    isLoading: eventLoading,
+    isRefetching: eventRefetchLoading,
+  } = getEvents({
+    token: decryptedToken,
+    enabled: needsAllEvents,
+  });
+
+   const filteredEvents = _.filter(allEvents, (e) => e.event_status_id !== 2);
 
   useEffect(() => {
     if (selectedTerm) {
@@ -76,10 +94,10 @@ export const AdminDashboard = () => {
   const COLORS = ['#3B3FA8', '#F7B500'];
 
   
-  if (termLoading || getReportLoading) {
+  if (termLoading || getReportLoading || eventRefetchLoading || eventLoading) {
     return (
       <div className="dashboard-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px]">
-        Loading....
+        Dashboard Loading....
       </div>
     );
   }
@@ -103,7 +121,9 @@ export const AdminDashboard = () => {
         />
       </div>
 
-      
+      <div className='my-4'>
+        <FormProgressList  eventList={filteredEvents}/>
+      </div>
 
       {/* Cards Section */}
       <div className='flex flex-col justify-center items-center'>
