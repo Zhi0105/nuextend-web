@@ -155,6 +155,7 @@ export const Form10 = ({ onSubmit }) => {
   };
 
   // Live preview
+  // eslint-disable-next-line no-unused-vars
   const preview = (() => {
     const w = watch();
     return {
@@ -402,14 +403,6 @@ export const Form10 = ({ onSubmit }) => {
             }}
           />
         </div>
-
-        {/* Dev preview */}
-        <details className="mt-6">
-          <summary className="cursor-pointer select-none">Preview JSON (dev)</summary>
-          <pre className="bg-gray-50 p-3 rounded overflow-auto text-sm">
-            {JSON.stringify(preview, null, 2)}
-          </pre>
-        </details>
       </form>
     </div>
   );

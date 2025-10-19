@@ -4,7 +4,7 @@ import { LazyImage } from "../Lazy/Lazy"
 import { Controller, useForm } from "react-hook-form";
 import { MdOutlineAlternateEmail } from "react-icons/md";
 import { MdLockOutline } from "react-icons/md";
-import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash, FaDownload } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 export const Login = () => {
@@ -26,6 +26,7 @@ export const Login = () => {
     setisPasswordVisible(!isVisible);
     };
 
+
     if(loginLoading) {
         return (
             <div className="login-main min-h-screen flex justify-center items-center">
@@ -40,6 +41,7 @@ export const Login = () => {
                 <LazyImage src={'logo.svg'} alt={"logo"} height={100} width={100} />
                 <LazyImage src={'name.webp'} alt={"logo"} height={150} width={150} />
                 <h1 className="mt-2 text-[#6c757d]">Login to participate in projects.</h1>
+                
                 <form
                     onSubmit={handleSubmit(onSubmit)}
                     className="w-full form_container mt-2 flex flex-col gap-2"

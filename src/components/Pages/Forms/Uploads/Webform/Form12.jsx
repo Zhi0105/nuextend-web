@@ -77,6 +77,7 @@ export const Form12 = ({ onSubmit }) => {
   } = useFieldArray({ control, name: "new_items", keyName: "keyId" });
 
   // Fetch Programs & Departments
+  // eslint-disable-next-line no-unused-vars
   const { data: programs, isLoading: loadingPrograms } = getPrograms();
   const { data: departments, isLoading: loadingDepartments } = getDepartments();
 

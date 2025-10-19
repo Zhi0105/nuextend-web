@@ -598,13 +598,6 @@ export const Form3 = ({ onSubmit }) => {
                     <Button type="reset" label="Reset" icon="pi pi-refresh" className={TW_BTN} onClick={() => reset(defaultValues)} />
                 </div>
 
-                {/* Dev Preview */}
-                <details className="mt-6">
-                    <summary className="cursor-pointer select-none">Preview JSON (dev)</summary>
-                    <pre className="bg-gray-50 p-3 rounded overflow-auto text-sm">
-                        {JSON.stringify(watch(), null, 2)}
-                    </pre>
-                </details>
             </form>
         </div>
     );

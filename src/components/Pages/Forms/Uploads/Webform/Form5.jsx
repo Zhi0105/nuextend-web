@@ -59,6 +59,7 @@ export const Form5 = ({ onSubmit }) => {
     },
   });
 
+  // eslint-disable-next-line no-unused-vars
   const { control, handleSubmit, reset, watch } = useForm({ defaultValues });
 
   useEffect(() => {
@@ -169,13 +170,6 @@ export const Form5 = ({ onSubmit }) => {
           />
           <Button type="reset" label="Reset" icon="pi pi-refresh" className={TW_BTN} onClick={() => reset(defaultValues)} />
         </div>
-
-        <details className="mt-6">
-          <summary className="cursor-pointer select-none">Preview JSON (dev)</summary>
-          <pre className="bg-gray-50 p-3 rounded overflow-auto text-sm">
-            {JSON.stringify(watch(), null, 2)}
-          </pre>
-        </details>
       </form>
     </div>
   );

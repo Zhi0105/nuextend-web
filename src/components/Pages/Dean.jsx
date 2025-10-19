@@ -181,9 +181,6 @@ export const Dean = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                 <div className="flex space-x-2">
-                                                    <button className="text-blue-600 hover:text-blue-900 font-medium text-xs py-1 px-2 rounded border border-blue-600 hover:bg-blue-50 transition-colors">
-                                                        Edit
-                                                    </button>
                                                     <button className="text-red-600 hover:text-red-900 font-medium text-xs py-1 px-2 rounded border border-red-600 hover:bg-red-50 transition-colors">
                                                         Delete
                                                     </button>
