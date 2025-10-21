@@ -10,16 +10,22 @@ export const Certificate = () => {
   const previewRefs = useRef([]);
   const [certificates, setCertificates] = useState([]);
 
+  console.log(certificates,setCertificates)
+
   useEffect(() => {
     let certData = [];
     if (state?.people?.length) {
-      certData = state.people.map(({ name, role }) => ({
+      certData = state.people.map(({ name, role, attendance  }) => ({
         name,
         programTitle: state.title || "“Title of Program or Project”",
         date: state.date || state.implementDate || new Date().toISOString(),
         location: state.location || "Location of Implementation",
         role: role || "Role or Responsibility",
         term: state.term || "Term of Academic Year",
+        attendance: attendance?.map((a) => ({
+        time_in: a.time_in || a.created_at,
+        time_out: a.time_out || a.updated_at, 
+      })) || [],
       }));
     } else if (search.includes("data=")) {
       try {
@@ -55,7 +61,28 @@ export const Certificate = () => {
       day: "numeric",
     });
 
-  console.log(_.filter(state?.users, user => _.includes([1, 10, 11, 12], user.role_id)))
+  // Calculate total hours rendered from attendance records
+  const calculateTotalHours = (attendance) => {
+    if (!attendance || !attendance.length) return 0.0;
+
+    let totalHours = 0;
+    
+    attendance.forEach((record) => {
+      if (record.time_in && record.time_out) {
+        const timeIn = new Date(record.time_in);
+        const timeOut = new Date(record.time_out);
+        
+        // Calculate difference in milliseconds and convert to hours
+        const diffMs = timeOut - timeIn;
+        const diffHours = diffMs / (1000 * 60 * 60);
+        
+        totalHours += diffHours;
+      }
+    });
+
+    // Round to 1 decimal place
+    return Math.round(totalHours * 10) / 10;
+  };
   
   // Filter users and exclude those with is_officer true for specific roles
   const filteredUsers = _.filter(state?.users, user => {
@@ -124,6 +151,10 @@ export const Certificate = () => {
               done as <strong>{cert.role}</strong>. Your dedication is essential
               to the mission and vision of the Community Extension Office.
             </p>
+            <p className="absolute text-center text-black text-base font-semibold"
+            style={{
+              left: "43%",
+            }}>Hours Rendered: {calculateTotalHours(cert.attendance)}</p>
           </div>
 
           {/* Signatories */}

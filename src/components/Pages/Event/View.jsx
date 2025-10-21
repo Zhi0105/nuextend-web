@@ -201,30 +201,41 @@ export const View = () => {
     return `${lastname}, ${firstname}${middlename ? " " + middlename : ""}`.trim();
   };
 
-  // Participants → default role "volunteer"
+    // Participants → default role "volunteer"
   const participantData = participants
-    .map((p) => ({
-      name: formatName(p.user),
-      role: "volunteer",
-    }))
+    .map((p) => {
+      const isLeader = p.user_id === eventOwner.id;
+      const memberMatch = eventMembers.find((em) => em.user_id === p.user_id);
+      
+      return {
+        name: formatName(p.user),
+        role: isLeader
+          ? "Leader"
+          : memberMatch
+          ? memberMatch.role || "Member" 
+          : "Volunteer",
+        attendance: p.attendance || [],
+      };
+    })
     .filter((p) => p.name);
 
   // Event members → use their specific role
-  const memberData = eventMembers
-    .map((m) => ({
-      name: formatName(m.user),
-      role: m.role || "volunteer",
-    })).filter((p) => p.name);
+  // const memberData = eventMembers // pang member
+  //   .map((m) => ({
+  //     name: formatName(m.user),
+  //     role: m.role || "volunteer",
+  //   })).filter((p) => p.name);
 
 
-  // Owner → also treated as "volunteer" (or you can change to "organizer" if desired)
-  const ownerData = eventOwner
-    ? [{ name: formatName(eventOwner), role: "leader" }]
-    : [];
+  // // Owner → also treated as "volunteer" (or you can change to "organizer" if desired)
+  // const ownerData = eventOwner // pang leader 
+  //   ? [{ name: formatName(eventOwner), role: "leader" }]
+  //   : [];
 
   // Merge and deduplicate by name
   const allPeople = _.uniqBy(
-    [...participantData, ...memberData, ...ownerData],
+    [...participantData],
+    // [...participantData, ...memberData, ...ownerData],
     "name"
   );
 
@@ -245,9 +256,9 @@ export const View = () => {
 
   previewCertificates({
     users,
-    people: allPeople, // array of { name, role }
+    people: allPeople, // array of { name, role, attendance }
     implementDate,
-    title: eventData?.eventName,
+    title: eventData?.name,
     location: eventData?.location,
     term: eventData?.term
   });
