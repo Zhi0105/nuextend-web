@@ -49,7 +49,12 @@ export const Activity = () => {
 
   const actionBodyTemplate = (rowData) => (
     <div className="flex gap-8">
-      <button onClick={() => navigate("/event/participants", { state: data?.participants })}>
+      <button onClick={() => navigate("/event/participants", { 
+    state: { 
+      participants: data?.participants, 
+      activity: data?.activity 
+    } 
+  })}>
         <Tooltip target=".participants" content="Participants" position="right" />
         <TbUsersGroup className="participants w-7 h-7 text-[#364190]" />
       </button>
