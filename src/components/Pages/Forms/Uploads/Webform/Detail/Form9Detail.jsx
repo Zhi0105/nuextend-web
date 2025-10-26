@@ -17,6 +17,7 @@ export const Form9Detail = () => {
   const { state, pathname } = useLocation();
   const navigate = useNavigate();
   const { event, owner, data: initialData } = state || {};
+  console.log(event)
 
   const queryClient = useQueryClient();
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
@@ -35,7 +36,6 @@ export const Form9Detail = () => {
   // Program Title and Team Data
   const programTitle = event?.eventName;
   const implementer = event?.organization?.name;
-  const managementTeam = form1Data?.team_members || [];
   const targetGroup = event?.target_group;
 
   // Executive Summary Data from form9
@@ -48,6 +48,7 @@ export const Form9Detail = () => {
 
   const roleId = decryptedUser?.role_id;
   const isApprover = useMemo(() => [1, 9, 10, 11].includes(roleId), [roleId]);
+  const [approveDialogVisible, setApproveDialogVisible] = useState(false);
 
   const hasUserRoleApproved = (row) => {
     if (!row) return false;
@@ -117,12 +118,23 @@ export const Form9Detail = () => {
 
   const onApprove = () => {
     if (!form9 || !canAction) return;
+      setApproveDialogVisible(true);
+  };
+
+  // Function to actually approve after confirmation
+  const handleConfirmApprove = () => {
     doApprove({
       token: decryptedToken,
       id: form9[0]?.id ?? form9.id,
       role_id: roleId,
     });
+    setApproveDialogVisible(false);
     navigate(-2);
+  };
+
+  // Function to cancel approval
+  const handleCancelApprove = () => {
+    setApproveDialogVisible(false);
   };
 
   // ✅ Revise
@@ -218,6 +230,11 @@ if (!formData) return false;
   return false;
 }, [formData, owner?.role_id]);
 
+const managementTeam = event?.eventmember?.map(member => ({
+  id: member.id,
+  name: `${member.user?.firstname || ''} ${member.user?.middlename || ''} ${member.user?.lastname || ''}`.trim()
+})) || [];
+
   return (
     <div className="project-detail-main min-h-screen bg-white w-full flex flex-col justify-center items-center xs:pl-[0px] sm:pl-[200px] py-20">
       <div className="w-full max-w-5xl bg-white shadow rounded-lg p-6 my-6">
@@ -245,9 +262,9 @@ if (!formData) return false;
             <p>{teamLeader || "No program coordinator specified"}</p>
           </div>
 
-          {/* 2. Team Members */}
+          {/* Team Members */}
           <div className="ml-4 mt-4">
-            <p className="font-semibold text-gray-600">2. Team Members</p>
+            <p className="font-semibold text-gray-600">Team Members</p>
             <ul className="list-disc ml-6">
               {managementTeam.length > 0 ? (
                 managementTeam.map((member, index) => (
@@ -559,6 +576,53 @@ if (!formData) return false;
             label={rejectLoading ? "Submitting…" : "Submit"}
           />
         </form>
+      </Dialog>
+
+      <Dialog
+        header="Confirm Approval"
+        visible={approveDialogVisible}
+        style={{ width: '400px' }}
+        onHide={handleCancelApprove}
+        footer={
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={handleCancelApprove}
+              disabled={approveLoading}
+              className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmApprove}
+              disabled={approveLoading}
+              className="px-5 py-2.5 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+            >
+              {approveLoading ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Approving...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <i className="pi pi-check text-sm"></i>
+                  Yes, Approve
+                </span>
+              )}
+            </button>
+          </div>
+        }
+      >
+        <div className="confirmation-content">
+          <p className="text-gray-700 mb-4">
+            Are you sure you want to approve this extension program evaluation report?
+          </p>
+          <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <i className="pi pi-info-circle text-blue-600"></i>
+            <p className="text-sm text-blue-800">
+              This action cannot be undone.
+            </p>
+          </div>
+        </div>
       </Dialog>
     </div>
   );

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useForm, Controller, useFieldArray } from "react-hook-form";
 import { Card } from "primereact/card";
 import { InputText } from "primereact/inputtext";
@@ -15,6 +15,7 @@ import { useUserStore } from '@_src/store/auth';
 import { DecryptString } from "@_src/utils/helpers";
 import { createForm2, updateForm2 } from "@_src/services/formservice";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Dialog } from "primereact/dialog";
 
 const Err = ({ message }) =>
   message ? <small className="p-error block mt-1">{message}</small> : null;
@@ -43,6 +44,8 @@ export const Form2 = () => {
   const { event, formdata } = location.state
   const { token } = useUserStore((state) => ({ token: state.token }));
   const decryptedToken = token && DecryptString(token)
+  const [submitDialogVisible, setSubmitDialogVisible] = useState(false);
+  const [formDataToSubmit, setFormDataToSubmit] = useState(null);
 
   const { mutate: handleCreateForm2, isLoading: createForm2Loading } = useMutation({
         mutationFn: createForm2,
@@ -202,66 +205,83 @@ useEffect(() => {
 
   const onSubmit = (data) => {
     const payload = {
-    ...(formdata?.[0]?.id && { id: formdata[0].id }),
-    event_id: event?.id,
-    event_type_id: data.event_type_id,
-    proponents: data.proponents,
-    collaborators: data.collaborators,
-    participants: data.participants,
-    partners: data.partners,
-    implementationDate: data.implementationDate,
-    area: data.area,
-    budgetRequested: num(data.budgetRequested),
-    budgetRequirement: num(data.budgetRequirement),
-    background: data.background,
-    otherInfo: data.otherInfo,
-    project_objectives: (data.project_objectives ?? []).map((r) => ({
-      objectives: r.objectives,
-      strategies: r.strategies,
-    })),
-    project_impact_outcomes: (data.project_impact_outcomes ?? []).map((r) => ({
-      impact: r.impact,
-      linkage: r.linkage,
-      outcome: r.outcome,
-    })),
-    project_risks: (data.project_risks ?? []).map((r) => ({
-      risk_identification: r.risk_identification,
-      risk_mitigation: r.risk_mitigation,
-    })),
-    project_staffings: (data.project_staffings ?? []).map((r) => ({
-      staff: r.staff,
-      contact: r.contact,
-      responsibilities: r.responsibilities,
-    })),
-    project_work_plans: (data.project_work_plans ?? []).map((r) => ({
-      phaseDate: r.phaseDate,
-      activities: r.activities,
-      targets: r.targets,
-      indicators: r.indicators,
-      personnel: r.personnel,
-      resources: r.resources,
-      cost: num(r.cost),   // 👈 normalize
-    })),
-    project_detailed_budgets: (data.project_detailed_budgets ?? []).map((r) => ({
-      item: r.item,
-      description: r.description,
-      quantity: r.quantity,
-      amount: num(r.amount),
-      source: r.source,
-    })),
+      ...(formdata?.[0]?.id && { id: formdata[0].id }),
+      event_id: event?.id,
+      event_type_id: data.event_type_id,
+      proponents: data.proponents,
+      collaborators: data.collaborators,
+      participants: data.participants,
+      partners: data.partners,
+      implementationDate: data.implementationDate,
+      area: data.area,
+      budgetRequested: num(data.budgetRequested),
+      budgetRequirement: num(data.budgetRequirement),
+      background: data.background,
+      otherInfo: data.otherInfo,
+      project_objectives: (data.project_objectives ?? []).map((r) => ({
+        objectives: r.objectives,
+        strategies: r.strategies,
+      })),
+      project_impact_outcomes: (data.project_impact_outcomes ?? []).map((r) => ({
+        impact: r.impact,
+        linkage: r.linkage,
+        outcome: r.outcome,
+      })),
+      project_risks: (data.project_risks ?? []).map((r) => ({
+        risk_identification: r.risk_identification,
+        risk_mitigation: r.risk_mitigation,
+      })),
+      project_staffings: (data.project_staffings ?? []).map((r) => ({
+        staff: r.staff,
+        contact: r.contact,
+        responsibilities: r.responsibilities,
+      })),
+      project_work_plans: (data.project_work_plans ?? []).map((r) => ({
+        phaseDate: r.phaseDate,
+        activities: r.activities,
+        targets: r.targets,
+        indicators: r.indicators,
+        personnel: r.personnel,
+        resources: r.resources,
+        cost: num(r.cost),
+      })),
+      project_detailed_budgets: (data.project_detailed_budgets ?? []).map((r) => ({
+        item: r.item,
+        description: r.description,
+        quantity: r.quantity,
+        amount: num(r.amount),
+        source: r.source,
+      })),
+    };
+
+    setFormDataToSubmit(payload);
+    setSubmitDialogVisible(true);
   };
 
-    if(formdata) {
-        handleUpdateForm2({
-            token: decryptedToken,
-            ...payload
-        })
-    } else {
-        handleCreateForm2({
+  // Function to actually submit after confirmation
+  const handleConfirmSubmit = () => {
+    if (!formDataToSubmit) return;
+    
+    if (formdata) {
+      handleUpdateForm2({
         token: decryptedToken,
-        ...payload
-    })
+        ...formDataToSubmit
+      });
+    } else {
+      handleCreateForm2({
+        token: decryptedToken,
+        ...formDataToSubmit
+      });
     }
+    
+    setSubmitDialogVisible(false);
+    setFormDataToSubmit(null);
+  };
+
+  // Function to cancel submission
+  const handleCancelSubmit = () => {
+    setSubmitDialogVisible(false);
+    setFormDataToSubmit(null);
   };
 
   return (
@@ -882,6 +902,53 @@ useEffect(() => {
           />
         </div>
       </form>
+
+      <Dialog
+        header="Confirm Submission"
+        visible={submitDialogVisible}
+        style={{ width: '400px' }}
+        onHide={handleCancelSubmit}
+        footer={
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={handleCancelSubmit}
+              disabled={createForm2Loading || updateForm2Loading}
+              className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmSubmit}
+              disabled={createForm2Loading || updateForm2Loading}
+              className="px-5 py-2.5 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+            >
+              {(createForm2Loading || updateForm2Loading) ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Submitting...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <i className="pi pi-check text-sm"></i>
+                  Yes, Submit
+                </span>
+              )}
+            </button>
+          </div>
+        }
+      >
+        <div className="confirmation-content">
+          <p className="text-gray-700 mb-4">
+            Are you sure you want to {formdata ? 'update' : 'submit'} this project proposal form?
+          </p>
+          <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <i className="pi pi-info-circle text-blue-600"></i>
+            <p className="text-sm text-blue-800">
+              Please review all information before submitting.
+            </p>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import { useContext, useRef, useEffect, useCallback } from "react";
+import { useContext, useRef, useEffect, useCallback, useState } from "react";
 import { EventContext } from "@_src/contexts/EventContext";
 import { Dropdown } from "primereact/dropdown";
 import { useUserStore } from '@_src/store/auth';
@@ -20,6 +20,8 @@ import { Activity } from "@_src/components/Partial/Activity";
 import { Calendar } from 'primereact/calendar';
 import dayjs from 'dayjs';
 import _ from "lodash";
+import { FaExclamationTriangle, FaCheckCircle, FaTimes } from "react-icons/fa";
+import { Dialog } from "primereact/dialog";
 
 
 export const Create = () => {
@@ -32,6 +34,8 @@ export const Create = () => {
     const { data: typeData, isLoading: typeLoading } = getEventTypes()
     const { data: unsdgData, isLoading: unsdgLoading } = getUnsdgs()
     const { data: skillData, isLoading: skillLoading } = getSkills()
+    const [confirmDialogVisible, setConfirmDialogVisible] = useState(false);
+    const [formDataToSubmit, setFormDataToSubmit] = useState(null);
 
     const setFormatDate = (date) => {
         return dayjs(new Date(date)).format('MM-DD-YYYY')
@@ -89,7 +93,14 @@ export const Create = () => {
     };
 
     const onSubmit = (data) => {
-        const { members, target_group, organization, model, event_type, name, term, implement_date, description, location, activities, budget_proposal, skills, unsdgs } = data
+        setFormDataToSubmit(data);
+        setConfirmDialogVisible(true);
+    };
+
+     const handleConfirmSubmit = () => {
+        if (!formDataToSubmit) return;
+
+        const { members, target_group, organization, model, event_type, name, term, implement_date, description, location, activities, budget_proposal, skills, unsdgs } = formDataToSubmit;
         const updatedActivities = _.map(activities, (activity) => ({
             name: activity.name,
             description: activity.description,
@@ -119,13 +130,13 @@ export const Create = () => {
                 user_id: m.member.id,
                 role: m.role
             }))
-        }
+        };
+
         createEvent(payload, {
             onSuccess: (data) => {
                 if(data?.data.model_id !== 3) {
                     reset()
                 } else {
-
                     reset({
                         organization: getValues("organization"),
                         model:getValues("model"),
@@ -143,9 +154,15 @@ export const Create = () => {
                         members: []
                     })
                 }
+                setConfirmDialogVisible(false);
+                setFormDataToSubmit(null);
             }
-        })
-        
+        });
+    };
+
+    const handleCancelSubmit = () => {
+        setConfirmDialogVisible(false);
+        setFormDataToSubmit(null);
     };
 
     const setOrganizationList = (organizations) => {
@@ -218,597 +235,644 @@ export const Create = () => {
                 <label className="text-base">
                     Create event:
                 </label>
-<Stepper ref={stepperRef} linear>
-    {/*SELECT MODEL*/}
-    <StepperPanel>
-        <div className="models">
-            <label htmlFor="model" className="block text-sm font-medium text-gray-700 mb-1">
-                Select Model
-            </label>
-            <Controller
-                control={control}
-                rules={{
-                    required: true,
-                }}
-                render={({ field: { onChange, value } }) => (
-                    <Dropdown
-                        id="model"
-                        className="w-full md:w-14rem capitalize border border-gray-400" 
-                        value={value} 
-                        onChange={onChange} 
-                        options={modelDataList} 
-                        optionLabel="name" 
-                        placeholder="Select model" 
-                        checkmark={true} 
-                        highlightOnSelect={false} 
-                    />
-                )}
-                name="model"
-            />
-            {errors.model && (
-                <p className="text-sm text-red-400 indent-2">Please select your model*</p>
-            )}
-        </div>
-        <div className="flex pt-4 justify-end px-4">
-            <Button 
-                className="bg-[#2211cc] text-[#c7c430] px-4 py-2" 
-                label="Next" 
-                iconPos="right" 
-                onClick={() => {
-                    trigger('model').then((valid) => {
-                        if (valid) stepperRef.current.nextCallback();
-                    });
-                }}
-            />
-        </div>
-    </StepperPanel>
-    {/*EVENT DETAIL*/}
-    <StepperPanel>
-        <div className="flex flex-col gap-4">
-            <div className="term">
-                <label htmlFor="term" className="block text-sm font-medium text-gray-700 mb-1">
-                    Event Term
-                </label>
-                <Controller
-                    control={control}
-                    render={({ field: { value } }) => (
-                    <InputText
-                        disabled
-                        value={value}
-                        name="term"
-                        type="text"
-                        id="term"
-                        placeholder="Enter event term"
-                        className={`${errors.term && 'border border-red-500'} bg-blue-100 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
-                    />
-                    )}
-                    name="term"
-                />
-                {errors.term && (
-                    <p className="text-sm italic mt-1 text-red-400 indent-2">
-                        event term is required.*
-                    </p>
-                )}
-            </div>
-            <div className="organization">
-                <label htmlFor="organization" className="block text-sm font-medium text-gray-700 mb-1">
-                    Organization
-                </label>
-                <Controller
-                    control={control}
-                    rules={{
-                        required: true,
-                    }}
-                    render={({ field: { onChange, value } }) => (
-                        <Dropdown
-                            id="organization"
-                            disabled={decryptedUser?.role_id === 1}
-                            className={`w-full md:w-14rem capitalize ${decryptedUser?.role_id === 1 && 'bg-blue-100'} border border-gray-400`} 
-                            value={value} 
-                            onChange={onChange} 
-                            options={setOrganizationList(decryptedUser?.organizations)} 
-                            optionLabel="name" 
-                            placeholder="Select organization" 
-                            checkmark={true} 
-                            highlightOnSelect={false} 
-                        />
-                    )}
-                    name="organization"
-                />
-                {errors.organization && (
-                    <p className="text-sm text-red-400 indent-2">Please select organization*</p>
-                )}
-            </div>
-            <div className="eventype">
-                <label htmlFor="event_type" className="block text-sm font-medium text-gray-700 mb-1">
-                    Event Type
-                </label>
-                <Controller
-                    control={control}
-                    rules={{
-                        required: true,
-                    }}
-                    render={({ field: { onChange, value } }) => (
-                        <Dropdown
-                            id="event_type"
-                            className="w-full md:w-14rem capitalize border border-gray-400" 
-                            value={value} 
-                            onChange={onChange} 
-                            options={typeData}
-                            optionLabel="label" 
-                            optionValue="value" 
-                            placeholder="Select Type" 
-                            checkmark={true} 
-                            highlightOnSelect={false} 
-                        />
-                    )}
-                    name="event_type"
-                />
-                {errors.event_type && (
-                    <p className="text-sm text-red-400 indent-2">Please select your event type*</p>
-                )}
-            </div>
-            <div className="unsdgs">
-                <label htmlFor="unsdgs" className="block text-sm font-medium text-gray-700 mb-1">
-                    UNSDGs
-                </label>
-                <Controller
-                    control={control}
-                    rules={{
-                        required: true,
-                    }}
-                    render={({ field: { onChange, value } }) => (
-                        <MultiSelect 
-                            id="unsdgs"
-                            value={value} 
-                            onChange={onChange} 
-                            options={unsdgData?.data}
-                            optionLabel="name" 
-                            display="chip" 
-                            placeholder="UNSDG" 
-                            maxSelectedLabels={3} 
-                            className="w-full md:w-20rem border border-gray-500" 
-                        />
-                    )}
-                    name="unsdgs"
-                />
-                {errors.unsdgs && (
-                    <p className="text-sm text-red-400 indent-2">Please select unsdgs*</p>
-                )}
-            </div>
-            <div className="skills">
-                <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-1">
-                    Skills Needed
-                </label>
-                <Controller
-                    control={control}
-                    rules={{
-                        required: true,
-                    }}
-                    render={({ field: { onChange, value } }) => (
-                        <MultiSelect 
-                            id="skills"
-                            value={value} 
-                            onChange={onChange} 
-                            options={skillData?.data} 
-                            optionLabel="name" 
-                            display="chip" 
-                            placeholder="Select skill needed for the event" 
-                            maxSelectedLabels={3} 
-                            className="w-full md:w-20rem border border-gray-500" 
-                        />
-                    )}
-                    name="skills"
-                />
-                {errors.skills && (
-                    <p className="text-sm text-red-400 indent-2">Please select skills needed for your event*</p>
-                )}
-            </div>
-            <div className="name">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Event Name
-                </label>
-                <Controller
-                    control={control}
-                    rules={{
-                    required: true,
-                    pattern: /[\S\s]+[\S]+/,
-                    }}
-                    render={({ field: { onChange, value } }) => (
-                    <InputText
-                        value={value}
-                        onChange={onChange}
-                        name="name"
-                        type="text"
-                        id="name"
-                        placeholder="Enter your event name"
-                        className={`${errors.name && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
-                    />
-                    )}
-                    name="name"
-                />
-                {errors.name && (
-                    <p className="text-sm italic mt-1 text-red-400 indent-2">
-                        event name is required.*
-                    </p>
-                )}
-            </div>
-            <div className="location">
-                <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-                    Event Location
-                </label>
-                <Controller
-                    control={control}
-                    rules={{ required: true }}
-                    render={({ field: { onChange, value } }) => (
-                        <InputText
-                            id="location"
-                            value={value}
-                            onChange={onChange}
-                            rows={4}
-                            placeholder="Enter event location"
-                            className={`${errors.location && 'p-invalid'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
-                        />
-                    )}
-                    name="location"
-                />
-                {errors.location && (
-                    <p className="text-sm italic mt-1 text-red-400 indent-2">
-                        event location is required.*
-                    </p>
-                )}
-            </div>
-            <div className="description">
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                    Event Description
-                </label>
-                <Controller
-                    control={control}
-                    rules={{ required: true }}
-                    render={({ field: { onChange, value } }) => (
-                        <InputTextarea
-                            id="description"
-                            value={value}
-                            onChange={onChange}
-                            rows={4}
-                            placeholder="Enter event description"
-                            className={`${errors.description && 'p-invalid'} w-full`}
-                        />
-                    )}
-                    name="description"
-                />
-                {errors.description && (
-                    <p className="text-sm italic mt-1 text-red-400 indent-2">
-                        event description is required.*
-                    </p>
-                )}
-            </div>
-            <div className="target_group">
-                <label htmlFor="target_group" className="block text-sm font-medium text-gray-700 mb-1">
-                    Target Group
-                </label>
-                <Controller
-                    control={control}
-                    rules={{
-                    required: true,
-                    pattern: /[\S\s]+[\S]+/,
-                    }}
-                    render={({ field: { onChange, value } }) => (
-                    <InputText
-                        value={value}
-                        onChange={onChange}
-                        name="target_group"
-                        type="text"
-                        id="target_group"
-                        placeholder="Enter your target group name"
-                        className={`${errors.target_group && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
-                    />
-                    )}
-                    name="target_group"
-                />
-                {errors.target_group && (
-                    <p className="text-sm italic mt-1 text-red-400 indent-2">
-                        event target group name is required.*
-                    </p>
-                )}
-            </div>
-            <div className="budget">
-                <label htmlFor="budget_proposal" className="block text-sm font-medium text-gray-700 mb-1">
-                    Budget Proposal
-                </label>
-                <Controller
-                    control={control}
-                    rules={{
-                    required: true,
-                    }}
-                    render={({ field: { onChange, value } }) => (
-                        <InputNumber
-                            id="budget_proposal"
-                            inputClassName={`${errors.budget_proposal && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
-                            name="budget_proposal"
-                            value={value} 
-                            onValueChange={onChange}
-                            rows={4}
-                            placeholder="Enter your budget proposal"
-                        />
-                    )}
-                    name="budget_proposal"
-                />
-                {errors.budget_proposal && (
-                    <p className="text-sm italic mt-1 text-red-400 indent-2">
-                        budget is required.*
-                    </p>
-                )}
-            </div>
-            <div className="implement_date">
-                <label htmlFor="implement_date" className="block text-sm font-medium text-gray-700 mb-1">
-                    Event Start Date
-                </label>
-                <Controller
-                    control={control}
-                    rules={{
-                    required: true,
-                    validate: {
-                        notInRestrictedPeriod: (value) => {
-                        if (!value) return true; // Let required rule handle empty values
-                        const disabledDates = getDisabledDates();
-                        const selectedDate = new Date(value);
-                        selectedDate.setHours(0, 0, 0, 0);
-                        
-                        // Check if selected date is in the disabled range
-                        return !disabledDates.some(disabledDate => 
-                            disabledDate.getTime() === selectedDate.getTime()
-                        );
-                        }
-                    }
-                    }}
-                    render={({ field: { onChange, value } }) => {
-                    const disabledDates = getDisabledDates();
-                    const minSelectableDate = new Date(disabledDates[disabledDates.length - 1]);
-                    minSelectableDate.setDate(minSelectableDate.getDate() + 1); // Day after last disabled date
-                    
-                    return (
-                        <Calendar
-                        id="implement_date"
-                        value={value}
-                        onChange={(e) => {
-                            onChange(e.value);
-                        }}
-                        dateFormat="yy-mm-dd"
-                        placeholder="Select Event start date"
-                        className={`w-full ${errors.implement_date && 'border border-red-500'}`}
-                        showIcon
-                        disabledDates={disabledDates}
-                        minDate={minSelectableDate}
-                        />
-                    );
-                    }}
-                    name="implement_date"
-                />
-                {errors.implement_date?.type === 'notInRestrictedPeriod' && (
-                    <p className="text-sm italic mt-1 text-red-400 indent-2">
-                    Implementation date cannot be within the next 4 weeks from today.
-                    </p>
-                )}
-                {errors.implement_date?.type === 'required' && (
-                    <p className="text-sm italic mt-1 text-red-400 indent-2">
-                    Event date is required.*
-                    </p>
-                )}
-            </div>
-
-            <div className="flex pt-4 justify-between px-4">
-                <Button 
-                    className="bg-[#2211cc] text-[#c7c430] px-4 py-2" 
-                    label="Back" 
-                    severity="secondary" 
-                    onClick={() => stepperRef.current.prevCallback()} 
-                />
-                <Button 
-                    className="bg-[#2211cc] text-[#c7c430] px-4 py-2" 
-                    label="Next" 
-                    iconPos="right" 
-                    onClick={() => {
-                        trigger().then((valid) => {
-                            if (valid) stepperRef.current.nextCallback();
-                        });
-                    }}
-                />
-            </div>
-        </div>
-    </StepperPanel> 
-    {/*EVENT MEMBER*/}
-    <StepperPanel>
-        <div>
-            <div className="w-full capitalize flex flex-col gap-2">
-            {membersLoading ? (
-                <div className="text-center py-6">Loading members...</div>
-            ) : (
-                <>
-                <label className="font-semibold text-lg mb-2">
-                    Organization Members
-                </label>
-
-                {!watch("organization") ? (
-                    <p className="italic text-gray-500">
-                    Please select an organization first.
-                    </p>
-                ) : (
-                    <>
-                    {(() => {
-                        const filteredMembers =
-                        membersData?.data?.filter((m) => m?.pivot?.role_id === 8) || [];
-
-                        // All currently selected member IDs
-                        const selectedMemberIds =
-                        watch("members")?.map((m) => m?.member?.id) || [];
-
-                        return (
-                        <>
-                            {memberFields.map((field, index) => (
-                            <div
-                                key={field.id}
-                                className="border border-gray-300 rounded-lg p-4 flex flex-col gap-2 bg-gray-50 relative"
-                            >
-                                <label htmlFor={`member-${index}`} className="block text-sm font-medium text-gray-700">
-                                    Member {index + 1}
-                                </label>
-                                {/* Member Dropdown */}
-                                <Controller
+                <Stepper ref={stepperRef} linear>
+                    {/*SELECT MODEL*/}
+                    <StepperPanel>
+                        <div className="models">
+                            <label htmlFor="model" className="block text-sm font-medium text-gray-700 mb-1">
+                                Select Model
+                            </label>
+                            <Controller
                                 control={control}
-                                name={`members.${index}.member`}
-                                defaultValue={null}
-                                render={({ field: { onChange, value } }) => {
-                                    // ✅ Use current field value here, not watch()
-                                    const availableMembers = filteredMembers.filter(
-                                    (m) =>
-                                        !selectedMemberIds.includes(m.id) ||
-                                        m.id === value?.id
-                                    );
-
-                                    return (
-                                    <Dropdown
-                                        id={`member-${index}`}
-                                        value={value}
-                                        onChange={(e) => onChange(e.value)}
-                                        options={availableMembers}
-                                        optionLabel="firstname"
-                                        placeholder="Select member"
-                                        className="w-full border border-gray-400 rounded-md"
-                                        itemTemplate={(option) => (
-                                        <div>
-                                            {option.firstname} {option.lastname}
-                                        </div>
-                                        )}
-                                        valueTemplate={(option) =>
-                                        option ? (
-                                            <div>
-                                            {option.firstname} {option.lastname}
-                                            </div>
-                                        ) : (
-                                            <span className="text-gray-400">
-                                            Select member
-                                            </span>
-                                        )
-                                        }
-                                    />
-                                    );
+                                rules={{
+                                    required: true,
                                 }}
-                                />
-
-                                <label htmlFor={`role-${index}`} className="block text-sm font-medium text-gray-700 mt-2">
-                                    Role
-                                </label>
-                                {/* Role input */}
-                                <Controller
-                                control={control}
-                                name={`members.${index}.role`}
-                                defaultValue=""
                                 render={({ field: { onChange, value } }) => (
-                                    <InputText
-                                    id={`role-${index}`}
-                                    value={value}
-                                    onChange={onChange}
-                                    placeholder="Enter role"
-                                    className="border border-gray-400 rounded-md p-2 w-full"
+                                    <Dropdown
+                                        id="model"
+                                        className="w-full md:w-14rem capitalize border border-gray-400" 
+                                        value={value} 
+                                        onChange={onChange} 
+                                        options={modelDataList} 
+                                        optionLabel="name" 
+                                        placeholder="Select model" 
+                                        checkmark={true} 
+                                        highlightOnSelect={false} 
                                     />
                                 )}
+                                name="model"
+                            />
+                            {errors.model && (
+                                <p className="text-sm text-red-400 indent-2">Please select your model*</p>
+                            )}
+                        </div>
+                        <div className="flex pt-4 justify-end px-4">
+                            <Button 
+                                className="bg-[#2211cc] text-[#c7c430] px-4 py-2" 
+                                label="Next" 
+                                iconPos="right" 
+                                onClick={() => {
+                                    trigger('model').then((valid) => {
+                                        if (valid) stepperRef.current.nextCallback();
+                                    });
+                                }}
+                            />
+                        </div>
+                    </StepperPanel>
+                    {/*EVENT DETAIL*/}
+                    <StepperPanel>
+                        <div className="flex flex-col gap-4">
+                            <div className="term">
+                                <label htmlFor="term" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Event Term
+                                </label>
+                                <Controller
+                                    control={control}
+                                    render={({ field: { value } }) => (
+                                    <InputText
+                                        disabled
+                                        value={value}
+                                        name="term"
+                                        type="text"
+                                        id="term"
+                                        placeholder="Enter event term"
+                                        className={`${errors.term && 'border border-red-500'} bg-blue-100 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                                    />
+                                    )}
+                                    name="term"
                                 />
-
-                                {/* Remove Button */}
-                                <span
-                                className="absolute top-2 right-3 text-[22px] text-red-500 cursor-pointer"
-                                onClick={() => removeMember(index)}
-                                >
-                                ×
-                                </span>
+                                {errors.term && (
+                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
+                                        event term is required.*
+                                    </p>
+                                )}
                             </div>
-                            ))}
+                            <div className="organization">
+                                <label htmlFor="organization" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Organization
+                                </label>
+                                <Controller
+                                    control={control}
+                                    rules={{
+                                        required: true,
+                                    }}
+                                    render={({ field: { onChange, value } }) => (
+                                        <Dropdown
+                                            id="organization"
+                                            disabled={decryptedUser?.role_id === 1}
+                                            className={`w-full md:w-14rem capitalize ${decryptedUser?.role_id === 1 && 'bg-blue-100'} border border-gray-400`} 
+                                            value={value} 
+                                            onChange={onChange} 
+                                            options={setOrganizationList(decryptedUser?.organizations)} 
+                                            optionLabel="name" 
+                                            placeholder="Select organization" 
+                                            checkmark={true} 
+                                            highlightOnSelect={false} 
+                                        />
+                                    )}
+                                    name="organization"
+                                />
+                                {errors.organization && (
+                                    <p className="text-sm text-red-400 indent-2">Please select organization*</p>
+                                )}
+                            </div>
+                            <div className="eventype">
+                                <label htmlFor="event_type" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Event Type
+                                </label>
+                                <Controller
+                                    control={control}
+                                    rules={{
+                                        required: true,
+                                    }}
+                                    render={({ field: { onChange, value } }) => (
+                                        <Dropdown
+                                            id="event_type"
+                                            className="w-full md:w-14rem capitalize border border-gray-400" 
+                                            value={value} 
+                                            onChange={onChange} 
+                                            options={typeData}
+                                            optionLabel="label" 
+                                            optionValue="value" 
+                                            placeholder="Select Type" 
+                                            checkmark={true} 
+                                            highlightOnSelect={false} 
+                                        />
+                                    )}
+                                    name="event_type"
+                                />
+                                {errors.event_type && (
+                                    <p className="text-sm text-red-400 indent-2">Please select your event type*</p>
+                                )}
+                            </div>
+                            <div className="unsdgs">
+                                <label htmlFor="unsdgs" className="block text-sm font-medium text-gray-700 mb-1">
+                                    UNSDGs
+                                </label>
+                                <Controller
+                                    control={control}
+                                    rules={{
+                                        required: true,
+                                    }}
+                                    render={({ field: { onChange, value } }) => (
+                                        <MultiSelect 
+                                            id="unsdgs"
+                                            value={value} 
+                                            onChange={onChange} 
+                                            options={unsdgData?.data}
+                                            optionLabel="name" 
+                                            display="chip" 
+                                            placeholder="UNSDG" 
+                                            maxSelectedLabels={3} 
+                                            className="w-full md:w-20rem border border-gray-500" 
+                                        />
+                                    )}
+                                    name="unsdgs"
+                                />
+                                {errors.unsdgs && (
+                                    <p className="text-sm text-red-400 indent-2">Please select unsdgs*</p>
+                                )}
+                            </div>
+                            <div className="skills">
+                                <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Skills Needed
+                                </label>
+                                <Controller
+                                    control={control}
+                                    rules={{
+                                        required: true,
+                                    }}
+                                    render={({ field: { onChange, value } }) => (
+                                        <MultiSelect 
+                                            id="skills"
+                                            value={value} 
+                                            onChange={onChange} 
+                                            options={skillData?.data} 
+                                            optionLabel="name" 
+                                            display="chip" 
+                                            placeholder="Select skill needed for the event" 
+                                            maxSelectedLabels={3} 
+                                            className="w-full md:w-20rem border border-gray-500" 
+                                        />
+                                    )}
+                                    name="skills"
+                                />
+                                {errors.skills && (
+                                    <p className="text-sm text-red-400 indent-2">Please select skills needed for your event*</p>
+                                )}
+                            </div>
+                            <div className="name">
+                                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Event Name
+                                </label>
+                                <Controller
+                                    control={control}
+                                    rules={{
+                                    required: true,
+                                    pattern: /[\S\s]+[\S]+/,
+                                    }}
+                                    render={({ field: { onChange, value } }) => (
+                                    <InputText
+                                        value={value}
+                                        onChange={onChange}
+                                        name="name"
+                                        type="text"
+                                        id="name"
+                                        placeholder="Enter your event name"
+                                        className={`${errors.name && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                                    />
+                                    )}
+                                    name="name"
+                                />
+                                {errors.name && (
+                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
+                                        event name is required.*
+                                    </p>
+                                )}
+                            </div>
+                            <div className="location">
+                                <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Event Location
+                                </label>
+                                <Controller
+                                    control={control}
+                                    rules={{ required: true }}
+                                    render={({ field: { onChange, value } }) => (
+                                        <InputText
+                                            id="location"
+                                            value={value}
+                                            onChange={onChange}
+                                            rows={4}
+                                            placeholder="Enter event location"
+                                            className={`${errors.location && 'p-invalid'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                                        />
+                                    )}
+                                    name="location"
+                                />
+                                {errors.location && (
+                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
+                                        event location is required.*
+                                    </p>
+                                )}
+                            </div>
+                            <div className="description">
+                                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Event Description
+                                </label>
+                                <Controller
+                                    control={control}
+                                    rules={{ required: true }}
+                                    render={({ field: { onChange, value } }) => (
+                                        <InputTextarea
+                                            id="description"
+                                            value={value}
+                                            onChange={onChange}
+                                            rows={4}
+                                            placeholder="Enter event description"
+                                            className={`${errors.description && 'p-invalid'} w-full`}
+                                        />
+                                    )}
+                                    name="description"
+                                />
+                                {errors.description && (
+                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
+                                        event description is required.*
+                                    </p>
+                                )}
+                            </div>
+                            <div className="target_group">
+                                <label htmlFor="target_group" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Target Group
+                                </label>
+                                <Controller
+                                    control={control}
+                                    rules={{
+                                    required: true,
+                                    pattern: /[\S\s]+[\S]+/,
+                                    }}
+                                    render={({ field: { onChange, value } }) => (
+                                    <InputText
+                                        value={value}
+                                        onChange={onChange}
+                                        name="target_group"
+                                        type="text"
+                                        id="target_group"
+                                        placeholder="Enter your target group name"
+                                        className={`${errors.target_group && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                                    />
+                                    )}
+                                    name="target_group"
+                                />
+                                {errors.target_group && (
+                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
+                                        event target group name is required.*
+                                    </p>
+                                )}
+                            </div>
+                            <div className="budget">
+                                <label htmlFor="budget_proposal" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Budget Proposal
+                                </label>
+                                <Controller
+                                    control={control}
+                                    rules={{
+                                    required: true,
+                                    }}
+                                    render={({ field: { onChange, value } }) => (
+                                        <InputNumber
+                                            id="budget_proposal"
+                                            inputClassName={`${errors.budget_proposal && 'border border-red-500'} bg-gray-50 border border-gray-300 text-[#495057] sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block leading-normal w-full p-2.5`}
+                                            name="budget_proposal"
+                                            value={value} 
+                                            onValueChange={onChange}
+                                            rows={4}
+                                            placeholder="Enter your budget proposal"
+                                        />
+                                    )}
+                                    name="budget_proposal"
+                                />
+                                {errors.budget_proposal && (
+                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
+                                        budget is required.*
+                                    </p>
+                                )}
+                            </div>
+                            <div className="implement_date">
+                                <label htmlFor="implement_date" className="block text-sm font-medium text-gray-700 mb-1">
+                                    Event Start Date
+                                </label>
+                                <Controller
+                                    control={control}
+                                    rules={{
+                                    required: true,
+                                    validate: {
+                                        notInRestrictedPeriod: (value) => {
+                                        if (!value) return true; // Let required rule handle empty values
+                                        const disabledDates = getDisabledDates();
+                                        const selectedDate = new Date(value);
+                                        selectedDate.setHours(0, 0, 0, 0);
+                                        
+                                        // Check if selected date is in the disabled range
+                                        return !disabledDates.some(disabledDate => 
+                                            disabledDate.getTime() === selectedDate.getTime()
+                                        );
+                                        }
+                                    }
+                                    }}
+                                    render={({ field: { onChange, value } }) => {
+                                    const disabledDates = getDisabledDates();
+                                    const minSelectableDate = new Date(disabledDates[disabledDates.length - 1]);
+                                    minSelectableDate.setDate(minSelectableDate.getDate() + 1); // Day after last disabled date
+                                    
+                                    return (
+                                        <Calendar
+                                        id="implement_date"
+                                        value={value}
+                                        onChange={(e) => {
+                                            onChange(e.value);
+                                        }}
+                                        dateFormat="yy-mm-dd"
+                                        placeholder="Select Event start date"
+                                        className={`w-full ${errors.implement_date && 'border border-red-500'}`}
+                                        showIcon
+                                        disabledDates={disabledDates}
+                                        minDate={minSelectableDate}
+                                        />
+                                    );
+                                    }}
+                                    name="implement_date"
+                                />
+                                {errors.implement_date?.type === 'notInRestrictedPeriod' && (
+                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
+                                    Implementation date cannot be within the next 4 weeks from today.
+                                    </p>
+                                )}
+                                {errors.implement_date?.type === 'required' && (
+                                    <p className="text-sm italic mt-1 text-red-400 indent-2">
+                                    Event date is required.*
+                                    </p>
+                                )}
+                            </div>
 
-                            {/* Add New Member Button */}
-                            {filteredMembers.length > 0 &&
-                            memberFields.length < filteredMembers.length && (
-                                <span
-                                className="text-[25px] text-[#5b9bd1] cursor-pointer mt-2 self-start"
-                                onClick={() =>
-                                    appendMember({ member: null, role: "" })
-                                }
-                                >
-                                +
+                            <div className="flex pt-4 justify-between px-4">
+                                <Button 
+                                    className="bg-[#2211cc] text-[#c7c430] px-4 py-2" 
+                                    label="Back" 
+                                    severity="secondary" 
+                                    onClick={() => stepperRef.current.prevCallback()} 
+                                />
+                                <Button 
+                                    className="bg-[#2211cc] text-[#c7c430] px-4 py-2" 
+                                    label="Next" 
+                                    iconPos="right" 
+                                    onClick={() => {
+                                        trigger().then((valid) => {
+                                            if (valid) stepperRef.current.nextCallback();
+                                        });
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </StepperPanel> 
+                    {/*EVENT MEMBER*/}
+                    <StepperPanel>
+                        <div>
+                            <div className="w-full capitalize flex flex-col gap-2">
+                            {membersLoading ? (
+                                <div className="text-center py-6">Loading members...</div>
+                            ) : (
+                                <>
+                                <label className="font-semibold text-lg mb-2">
+                                    Organization Members
+                                </label>
+
+                                {!watch("organization") ? (
+                                    <p className="italic text-gray-500">
+                                    Please select an organization first.
+                                    </p>
+                                ) : (
+                                    <>
+                                    {(() => {
+                                        const filteredMembers =
+                                        membersData?.data?.filter((m) => m?.pivot?.role_id === 8) || [];
+
+                                        // All currently selected member IDs
+                                        const selectedMemberIds =
+                                        watch("members")?.map((m) => m?.member?.id) || [];
+
+                                        return (
+                                        <>
+                                            {memberFields.map((field, index) => (
+                                            <div
+                                                key={field.id}
+                                                className="border border-gray-300 rounded-lg p-4 flex flex-col gap-2 bg-gray-50 relative"
+                                            >
+                                                <label htmlFor={`member-${index}`} className="block text-sm font-medium text-gray-700">
+                                                    Member {index + 1}
+                                                </label>
+                                                {/* Member Dropdown */}
+                                                <Controller
+                                                control={control}
+                                                name={`members.${index}.member`}
+                                                defaultValue={null}
+                                                render={({ field: { onChange, value } }) => {
+                                                    // ✅ Use current field value here, not watch()
+                                                    const availableMembers = filteredMembers.filter(
+                                                    (m) =>
+                                                        !selectedMemberIds.includes(m.id) ||
+                                                        m.id === value?.id
+                                                    );
+
+                                                    return (
+                                                    <Dropdown
+                                                        id={`member-${index}`}
+                                                        value={value}
+                                                        onChange={(e) => onChange(e.value)}
+                                                        options={availableMembers}
+                                                        optionLabel="firstname"
+                                                        placeholder="Select member"
+                                                        className="w-full border border-gray-400 rounded-md"
+                                                        itemTemplate={(option) => (
+                                                        <div>
+                                                            {option.firstname} {option.lastname}
+                                                        </div>
+                                                        )}
+                                                        valueTemplate={(option) =>
+                                                        option ? (
+                                                            <div>
+                                                            {option.firstname} {option.lastname}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-gray-400">
+                                                            Select member
+                                                            </span>
+                                                        )
+                                                        }
+                                                    />
+                                                    );
+                                                }}
+                                                />
+
+                                                <label htmlFor={`role-${index}`} className="block text-sm font-medium text-gray-700 mt-2">
+                                                    Role
+                                                </label>
+                                                {/* Role input */}
+                                                <Controller
+                                                control={control}
+                                                name={`members.${index}.role`}
+                                                defaultValue=""
+                                                render={({ field: { onChange, value } }) => (
+                                                    <InputText
+                                                    id={`role-${index}`}
+                                                    value={value}
+                                                    onChange={onChange}
+                                                    placeholder="Enter role"
+                                                    className="border border-gray-400 rounded-md p-2 w-full"
+                                                    />
+                                                )}
+                                                />
+
+                                                {/* Remove Button */}
+                                                <span
+                                                className="absolute top-2 right-3 text-[22px] text-red-500 cursor-pointer"
+                                                onClick={() => removeMember(index)}
+                                                >
+                                                ×
+                                                </span>
+                                            </div>
+                                            ))}
+
+                                            {/* Add New Member Button */}
+                                            {filteredMembers.length > 0 &&
+                                            memberFields.length < filteredMembers.length && (
+                                                <span
+                                                className="text-[25px] text-[#5b9bd1] cursor-pointer mt-2 self-start"
+                                                onClick={() =>
+                                                    appendMember({ member: null, role: "" })
+                                                }
+                                                >
+                                                +
+                                                </span>
+                                            )}
+                                        </>
+                                        );
+                                    })()}
+                                    </>
+                                )}
+                                </>
+                            )}
+                            </div>
+
+                            {/* Navigation Buttons */}
+                            <div className="flex pt-4 justify-between">
+                            <Button
+                                className="bg-[#2211cc] text-[#c7c430] px-4 py-2"
+                                label="Back"
+                                severity="secondary"
+                                onClick={() => stepperRef.current.prevCallback()}
+                            />
+                            <Button
+                                className="bg-[#2211cc] text-[#c7c430] px-4 py-2"
+                                label="Next"
+                                iconPos="right"
+                                onClick={() => {
+                                trigger().then((valid) => {
+                                    if (valid) stepperRef.current.nextCallback();
+                                });
+                                }}
+                            />
+                            </div>
+                        </div>
+                    </StepperPanel>
+                    {/*EVENT ACTIVITIES*/}
+                    <StepperPanel>
+                        <div>
+                            <div className="w-full capitalize flex flex-col gap-2">
+                                <label className="font-semibold text-lg mb-2">
+                                    Event Activities
+                                </label>
+                                <Activity 
+                                    modelId={modelId}
+                                    activities={activitiesValues}
+                                    activityKeys={fields.map(f => f.id)}
+                                    onRemove={handleRemoveActivity}
+                                    onChange={handleActivityChange}
+                                />
+                                {modelId === 3 && (
+                                    <span
+                                        className="text-[25px] text-[#5b9bd1] cursor-pointer"
+                                        onClick={handleAddActivity}
+                                    >
+                                    +
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex pt-4 justify-between">
+                                <Button 
+                                    className="bg-[#2211cc] text-[#c7c430] px-4 py-2" 
+                                    label="Back" 
+                                    severity="secondary" 
+                                    onClick={() => stepperRef.current.prevCallback()} 
+                                />
+                                <Button
+                                    disabled={createEventLoading}
+                                    type="submit" 
+                                    className="bg-[#2211cc] text-[#c7c430] px-4 py-2" 
+                                    label="Submit" 
+                                    iconPos="right" 
+                                />
+                            </div>
+                        </div>
+                    </StepperPanel>
+                </Stepper>
+            </form>
+            {/* Confirmation Dialog */}
+            <Dialog
+                header="Confirm Event Creation"
+                visible={confirmDialogVisible}
+                style={{ width: '400px' }}
+                onHide={handleCancelSubmit}
+                footer={
+                    <div className="flex gap-3 justify-end">
+                        <button
+                            onClick={handleCancelSubmit}
+                            disabled={createEventLoading}
+                            className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleConfirmSubmit}
+                            disabled={createEventLoading}
+                            className="px-5 py-2.5 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                        >
+                            {createEventLoading ? (
+                                <span className="flex items-center gap-2">
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    Creating...
+                                </span>
+                            ) : (
+                                <span className="flex items-center gap-2">
+                                    <i className="pi pi-check text-sm"></i>
+                                    Create Event
                                 </span>
                             )}
-                        </>
-                        );
-                    })()}
-                    </>
-                )}
-                </>
-            )}
-            </div>
-
-            {/* Navigation Buttons */}
-            <div className="flex pt-4 justify-between">
-            <Button
-                className="bg-[#2211cc] text-[#c7c430] px-4 py-2"
-                label="Back"
-                severity="secondary"
-                onClick={() => stepperRef.current.prevCallback()}
-            />
-            <Button
-                className="bg-[#2211cc] text-[#c7c430] px-4 py-2"
-                label="Next"
-                iconPos="right"
-                onClick={() => {
-                trigger().then((valid) => {
-                    if (valid) stepperRef.current.nextCallback();
-                });
-                }}
-            />
-            </div>
-        </div>
-    </StepperPanel>
-    {/*EVENT ACTIVITIES*/}
-    <StepperPanel>
-        <div>
-            <div className="w-full capitalize flex flex-col gap-2">
-                <label className="font-semibold text-lg mb-2">
-                    Event Activities
-                </label>
-                <Activity 
-                    modelId={modelId}
-                    activities={activitiesValues}
-                    activityKeys={fields.map(f => f.id)}
-                    onRemove={handleRemoveActivity}
-                    onChange={handleActivityChange}
-                />
-                {modelId === 3 && (
-                    <span
-                        className="text-[25px] text-[#5b9bd1] cursor-pointer"
-                        onClick={handleAddActivity}
-                    >
-                    +
-                    </span>
-                )}
-            </div>
-            <div className="flex pt-4 justify-between">
-                <Button 
-                    className="bg-[#2211cc] text-[#c7c430] px-4 py-2" 
-                    label="Back" 
-                    severity="secondary" 
-                    onClick={() => stepperRef.current.prevCallback()} 
-                />
-                <Button
-                    disabled={createEventLoading}
-                    type="submit" 
-                    className="bg-[#2211cc] text-[#c7c430] px-4 py-2" 
-                    label="Submit" 
-                    iconPos="right" 
-                />
-            </div>
-        </div>
-    </StepperPanel>
-</Stepper>
-            </form>
+                        </button>
+                    </div>
+                }
+            >
+                <div className="confirmation-content">
+                    <p className="text-gray-700 mb-4">
+                        Are you sure you want to create this event? Please verify all information is correct.
+                    </p>
+                    <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <i className="pi pi-exclamation-triangle text-amber-600"></i>
+                        <p className="text-sm text-amber-800">
+                            Changes will require approval after creation.
+                        </p>
+                    </div>
+                </div>
+            </Dialog>
         </div>
     )
 }

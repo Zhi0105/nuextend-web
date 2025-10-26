@@ -16,6 +16,9 @@ import { getUsers } from "@_src/services/user";
 import { toast } from "react-toastify";
 import _ from "lodash";
 
+// Import Dialog component
+import { Dialog } from "primereact/dialog";
+
 import { PiNotePencil, PiListMagnifyingGlass, PiCertificate } from "react-icons/pi";
 import { VscLayoutActivitybarLeft } from "react-icons/vsc";
 import { RiIndeterminateCircleLine } from "react-icons/ri";
@@ -32,6 +35,10 @@ export const View = () => {
     token: state.token,
   }));
   const { removeEvent, removeEventLoading } = useContext(EventContext);
+
+  // Add state for delete confirmation dialog
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState(null);
 
   const decryptedToken = useMemo(() => (token ? DecryptString(token) : null), [token]);
   const decryptedUser = useMemo(() => (token ? DecryptUser(user) : null), [token, user]);
@@ -148,6 +155,33 @@ export const View = () => {
       console.log("@ETE:", error);
     },
   });
+
+  // Add function to handle delete confirmation
+  const confirmDelete = (eventData) => {
+    // Check if event status is 1 (planning/pending)
+    if (eventData?.event_status_id !== 1) {
+      toast("Only events in planning/pending status can be deleted.", { type: "warning" });
+      return;
+    }
+    
+    setEventToDelete(eventData);
+    setDeleteDialogVisible(true);
+  };
+
+  // Add function to execute delete after confirmation
+  const executeDelete = () => {
+    if (eventToDelete) {
+      removeEvent({ token: decryptedToken, id: eventToDelete?.id });
+      setDeleteDialogVisible(false);
+      setEventToDelete(null);
+    }
+  };
+
+  // Add function to cancel delete
+  const cancelDelete = () => {
+    setDeleteDialogVisible(false);
+    setEventToDelete(null);
+  };
 
   const handleTerminate = (data) => {
   const form9 = data?.form9 || {};
@@ -357,13 +391,17 @@ export const View = () => {
             </button>
           )}
           {isEventOwner && (
-          <button
-            disabled={removeEventLoading}
-            onClick={() => removeEvent({ token: decryptedToken, id: eventRow?.id })}
-          >
-            <Tooltip target=".remove" content="remove" position="right" />
-            <FaTrash className="remove w-7 h-7 text-[#364190]" />
-          </button>
+            <button
+              disabled={removeEventLoading || eventRow?.event_status_id !== 1}
+              onClick={() => confirmDelete(eventRow)}
+            >
+              <Tooltip 
+                target=".remove" 
+                content={"Remove"} 
+                position="left" 
+              />
+              <FaTrash className={`remove w-7 h-7 ${eventRow?.event_status_id !== 1 ? "text-gray-400" : "text-[#364190]"}`} />
+            </button>
           )}
           
         </div>
@@ -425,14 +463,18 @@ export const View = () => {
           <FaBullhorn className="announcement w-7 h-7 text-[#364190]" />
         </button>
         {isEventOwner && (
-        <button
-          disabled={removeEventLoading}
-          onClick={() => removeEvent({ token: decryptedToken, id: eventRow?.id })}
-        >
-          <Tooltip target=".remove" content="remove" position="right" />
-          <FaTrash className="remove w-7 h-7 text-[#364190]" />
-        </button>
-        )} 
+          <button
+            disabled={removeEventLoading || eventRow?.event_status_id !== 1}
+            onClick={() => confirmDelete(eventRow)}
+          >
+            <Tooltip 
+              target=".remove" 
+              content={"Remove"} 
+              position="left" 
+            />
+            <FaTrash className={`remove w-7 h-7 ${eventRow?.event_status_id !== 1 ? "text-gray-400" : "text-[#364190]"}`} />
+          </button>
+        )}
       </div>
     );
   };
@@ -493,6 +535,50 @@ export const View = () => {
       <div className="w-full px-4 text-xl font-bold">
         <h1>Events</h1>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        header="Confirm Deletion"
+        visible={deleteDialogVisible}
+        style={{ width: '50vw' }}
+        onHide={cancelDelete}
+        footer={
+          <div className="flex gap-3 justify-end">
+            <button
+              className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              onClick={cancelDelete}
+              disabled={removeEventLoading}
+            >
+              Cancel
+            </button>
+            <button
+              className="px-6 py-2.5 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+              onClick={executeDelete}
+              disabled={removeEventLoading}
+            >
+              {removeEventLoading ? (
+                <span className="flex items-center gap-2">
+                  <i className="pi pi-spin pi-spinner" style={{ fontSize: '1rem' }}></i>
+                  Deleting...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <i className="pi pi-trash" style={{ fontSize: '1rem' }}></i>
+                  Delete Event
+                </span>
+              )}
+            </button>
+          </div>
+        }
+      >
+        <div className="confirmation-content flex items-start">
+          <i className="pi pi-exclamation-triangle mr-3 mt-1" style={{ fontSize: '2rem', color: '#e53e3e' }} />
+          <span className="text-gray-700">
+            Are you sure you want to delete the event "<strong className="text-gray-900">{eventToDelete?.name}</strong>"? 
+            This action cannot be undone.
+          </span>
+        </div>
+      </Dialog>
 
       {/* External filters (visible) */}
       <div className="w-full flex gap-3 justify-end items-center px-2">

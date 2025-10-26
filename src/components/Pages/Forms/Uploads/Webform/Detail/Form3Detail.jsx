@@ -26,7 +26,7 @@ export const Form3Detail = () => {
   const [form3, setForm3] = useState(initialData || null);
   const approvalCheck = checkApprovalProcess(getFormNumber(pathname), decryptedUser?.role_id, [ form3[0]?.is_dean && 9, form3[0]?.is_commex && 1, form3[0]?.is_asd && 10, form3[0]?.is_ad && 11, ].filter(Boolean), (owner?.role_id === 1 || owner?.role_id === 4), (owner?.role_id === 4))
   const isApprovalCheckPass = approvalCheck?.included && ( Number(decryptedUser?.role_id) === Number(approvalCheck?.nextApprover));
-
+  const [approveDialogVisible, setApproveDialogVisible] = useState(false);
 
   const [showRevise, setShowRevise] = useState(false);
 
@@ -96,8 +96,19 @@ export const Form3Detail = () => {
 
   const onApprove = () => {
     if (!form3 || !canAction) return;
+    setApproveDialogVisible(true);
+  };
+
+  // Function to actually approve after confirmation
+  const handleConfirmApprove = () => {
     doApprove({ token: decryptedToken, id: form3[0].id, role_id: roleId });
+    setApproveDialogVisible(false);
     navigate(-2);
+  };
+
+  // Function to cancel approval
+  const handleCancelApprove = () => {
+    setApproveDialogVisible(false);
   };
 
   const handleViewRemarks = () => {
@@ -595,6 +606,53 @@ export const Form3Detail = () => {
               className="p-button-text"
               onClick={() => setRemarksModal({ show: false, remarks: [], approver: '' })}
             />
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog
+        header="Confirm Approval"
+        visible={approveDialogVisible}
+        style={{ width: '400px' }}
+        onHide={handleCancelApprove}
+        footer={
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={handleCancelApprove}
+              disabled={approveLoading}
+              className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmApprove}
+              disabled={approveLoading}
+              className="px-5 py-2.5 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+            >
+              {approveLoading ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Approving...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <i className="pi pi-check text-sm"></i>
+                  Yes, Approve
+                </span>
+              )}
+            </button>
+          </div>
+        }
+      >
+        <div className="confirmation-content">
+          <p className="text-gray-700 mb-4">
+            Are you sure you want to approve this outreach project proposal form?
+          </p>
+          <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <i className="pi pi-info-circle text-blue-600"></i>
+            <p className="text-sm text-blue-800">
+              This action cannot be undone.
+            </p>
           </div>
         </div>
       </Dialog>
