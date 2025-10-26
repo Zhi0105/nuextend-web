@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Card } from "primereact/card";
 import { Fieldset } from "primereact/fieldset";
@@ -10,6 +10,7 @@ import { useUserStore } from "@_src/store/auth";
 import { DecryptString } from "@_src/utils/helpers";
 import { createForm4, updateForm4 } from "@_src/services/formservice";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Dialog } from "primereact/dialog";
 
 const defaultValues = {
   a: false, b: false, c: false,
@@ -33,6 +34,8 @@ export const Form4 = ({ onSubmit }) => {
   const { event, formdata } = location.state;
   const { token } = useUserStore((state) => ({ token: state.token }));
   const decryptedToken = token && DecryptString(token);
+  const [submitDialogVisible, setSubmitDialogVisible] = useState(false);
+  const [formDataToSubmit, setFormDataToSubmit] = useState(null);
 
   const { mutate: handleCreateForm4, isLoading: createLoading } = useMutation({
     mutationFn: createForm4,
@@ -76,15 +79,31 @@ export const Form4 = ({ onSubmit }) => {
     };
 
     onSubmit?.(payload);
-
-    if (formdata) {
-      handleUpdateForm4({ token: decryptedToken, ...payload });
-    } else {
-      handleCreateForm4({ token: decryptedToken, ...payload });
-    }
+    
+    setFormDataToSubmit(payload);
+    setSubmitDialogVisible(true);
   };
 
-  const sections = [
+  // Function to actually submit after confirmation
+  const handleConfirmSubmit = () => {
+    if (!formDataToSubmit) return;
+    
+    if (formdata) {
+      handleUpdateForm4({ token: decryptedToken, ...formDataToSubmit });
+    } else {
+      handleCreateForm4({ token: decryptedToken, ...formDataToSubmit });
+    }
+    
+    setSubmitDialogVisible(false);
+    setFormDataToSubmit(null);
+  };
+
+  // Function to cancel submission
+  const handleCancelSubmit = () => {
+    setSubmitDialogVisible(false);
+    setFormDataToSubmit(null);
+  };
+    const sections = [
     {
       title: "I. Relevance to Academic and Research Programs",
       fields: [
@@ -166,6 +185,53 @@ export const Form4 = ({ onSubmit }) => {
           />
         </div>
       </form>
+
+       <Dialog
+          header="Confirm Submission"
+          visible={submitDialogVisible}
+          style={{ width: '400px' }}
+          onHide={handleCancelSubmit}
+          footer={
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleCancelSubmit}
+                disabled={createLoading || updateLoading}
+                className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmSubmit}
+                disabled={createLoading || updateLoading}
+                className="px-5 py-2.5 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+              >
+                {(createLoading || updateLoading) ? (
+                  <span className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Submitting...
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <i className="pi pi-check text-sm"></i>
+                    Yes, Submit
+                  </span>
+                )}
+              </button>
+            </div>
+          }
+        >
+          <div className="confirmation-content">
+            <p className="text-gray-700 mb-4">
+              Are you sure you want to {formdata ? 'update' : 'submit'} this extension program proposal checklist?
+            </p>
+            <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <i className="pi pi-info-circle text-blue-600"></i>
+              <p className="text-sm text-blue-800">
+                Please review all criteria before submitting.
+              </p>
+            </div>
+          </div>
+        </Dialog>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { Card } from "primereact/card";
 import { Fieldset } from "primereact/fieldset";
@@ -13,6 +13,7 @@ import { useUserStore } from '@_src/store/auth';
 import { DecryptString } from "@_src/utils/helpers";
 import { createForm3, updateForm3 } from "@_src/services/formservice";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Dialog } from "primereact/dialog";
 
 const defaultValues = {
     description: "",
@@ -59,6 +60,8 @@ export const Form3 = ({ onSubmit }) => {
     const { event, formdata } = location.state || {}
     const { token } = useUserStore((state) => ({ token: state.token }));
     const decryptedToken = token && DecryptString(token)
+    const [submitDialogVisible, setSubmitDialogVisible] = useState(false);
+    const [formDataToSubmit, setFormDataToSubmit] = useState(null);
 
     const { mutate: handleCreateForm3, isLoading: createForm3Loading } = useMutation({
         mutationFn: createForm3,
@@ -147,41 +150,59 @@ export const Form3 = ({ onSubmit }) => {
             startDate: toYMD(data.startDate),
             endDate: toYMD(data.endDate),
             activity_plan_budget: data.activity_plan_budget.map((r) => ({
-                objectives: r.objectives,
-                activities: r.activities,
-                outputs: r.outputs,
-                personnel: r.personnel,
-                budget: num(r.budget),
+            objectives: r.objectives,
+            activities: r.activities,
+            outputs: r.outputs,
+            personnel: r.personnel,
+            budget: num(r.budget),
             })),
             detailed_budget: data.detailed_budget.map((r) => ({
-                item: r.item,
-                details: r.details || undefined,
-                quantity: num(r.quantity),
-                amount: num(r.amount),
-                total: num(r.total),
+            item: r.item,
+            details: r.details || undefined,
+            quantity: num(r.quantity),
+            amount: num(r.amount),
+            total: num(r.total),
             })),
             budget_sourcing: data.budget_sourcing.map((r) => ({
-                university: r.university,
-                outreachGroup: r.outreachGroup,
-                service: r.service,
-                other: r.other || undefined,
-                total: num(r.total),
+            university: r.university,
+            outreachGroup: r.outreachGroup,
+            service: r.service,
+            other: r.other || undefined,
+            total: num(r.total),
             })),
         };
+        
         onSubmit?.(payload);
+        
+        setFormDataToSubmit(payload);
+        setSubmitDialogVisible(true);
+        };
+
+        // Function to actually submit after confirmation
+        const handleConfirmSubmit = () => {
+        if (!formDataToSubmit) return;
         
         if (Array.isArray(formdata) && formdata.length > 0) {
             handleUpdateForm3({
-                token: decryptedToken,
-                ...payload
-            })
+            token: decryptedToken,
+            ...formDataToSubmit
+            });
         } else {
             handleCreateForm3({
-                token: decryptedToken,
-                ...payload
-            })
+            token: decryptedToken,
+            ...formDataToSubmit
+            });
         }
-    };
+        
+        setSubmitDialogVisible(false);
+        setFormDataToSubmit(null);
+        };
+
+        // Function to cancel submission
+        const handleCancelSubmit = () => {
+        setSubmitDialogVisible(false);
+        setFormDataToSubmit(null);
+        };
 
 
     return (
@@ -599,6 +620,53 @@ export const Form3 = ({ onSubmit }) => {
                 </div>
 
             </form>
+
+            <Dialog
+                header="Confirm Submission"
+                visible={submitDialogVisible}
+                style={{ width: '400px' }}
+                onHide={handleCancelSubmit}
+                footer={
+                <div className="flex gap-3 justify-end">
+                    <button
+                    onClick={handleCancelSubmit}
+                    disabled={createForm3Loading || updateForm3Loading}
+                    className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                    >
+                    Cancel
+                    </button>
+                    <button
+                    onClick={handleConfirmSubmit}
+                    disabled={createForm3Loading || updateForm3Loading}
+                    className="px-5 py-2.5 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                    >
+                    {(createForm3Loading || updateForm3Loading) ? (
+                        <span className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Submitting...
+                        </span>
+                    ) : (
+                        <span className="flex items-center gap-2">
+                        <i className="pi pi-check text-sm"></i>
+                        Yes, Submit
+                        </span>
+                    )}
+                    </button>
+                </div>
+                }
+            >
+                <div className="confirmation-content">
+                <p className="text-gray-700 mb-4">
+                    Are you sure you want to {formdata ? 'update' : 'submit'} this outreach proposal form?
+                </p>
+                <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <i className="pi pi-info-circle text-blue-600"></i>
+                    <p className="text-sm text-blue-800">
+                    Please review all information before submitting.
+                    </p>
+                </div>
+                </div>
+            </Dialog>
         </div>
     );
 };

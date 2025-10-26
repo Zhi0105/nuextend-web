@@ -23,6 +23,7 @@ export const Form4Detail = () => {
   const { user, token } = useUserStore((s) => ({ user: s.user, token: s.token }));
   const decryptedUser = token && DecryptUser(user);
   const decryptedToken = token && DecryptString(token);
+  const [approveDialogVisible, setApproveDialogVisible] = useState(false);
 
   const [form4, setForm4] = useState(() => {
     if (!initialData) return null;
@@ -88,8 +89,19 @@ export const Form4Detail = () => {
 
   const onApprove = () => {
     if (!form4 || !canAction) return;
+    setApproveDialogVisible(true);
+  };
+
+  // Function to actually approve after confirmation
+  const handleConfirmApprove = () => {
     doApprove({ token: decryptedToken, id: form4.id, role_id: roleId });
+    setApproveDialogVisible(false);
     navigate(-2);
+  };
+
+  // Function to cancel approval
+  const handleCancelApprove = () => {
+    setApproveDialogVisible(false);
   };
 
   // Revise
@@ -473,6 +485,53 @@ const [remarksModal, setRemarksModal] = useState({
           {errors.remarks && <p className="text-sm italic mt-1 text-red-400">remarks is required.*</p>}
           <Button type="submit" disabled={rejectLoading} className="bg-[#2211cc] text-[#c7c430] font-bold rounded-lg p-2" label={rejectLoading ? "Submitting…" : "Submit"} />
         </form>
+      </Dialog>
+
+      <Dialog
+        header="Confirm Approval"
+        visible={approveDialogVisible}
+        style={{ width: '400px' }}
+        onHide={handleCancelApprove}
+        footer={
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={handleCancelApprove}
+              disabled={approveLoading}
+              className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleConfirmApprove}
+              disabled={approveLoading}
+              className="px-5 py-2.5 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+            >
+              {approveLoading ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Approving...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <i className="pi pi-check text-sm"></i>
+                  Yes, Approve
+                </span>
+              )}
+            </button>
+          </div>
+        }
+      >
+        <div className="confirmation-content">
+          <p className="text-gray-700 mb-4">
+            Are you sure you want to approve this extension program checklist form?
+          </p>
+          <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <i className="pi pi-info-circle text-blue-600"></i>
+            <p className="text-sm text-blue-800">
+              This action cannot be undone.
+            </p>
+          </div>
+        </div>
       </Dialog>
     </div>
   );

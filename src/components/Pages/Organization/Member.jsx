@@ -11,6 +11,7 @@ import { getRoles } from "@_src/services/role";
 import { Button } from "primereact/button";
 import { OverlayPanel } from 'primereact/overlaypanel'
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog'
+import { Dialog } from "primereact/dialog"; // Add this import
 import { Link } from 'react-router-dom';
 import { toast } from "react-toastify";
 import _ from "lodash";
@@ -24,6 +25,10 @@ export const Member = () => {
     const decryptedToken = token && DecryptString(token)    
     const decryptedUser = token && DecryptUser(user)
     
+    // Add state for remove confirmation dialog
+    const [removeDialogVisible, setRemoveDialogVisible] = useState(false);
+    const [memberToRemove, setMemberToRemove] = useState(null);
+    
     const { data: roleData } = getRoles()
     const { data: memberData, isLoading: memberLoading, refetch, isRefetching } = getMembers({
         token: decryptedToken,
@@ -34,11 +39,14 @@ export const Member = () => {
         onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['members'] });
             toast(data?.message, {type: "success" })
-            
+            setRemoveDialogVisible(false);
+            setMemberToRemove(null);
             }, 
         onError: (error) => {  
             console.log("@RME:", error)
             toast(error?.response.data.message, {type: "warning" })
+            setRemoveDialogVisible(false);
+            setMemberToRemove(null);
         },
     });
 
@@ -47,6 +55,28 @@ export const Member = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
+    // Function to show remove confirmation
+    const confirmRemove = (rowData) => {
+        setMemberToRemove(rowData);
+        setRemoveDialogVisible(true);
+    };
+
+    // Function to execute remove after confirmation
+    const executeRemove = () => {
+        if (memberToRemove) {
+            handleRemoveMember({
+                token: decryptedToken,
+                user_id: memberToRemove?.id,
+                role: memberToRemove?.pivot.role_id
+            })
+        }
+    };
+
+    // Function to cancel remove
+    const cancelRemove = () => {
+        setRemoveDialogVisible(false);
+        setMemberToRemove(null);
+    };
 
     
     const hasRole = (organization) => {
@@ -121,35 +151,12 @@ export const Member = () => {
     const actionTemplate = (rowData) => {
         return (
             <div className="action-main flex gap-4">
-                {rowData.pivot.role_id === 6 && (
-                    <Button
-                        onClick={() => {
-                            handleRemoveMember({
-                                token: decryptedToken,
-                                user_id: rowData?.id,
-                                role: rowData?.pivot.role_id
-                            })
-                        }}
-                        className="text-red-400 px-4 py-2"
-                    >
-                        leave
-                    </Button>
-                )}
-                {rowData.pivot.role_id !== 6 && (
-                    <Button
-                        onClick={() => {
-                            handleRemoveMember({
-                                token: decryptedToken,
-                                user_id: rowData?.id,
-                                role: rowData?.pivot.role_id
-                            })
-                        }}
-                        className="text-red-400 px-4 py-2"
-                    >
-                        remove
-                    </Button>    
-                )}
-                
+                <Button
+                    onClick={() => confirmRemove(rowData)}
+                    className="text-red-400 px-4 py-2"
+                >
+                    {rowData.pivot.role_id === 6 ? "leave" : "remove"}
+                </Button>
             </div>  
         )
     }
@@ -167,6 +174,49 @@ export const Member = () => {
             const members = memberData?.data
         return (
             <div className="member-main min-h-screen bg-white w-full flex flex-col items-center xs:pl-[0px] sm:pl-[200px] pt-[5rem]">
+                {/* Remove Confirmation Dialog */}
+                <Dialog
+                    header="Confirm Removal"
+                    visible={removeDialogVisible}
+                    style={{ width: '400px' }}
+                    onHide={cancelRemove}
+                    footer={
+                        <div className="flex gap-3 justify-end">
+                            <button
+                                onClick={cancelRemove}
+                                disabled={removeMemberLoading}
+                                className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={executeRemove}
+                                disabled={removeMemberLoading}
+                                className="px-5 py-2.5 text-sm font-medium text-white bg-red-600 border border-transparent rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                            >
+                                {removeMemberLoading ? (
+                                    <span className="flex items-center gap-2">
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        Removing...
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center gap-2">
+                                        <i className="pi pi-trash text-sm"></i>
+                                        Remove Member
+                                    </span>
+                                )}
+                            </button>
+                        </div>
+                    }
+                >
+                    <div className="confirmation-content flex align-items-center">
+                        <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem', color: '#e74c3c' }} />
+                        <span>
+                            Are you sure you want to remove <strong>{memberToRemove?.firstname} {memberToRemove?.lastname}</strong> from the organization?
+                        </span>
+                    </div>
+                </Dialog>
+
                 {hasRole(decryptedUser?.organizations) && (
                     <div className="w-full flex justify-end px-2">
                         <Link
